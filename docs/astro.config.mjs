@@ -12,15 +12,8 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Guides',
-					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', link: '/guides/example/' },
-					],
-				},
-				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
+					label: 'Software Architecture (Arc42)',
+					autogenerate: { directory: 'arc42' },
 				},
 			],
 			editLink: { baseUrl: 'https://github.com/HAW-Rust-SoSe24/gb_emulator/tree/main/docs/' },
