@@ -3,7 +3,9 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	base: '/gb_emulator',
 	trailingSlash: 'always',
+	site: 'https://haw-rust-sose24.github.io',
 	integrations: [
 		starlight({
 			title: 'GB Emulator by HAW WP Rust SoSe24',
