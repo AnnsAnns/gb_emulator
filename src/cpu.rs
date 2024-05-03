@@ -2,6 +2,7 @@ use crate::memory::Memory;
 
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
+mod registers;
 
 /// The CPU of the Gameboy
 pub struct CPU {
