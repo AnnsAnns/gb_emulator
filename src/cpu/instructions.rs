@@ -1,4 +1,7 @@
+use super::registers::{Register16Bit, Register8Bit};
+
 pub mod arithmetic_and_logic;
+pub mod misc;
 
 /// The Flag States after an instruction
 /// Set: The flag is set
@@ -30,4 +33,40 @@ pub struct InstructionResult {
     cycles: u8,
     bytes: u8,
     condition_codes: ConditionCodes,
+}
+
+#[derive(Debug)]
+pub enum InstructionCondition {
+    Zero,
+    NotZero,
+    Carry,
+    NotCarry,
+}
+
+#[derive(Debug)]
+pub enum InstParam {
+    Register8Bit(Register8Bit),
+    Register16Bit(Register16Bit),
+    ConditionCodes(InstructionCondition),
+    Number8Bit,
+    Number16Bit,
+    Offset,
+    Unsigned3Bit,
+}
+
+#[derive(Debug)]
+pub enum Instructions {
+    ADD(InstParam),
+    ADC(InstParam),
+    SUB(InstParam),
+    SBC(InstParam),
+    AND(InstParam),
+    XOR(InstParam),
+    OR(InstParam),
+    CP(InstParam),
+    HALT,
+
+    LD(InstParam, InstParam),
+
+    NOP,
 }
