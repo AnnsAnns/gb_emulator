@@ -1,0 +1,19 @@
+<diagram program="umletino" version="15.1"><zoom_level>13</zoom_level><help_text>Space for diagram notes</help_text><element><id>UMLDeployment</id><coordinates><x>14</x><y>26</y><w>871</w><h>494</h></coordinates><panel_attributes>&lt;&lt;struct&gt;&gt;
+CPU
+The overall struct for the emulation itself. 
+Acts like a real GB CPU.
+Modules 'impl' the different methods.</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>40</x><y>169</y><w>208</w><h>91</h></coordinates><panel_attributes>&lt;&lt;module&gt;&gt;
+flags
+Handles Flag Register</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>326</x><y>169</y><w>208</w><h>91</h></coordinates><panel_attributes>&lt;&lt;module&gt;&gt;
+registers
+Handles normal Registers</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>638</x><y>169</y><w>208</w><h>91</h></coordinates><panel_attributes>&lt;&lt;module&gt;&gt;
+instructions
+Implements all instructions</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLDeployment</id><coordinates><x>40</x><y>286</y><w>806</w><h>221</h></coordinates><panel_attributes>&lt;&lt;struct&gt;&gt;
+Memory
+The raw memory representation &amp; abstractions over it.</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>53</x><y>377</y><w>299</w><h>117</h></coordinates><panel_attributes>&lt;&lt;module&gt;&gt;
+raw_memory_operations
+Direct read/write operations</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>521</x><y>377</y><w>299</w><h>117</h></coordinates><panel_attributes>&lt;&lt;module&gt;&gt;
+io_abstractions
+Abstractions over the memory to offer
+the Frontend simpler write/reads for
+I/O Devices (e.g. Buttons)</panel_attributes><additional_attributes></additional_attributes></element></diagram>
