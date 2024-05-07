@@ -67,8 +67,8 @@ pub enum InstParam {
     Register8Bit(Register8Bit),
     Register16Bit(Register16Bit),
     ConditionCodes(InstructionCondition),
-    Number8Bit,
-    Number16Bit,
+    Number8Bit(u8),
+    Number16Bit(u16),
     Offset,
     Unsigned3Bit,
 }
@@ -86,6 +86,7 @@ pub enum Instructions {
     HALT,
 
     LD(InstParam, InstParam),
+
 
     NOP,
 }

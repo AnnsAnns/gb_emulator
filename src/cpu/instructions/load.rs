@@ -1,8 +1,11 @@
-use crate::{cpu::{
-    instructions::{ConditionCodes, FlagState, InstructionResult},
+use crate::cpu::{
+    instructions::{ConditionCodes, FlagState, InstructionResult,Instructions},
     registers::{Register16Bit, Register8Bit},
     CPU,
-}, memory};
+};
+
+#[cfg(test)]
+use crate::test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step};
 
 impl CPU {
     /// loads(copies) the value of the source 8bit-register into the target 8bit-register
@@ -332,4 +335,82 @@ impl CPU {
             },
         }
     }
+}
+
+#[test]
+pub fn load_test() {
+    let mut cpu = CPU::new();
+    let mut expected_result = InstructionResult::default();
+    let mut registers;
+
+    //1) LD r8,n8: B,42
+    expected_result.bytes = 2;
+    expected_result.cycles = 2;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::B), super::InstParam::Number8Bit(42)), expected_result);
+    //2) LD r8,r8: A,B
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 1;
+    expected_result.cycles = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::A), super::InstParam::Register8Bit(Register8Bit::B)), expected_result);
+    //3) LD [HL],r8: [HL],B
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 1;
+    expected_result.cycles = 2;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::HL), super::InstParam::Register8Bit(Register8Bit::B)), expected_result);
+    //4) LD r8,[HL]: C,[HL]
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 1;
+    expected_result.cycles = 2;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::C), super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    //check registers for correct loads
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 42);
+    assert_eq!(registers[Register8Bit::B as usize], 42);
+    assert_eq!(registers[Register8Bit::C as usize], 42);
+    //5) LD r16,n16: DE,0xFF00u16
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 3;
+    expected_result.cycles = 3;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Number16Bit(0xFF00u16)), expected_result);
+    //6) LD [r16],A: [DE],A
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 1;
+    expected_result.cycles = 2;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Register8Bit(Register8Bit::A)), expected_result);
+    //7) LD A,[r16]: A,0xFF00u16
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 1;
+    expected_result.cycles = 2;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::A), super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 42);
+    let register_value = Register16Bit::DE as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFF00u16);
+
+    //8) LD [n16],A
+    cpu.ld_r8_n8(Register8Bit::A, 0);
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 3;
+    expected_result.cycles = 4;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD( super::InstParam::Number16Bit(0xFF01u16), super::InstParam::Register8Bit(Register8Bit::A)), expected_result);
+    //9) LD A,[n16]
+    cpu.ld_r8_n8(Register8Bit::A, 1);
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 3;
+    expected_result.cycles = 4;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::A), super::InstParam::Number16Bit(0xFF01u16)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 0);
+    // 10) [HL],n8: [HL], 8 
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 2;
+    expected_result.cycles = 3;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::HL), super::InstParam::Number8Bit(8)), expected_result);
+    cpu.ld_a_hli();
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 8);
+
 }
