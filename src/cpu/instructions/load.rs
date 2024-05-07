@@ -180,4 +180,156 @@ impl CPU {
             },
         }
     }
+    /// loads(copies) the value from memory at the address in 16bit-register source into register A
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_r16_
+    pub fn ld_a_r16 (&mut self, source: Register16Bit)-> InstructionResult {
+        let memory_address = self.get_16bit_register(source);
+        let value = self.memory.read_byte(memory_address);
+
+        self.set_8bit_register(Register8Bit::A, value);
+        InstructionResult {
+            cycles: 2,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value from memory at the 16bit-address source into register A
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_n16_
+    pub fn ld_a_n16 (&mut self, source: u16)-> InstructionResult {
+        let value = self.memory.read_byte(source);
+        self.set_8bit_register(Register8Bit::A, value);
+
+        InstructionResult {
+            cycles: 4,
+            bytes: 3,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value from memory at the 16bit-address source into register A if the address is between $FF00 and $FFFF
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_n16_
+    pub fn ldh_a_n16 (&mut self, source: u16)-> InstructionResult {
+        if source > 0xFF00u16 && source < 0xFFFFu16 {
+            let value = self.memory.read_byte(source);
+            self.set_8bit_register(Register8Bit::A, value);
+        }
+
+        InstructionResult {
+            cycles: 3,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + c into register A. TODO was ist C hier?
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
+    pub fn ldh_a_c (&mut self)-> InstructionResult {
+        let source = 0xFF00u16 + self.get_8bit_register(Register8Bit::C) as u16;
+        let value = self.memory.read_byte(source);
+        self.set_8bit_register(Register8Bit::A, value);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value in register A into memory at the address in HL and increments HL afterwards
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD__HLI_,A
+    pub fn ld_hli_a (&mut self)-> InstructionResult {
+        let value = self.get_8bit_register(Register8Bit::A);
+        let memory_address = self.get_16bit_register(Register16Bit::HL);
+
+        self.memory.write_byte(memory_address, value);
+        self.set_16bit_register(Register16Bit::HL, memory_address+1u16);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value in register A into memory at the address in HL and decrements HL afterwards
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD__HLD_,A
+    pub fn ld_hld_a (&mut self)-> InstructionResult {
+        let value = self.get_8bit_register(Register8Bit::A);
+        let memory_address = self.get_16bit_register(Register16Bit::HL);
+
+        self.memory.write_byte(memory_address, value);
+        self.set_16bit_register(Register16Bit::HL, memory_address-1u16);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value in memory at the address in HL into register A and decrements HL afterwards 
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_HLD_
+    pub fn ld_a_hld (&mut self)-> InstructionResult {
+        let memory_address = self.get_16bit_register(Register16Bit::HL);
+        let value = self.memory.read_byte(memory_address);
+
+        self.set_8bit_register(Register8Bit::A, value);
+        self.set_16bit_register(Register16Bit::HL, memory_address-1u16);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value in memory at the address in HL into register A and increments HL afterwards 
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_HLI_
+    pub fn ld_a_hli (&mut self)-> InstructionResult {
+        let memory_address = self.get_16bit_register(Register16Bit::HL);
+        let value = self.memory.read_byte(memory_address);
+
+        self.set_8bit_register(Register8Bit::A, value);
+        self.set_16bit_register(Register16Bit::HL, memory_address+1u16);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
 }
