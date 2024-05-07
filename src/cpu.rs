@@ -35,13 +35,27 @@ impl CPU {
         }
     }
 
+    /// Set the next instruction to be executed
+    /// This is used for testing 
     #[cfg(test)]
     pub fn set_instruction(&mut self, instruction: Instructions) {
         self.next_instruction = instruction;
     }
 
+    /// Get the last step result
+    /// This is used for testing purposes
     #[cfg(test)]
     pub fn get_last_step_result(&self) -> InstructionResult {
         self.last_step_result.clone()
+    }
+
+    #[cfg(test)]
+    pub fn get_registry_dump(&self) -> [u8; 8] {
+        self.registers.clone()
+    }
+
+    #[cfg(test)]
+    pub fn get_memory(&self) -> Memory {
+        self.memory.clone()
     }
 }

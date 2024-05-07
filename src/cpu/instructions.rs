@@ -33,9 +33,9 @@ pub struct ConditionCodes {
 /// condition_codes: The condition codes after the instruction
 #[derive(Debug, PartialEq, Clone)]
 pub struct InstructionResult {
-    cycles: u8,
-    bytes: u8,
-    condition_codes: ConditionCodes,
+    pub cycles: u8,
+    pub bytes: u8,
+    pub condition_codes: ConditionCodes,
 }
 
 impl InstructionResult {
@@ -53,7 +53,7 @@ impl InstructionResult {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum InstructionCondition {
     Zero,
     NotZero,
@@ -61,7 +61,7 @@ pub enum InstructionCondition {
     NotCarry,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum InstParam {
     Register8Bit(Register8Bit),
     Register16Bit(Register16Bit),
@@ -72,7 +72,7 @@ pub enum InstParam {
     Unsigned3Bit,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Instructions {
     ADD(InstParam),
     ADC(InstParam),

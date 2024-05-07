@@ -1,6 +1,6 @@
-use crate::cpu::CPU;
+use crate::{cpu::CPU, test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step}};
 
-use super::{ConditionCodes, FlagState, InstructionResult};
+use super::{ConditionCodes, FlagState, InstructionResult, Instructions};
 
 impl CPU {
     /// NOP instruction
@@ -17,4 +17,14 @@ impl CPU {
             },
         }
     }
+}
+
+#[test]
+pub fn nop_test() {
+    let mut cpu = CPU::new();
+    let mut expected_result = InstructionResult::default();
+    expected_result.bytes = 1;
+    expected_result.cycles = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::NOP, expected_result);
+    assert_correct_instruction_decode(&mut cpu, 0x00, Instructions::NOP);
 }

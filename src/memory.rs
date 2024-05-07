@@ -5,6 +5,7 @@ pub mod raw_memory_operations;
 pub mod io_abstraction;
 
 /// Abstraction over the raw memory of the Gameboy
+#[derive(Debug, Clone)]
 pub struct Memory {
     /// The raw memory of the Gameboy
     /// The Address Bus is 16-bit, thus the memory is 64KB (0xFFFF bytes)

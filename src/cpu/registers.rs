@@ -2,7 +2,7 @@ use num_enum::IntoPrimitive;
 
 use super::CPU;
 
-#[derive(Debug, IntoPrimitive, Clone, Copy)]
+#[derive(Debug, IntoPrimitive, PartialEq, Clone, Copy)]
 #[repr(u8)]
 pub enum Register8Bit {
     A = 0,
@@ -15,7 +15,7 @@ pub enum Register8Bit {
     L = 7,
 }
 
-#[derive(Debug, IntoPrimitive, Clone, Copy)]
+#[derive(Debug, IntoPrimitive, PartialEq, Clone, Copy)]
 #[repr(u8)]
 pub enum Register16Bit {
     AF = 0,
