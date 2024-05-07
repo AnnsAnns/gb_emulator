@@ -7,6 +7,7 @@ pub mod misc;
 /// Set: The flag is set
 /// Unset: The flag is unset
 /// NotAffected: The flag is not affected by the instruction
+#[derive(Debug, PartialEq, Clone)]
 pub enum FlagState {
     Set,
     Unset,
@@ -18,6 +19,7 @@ pub enum FlagState {
 /// subtract: The subtract flag (N)
 /// half_carry: The half carry flag (H)
 /// carry: The carry flag (C)
+#[derive(Debug, PartialEq, Clone)]
 pub struct ConditionCodes {
     zero: FlagState,
     subtract: FlagState,
@@ -29,10 +31,26 @@ pub struct ConditionCodes {
 /// cycles: The number of cycles the instruction took
 /// bytes: The number of bytes the instruction took
 /// condition_codes: The condition codes after the instruction
+#[derive(Debug, PartialEq, Clone)]
 pub struct InstructionResult {
     cycles: u8,
     bytes: u8,
     condition_codes: ConditionCodes,
+}
+
+impl InstructionResult {
+    pub fn default() -> InstructionResult {
+        InstructionResult {
+            cycles: 0,
+            bytes: 0,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
 }
 
 #[derive(Debug)]

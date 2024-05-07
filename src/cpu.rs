@@ -1,12 +1,15 @@
 use crate::memory::Memory;
 
-use self::{instructions::{ConditionCodes, InstructionResult}, registers::Register16Bit};
+use self::instructions::{InstructionResult, Instructions};
+
+
 
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
 mod registers;
-mod instructions;
-mod decode;
+pub mod instructions;
+pub mod decode;
+mod step;
 
 /// The CPU of the Gameboy
 pub struct CPU {
@@ -16,6 +19,8 @@ pub struct CPU {
     /// and two purely 16-bit registers (SP, PC)
     registers: [u8; 8],
     memory: Memory,
+    next_instruction: Instructions,
+    last_step_result: InstructionResult,
 }
 
 /// Note, please look at the relevant modules for the actual implementations
@@ -25,6 +30,18 @@ impl CPU {
         CPU {
             registers: [0; 8],
             memory: Memory::new(),
+            next_instruction: Instructions::NOP,
+            last_step_result: InstructionResult::default(),
         }
+    }
+
+    #[cfg(test)]
+    pub fn set_instruction(&mut self, instruction: Instructions) {
+        self.next_instruction = instruction;
+    }
+
+    #[cfg(test)]
+    pub fn get_last_step_result(&self) -> InstructionResult {
+        self.last_step_result.clone()
     }
 }

@@ -1,5 +1,6 @@
 pub mod memory;
 pub mod cpu;
+pub mod test_helpers;
 
 fn main() {
     println!("Hello, world!");

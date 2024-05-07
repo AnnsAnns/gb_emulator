@@ -43,7 +43,7 @@ impl CPU {
     }
 
     /// Abstraction for ADC & ADD
-    fn adX_a_r8(&mut self, target: Register8Bit, also_add_carry: bool) -> InstructionResult {
+    fn adx_a_r8(&mut self, target: Register8Bit, also_add_carry: bool) -> InstructionResult {
         let value = self.get_8bit_register(target);
 
         InstructionResult {
@@ -53,7 +53,7 @@ impl CPU {
         }
     }
 
-    fn adX_a_hl(&mut self, also_add_carry: bool) -> InstructionResult {
+    fn adx_a_hl(&mut self, also_add_carry: bool) -> InstructionResult {
         let mem_addr = self.get_16bit_register(Register16Bit::HL);
         let value = self.memory.read_byte(mem_addr);
 
@@ -67,25 +67,25 @@ impl CPU {
     /// Add the value of an 8-bit register to the A register + carry flag
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADC_A,r8
     pub fn adc_a_r8(&mut self, target: Register8Bit) -> InstructionResult {
-        self.adX_a_r8(target, true)
+        self.adx_a_r8(target, true)
     }
 
     /// Add the value of an 8-bit register to the A register
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADD_A,r8
     pub fn add_a_r8(&mut self, target: Register8Bit) -> InstructionResult {
-        self.adX_a_r8(target, false)
+        self.adx_a_r8(target, false)
     }
 
     /// Add the value of a memory address within HL to the A register + carry flag
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADC_A,_HL_
     pub fn adc_a_hl(&mut self) -> InstructionResult {
-        self.adX_a_hl(true)
+        self.adx_a_hl(true)
     }
 
     /// Add the value of a memory address within HL to the A register
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADD_A,_HL_
     pub fn add_a_hl(&mut self) -> InstructionResult {
-        self.adX_a_hl(false)
+        self.adx_a_hl(false)
     }
 
     /// Add an 8-bit value to the A register
@@ -160,3 +160,4 @@ impl CPU {
         }
     }
 }
+
