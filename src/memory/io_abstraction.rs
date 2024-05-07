@@ -6,7 +6,7 @@ use super::Memory;
 
 /// Enum for the I/O registers
 /// See: https://gbdev.io/pandocs/Hardware_Reg_List.html
-#[derive(IntoPrimitive, Debug)]
+#[derive(IntoPrimitive, Debug, Clone, Copy)]
 #[repr(u16)]
 pub enum HardwareRegisters {
     JOYP = 0xFF00, // Joypad

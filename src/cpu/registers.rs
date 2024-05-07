@@ -2,7 +2,7 @@ use num_enum::IntoPrimitive;
 
 use super::CPU;
 
-#[derive(Debug, IntoPrimitive)]
+#[derive(Debug, IntoPrimitive, Clone, Copy)]
 #[repr(u8)]
 pub enum Register8Bit {
     A = 0,
@@ -15,7 +15,7 @@ pub enum Register8Bit {
     L = 7,
 }
 
-#[derive(Debug, IntoPrimitive)]
+#[derive(Debug, IntoPrimitive, Clone, Copy)]
 #[repr(u8)]
 pub enum Register16Bit {
     AF = 0,
@@ -34,7 +34,7 @@ impl CPU {
     }
 
     /// Get a 16-bit register (e.g. AF)
-    pub fn get_16bit_register(self, register: Register16Bit) -> u16 {
+    pub fn get_16bit_register(&self, register: Register16Bit) -> u16 {
         let register_value = register as usize;
         let high = self.registers[register_value.clone()] as u16;
         let low = self.registers[register_value + 1] as u16;

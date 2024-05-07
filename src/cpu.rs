@@ -1,8 +1,12 @@
 use crate::memory::Memory;
 
+use self::{instructions::{ConditionCodes, InstructionResult}, registers::Register16Bit};
+
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
 mod registers;
+mod instructions;
+mod decode;
 
 /// The CPU of the Gameboy
 pub struct CPU {
