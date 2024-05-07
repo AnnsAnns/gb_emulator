@@ -2,6 +2,7 @@ use super::registers::{Register16Bit, Register8Bit};
 
 pub mod arithmetic_and_logic;
 pub mod misc;
+pub mod load;
 
 /// The Flag States after an instruction
 /// Set: The flag is set
