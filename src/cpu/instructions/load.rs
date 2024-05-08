@@ -412,5 +412,48 @@ pub fn load_test() {
     cpu.ld_a_hli();
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 8);
+    //11) LDH 
+    cpu.ld_r8_n8(Register8Bit::A, 111);
+    cpu.ldh_n16_a(0xFEFF);
+    cpu.ld_r8_n8(Register8Bit::A, 222);
+    cpu.ldh_n16_a(0xFF00);
+    cpu.ldh_a_n16(0xFEFF);
+    registers = cpu.get_registry_dump();
+    assert_ne!(registers[Register8Bit::A as usize], 111);
+    cpu.ldh_a_n16(0xFF00);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 222);
+    //12) LDI und LDD
+    cpu.ld_r16_n16(Register16Bit::HL,0xFF04);
+    cpu.ld_r8_n8(Register8Bit::A, 121);
+    cpu.ld_hli_a();
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::HL as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFF05);
 
+    cpu.ld_r8_n8(Register8Bit::A, 131);
+    cpu.ld_hld_a();
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::HL as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFF04);
+
+    cpu.ld_a_hli();
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 121);
+
+    cpu.ld_a_hld();
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 131);
+
+    let register_value = Register16Bit::HL as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFF04);
 }
