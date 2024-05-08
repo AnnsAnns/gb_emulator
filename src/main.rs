@@ -1,11 +1,14 @@
-use macroquad::prelude::*;
-use rendering::{
-    render_settings::*, tiles::*, views::*
-};
+#[cfg(test)]
+pub mod test_helpers;
 
 pub mod memory;
 pub mod cpu;
 pub mod rendering;
+
+use macroquad::prelude::*;
+use rendering::{
+    render_settings::*, tiles::*, views::*
+};
 
 
 #[macroquad::main("GB Emulator")]
