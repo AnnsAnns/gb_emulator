@@ -2,13 +2,11 @@ use crate::memory::Memory;
 
 use self::instructions::{InstructionResult, Instructions};
 
-
-
+pub mod decode;
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
-mod registers;
 pub mod instructions;
-pub mod decode;
+mod registers;
 mod step;
 
 /// The CPU of the Gameboy
@@ -35,8 +33,12 @@ impl CPU {
         }
     }
 
+    pub fn get_memory(&mut self) -> &mut Memory {
+        &mut self.memory
+    }
+
     /// Set the next instruction to be executed
-    /// This is used for testing 
+    /// This is used for testing
     #[cfg(test)]
     pub fn set_instruction(&mut self, instruction: Instructions) {
         self.next_instruction = instruction;
@@ -52,10 +54,5 @@ impl CPU {
     #[cfg(test)]
     pub fn get_registry_dump(&self) -> [u8; 8] {
         self.registers.clone()
-    }
-
-    #[cfg(test)]
-    pub fn get_memory(&self) -> Memory {
-        self.memory.clone()
     }
 }
