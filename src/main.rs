@@ -7,16 +7,15 @@ pub mod rendering;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
+
+}
+
+
+
+#[macroquad::test]
+async fn test_test() {
     // Inititalize General Settings
-    let gb_settings = GbSettings {
-        scaling: 4.0,
-        palette: [
-            Color::from_hex(0xFFFFFF),
-            Color::from_hex(0x81C784),
-            Color::from_hex(0x43A047),
-            Color::from_hex(0x1B5E20),
-        ],
-    };
+    let gb_settings = GbSettings { ..Default::default()};
 
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
     let combined_image = Image::gen_image_color(160, 144, GREEN);
