@@ -1,4 +1,7 @@
-use crate::{cpu::CPU, test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step}};
+use crate::cpu::CPU;
+
+#[cfg(test)]
+use crate::test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step};
 
 use super::{ConditionCodes, FlagState, InstructionResult, Instructions};
 

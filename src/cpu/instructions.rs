@@ -2,6 +2,7 @@ use super::registers::{Register16Bit, Register8Bit};
 
 pub mod arithmetic_and_logic;
 pub mod misc;
+pub mod load;
 
 /// The Flag States after an instruction
 /// Set: The flag is set
@@ -66,8 +67,8 @@ pub enum InstParam {
     Register8Bit(Register8Bit),
     Register16Bit(Register16Bit),
     ConditionCodes(InstructionCondition),
-    Number8Bit,
-    Number16Bit,
+    Number8Bit(u8),
+    Number16Bit(u16),
     Offset,
     Unsigned3Bit,
 }
@@ -85,6 +86,7 @@ pub enum Instructions {
     HALT,
 
     LD(InstParam, InstParam),
+
 
     NOP,
 }

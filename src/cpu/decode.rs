@@ -17,7 +17,7 @@ impl CPU {
             0x3 => InstParam::Register8Bit(Register8Bit::E),
             0x4 => InstParam::Register8Bit(Register8Bit::H),
             0x5 => InstParam::Register8Bit(Register8Bit::L),
-            0x6 => InstParam::Number8Bit,
+            0x6 => InstParam::Number8Bit(0), //number8bit and 16bit will need to get actual numbers passed right?
             0x7 => InstParam::Register8Bit(Register8Bit::A),
             _ => panic!("Unknown tail: {:X}", tail),
         }
