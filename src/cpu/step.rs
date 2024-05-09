@@ -1,4 +1,4 @@
-use super::{instructions::{InstParam, Instructions}, registers::{Register16Bit, Register8Bit}, CPU};
+use super::{instructions::{InstParam, Instructions}, registers::{self, Register16Bit, Register8Bit}, CPU};
 
 impl CPU {
     // Gets a 8-bit value from the HL register
@@ -39,6 +39,26 @@ impl CPU {
                         }
                     },
                     _ => panic!("BIT with {:?} not implemented", target),
+                }
+            }
+            Instructions::RES(bit,target) => {
+                match bit {
+                    InstParam::Unsigned3Bit(targeted_bit) => {
+                        match target {
+                            InstParam::Register8Bit(register) => {
+                                self.res_u3_r8(*targeted_bit, *register)
+                            }
+                            InstParam::Register16Bit(register) => {
+                                if *register == Register16Bit::HL {
+                                    self.res_u3_hl(*targeted_bit)
+                                }else {
+                                    panic!("RES with {:?} not implemented", target);
+                                }
+                            }
+                            _ => panic!("RES with {:?} not implemented", target),
+                        }
+                    }
+                    _ => panic!("RES with {:?} not implemented", target),
                 }
             }
             Instructions::LD(target, source) => {
