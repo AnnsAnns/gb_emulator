@@ -61,6 +61,26 @@ impl CPU {
                     _ => panic!("RES with {:?} not implemented", target),
                 }
             }
+            Instructions::SET(bit,target) => {
+                match bit {
+                    InstParam::Unsigned3Bit(targeted_bit) => {
+                        match target {
+                            InstParam::Register8Bit(register) => {
+                                self.set_u3_r8(*targeted_bit, *register)
+                            }
+                            InstParam::Register16Bit(register) => {
+                                if *register == Register16Bit::HL {
+                                    self.set_u3_hl(*targeted_bit)
+                                }else {
+                                    panic!("SET with {:?} not implemented", target);
+                                }
+                            }
+                            _ => panic!("SET with {:?} not implemented", target),
+                        }
+                    }
+                    _ => panic!("SET with {:?} not implemented", target),
+                }
+            }
             Instructions::LD(target, source) => {
                 match target {
                     InstParam::Register8Bit(target_register) => {

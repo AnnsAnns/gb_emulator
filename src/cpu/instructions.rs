@@ -89,6 +89,7 @@ pub enum Instructions {
     LD(InstParam, InstParam),
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
+    SET(InstParam,InstParam),
 
     NOP,
 }

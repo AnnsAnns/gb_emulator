@@ -73,6 +73,46 @@ impl CPU {
         let register_to_set = self.memory.read_byte(memory_address);
         let mask = !(1 << bit);
         let value = register_to_set & mask;
+
+        self.memory.write_byte(memory_address, value);
+
+        InstructionResult {
+            cycles: 4,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+
+
+    /// set bit 'bit' in 8bit-register target to 1
+    pub fn set_u3_r8(&mut self, bit: u8, target: Register8Bit)-> InstructionResult {
+        let register_to_set = self.get_8bit_register(target);
+        let mask = 1 << bit;
+        let value = register_to_set | mask;
+        self.set_8bit_register(target, value);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// set bit 'bit' in the byte in memory at the adress in HL to 1
+    pub fn set_u3_hl(&mut self, bit: u8)-> InstructionResult {
+        let memory_address = self.get_16bit_register(Register16Bit::HL);
+        let register_to_set = self.memory.read_byte(memory_address);
+        let mask = 1 << bit;
+        let value = register_to_set | mask;
         
         self.memory.write_byte(memory_address, value);
 
