@@ -6,6 +6,11 @@ impl CPU {
         self.memory.read_byte(self.get_16bit_register(Register16Bit::HL))
     }
 
+    pub fn prepare_and_decode_next_instruction(&mut self) {
+        let opcode = self.get_next_opcode();
+        self.next_instruction = self.decode(opcode).unwrap();
+    }
+
     /// Does a step (calls function and sets last_step_result), 
     /// ensure to first set the next instruction
     /// by decoding it (see `decode.rs`)
@@ -59,6 +64,8 @@ impl CPU {
                 }
             }
             _ => panic!("Handling of {:?} not implemented", self.next_instruction),
-        }
+        };
+
+        self.set_16bit_register(Register16Bit::SP, self.get_16bit_register(Register16Bit::SP) + 1);
     }
 }

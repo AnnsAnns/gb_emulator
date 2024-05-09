@@ -35,6 +35,14 @@ impl CPU {
         }
     }
 
+    pub fn load_from_file(&mut self, file: &str) {
+        self.memory.load_from_file(file);
+    }
+
+    pub fn get_next_opcode(&self) -> u8 {
+        self.memory.read_byte(self.get_16bit_register(registers::Register16Bit::PC))
+    }
+
     /// Set the next instruction to be executed
     /// This is used for testing 
     #[cfg(test)]

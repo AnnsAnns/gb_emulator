@@ -39,6 +39,13 @@ impl CPU {
         })
     }
 
+    /// Decode a CB prefixed opcode
+    /// These are 16bit instructions
+    pub fn decode_cb(&self, opcode: u8) -> Result<Instructions, String> {
+        Err("CB prefixed instructions not implemented".to_string())
+    }
+
+    /// Decode normal 8bit instructions
     pub fn decode(&self, opcode: u8) -> Result<Instructions, String> {
         // Split the opcode into head and tail
         // The head is the first 4 bits of the opcode e.g. 0x42 -> 0x4
