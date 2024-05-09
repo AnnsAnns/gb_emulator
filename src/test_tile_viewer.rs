@@ -1,3 +1,5 @@
+use std::{thread::sleep, time::Duration};
+
 use super::*;
 
 #[macroquad::test]
@@ -32,5 +34,9 @@ async fn test_test() {
         );
 
         next_frame().await;
+
+        // Exit the loop after 1s
+        sleep(Duration::from_millis(1000));
+        break;
     }
 }
