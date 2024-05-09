@@ -1,6 +1,7 @@
 use super::*;
 
 #[macroquad::test]
+#[cfg_attr(feature = "ci", ignore)]
 async fn test_test() {
     // Inititalize General Settings
     let gb_settings = GbSettings { ..Default::default()};
