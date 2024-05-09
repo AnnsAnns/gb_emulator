@@ -34,4 +34,17 @@ impl Memory {
             memory: [0; 0xFFFF],
         }
     }
+
+    pub fn load_from_file(&mut self, file_path: &str) {
+        let rom = std::fs::read(file_path).expect("Unable to read file");
+
+        for (i, byte) in rom.iter().enumerate() {
+            if i >= 0xFFFF {
+                eprintln!("ROM is too large for memory: size: {}", rom.len());
+                break;
+            }
+
+            self.memory[i] = *byte;
+        }
+    }
 }

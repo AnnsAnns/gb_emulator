@@ -12,11 +12,16 @@ use rendering::{
 
 
 #[macroquad::main("GB Emulator")]
-async fn main() {
+async fn main() {   
     println!("Hello, world!");
 
     let mut cpu = cpu::CPU::new();
-    cpu.set_zero_flag();
+    cpu.load_from_file("./test_roms/cpu_instrs.gb");
+    loop {
+        cpu.prepare_and_decode_next_instruction();
+        let result = cpu.step();
+
+    }
 }
 
 #[cfg(test)]

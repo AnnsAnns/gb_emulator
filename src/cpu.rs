@@ -17,7 +17,7 @@ pub struct CPU {
     /// The CPU has 8 8-bit registers (A, F, B, C, D, E, H, L)
     /// that can be combined to form 4 16-bit registers (AF, BC, DE, HL)
     /// and two purely 16-bit registers (SP, PC)
-    registers: [u8; 8],
+    registers: [u8; 12],
     memory: Memory,
     next_instruction: Instructions,
     last_step_result: InstructionResult,
@@ -28,11 +28,19 @@ impl CPU {
     /// Create a new CPU
     pub fn new() -> CPU {
         CPU {
-            registers: [0; 8],
+            registers: [0; 12],
             memory: Memory::new(),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
         }
+    }
+
+    pub fn load_from_file(&mut self, file: &str) {
+        self.memory.load_from_file(file);
+    }
+
+    pub fn get_next_opcode(&self) -> u8 {
+        self.memory.read_byte(self.get_16bit_register(registers::Register16Bit::PC))
     }
 
     /// Set the next instruction to be executed
@@ -50,7 +58,7 @@ impl CPU {
     }
 
     #[cfg(test)]
-    pub fn get_registry_dump(&self) -> [u8; 8] {
+    pub fn get_registry_dump(&self) -> [u8; 12] {
         self.registers.clone()
     }
 
