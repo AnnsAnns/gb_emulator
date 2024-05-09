@@ -81,6 +81,19 @@ impl CPU {
                     _ => panic!("SET with {:?} not implemented", target),
                 }
             }
+            Instructions::SWAP(target) => {
+                match target {
+                    InstParam::Register8Bit(register) => self.swap_r8(*register),
+                    InstParam::Register16Bit(register) => {
+                        if *register == Register16Bit::HL {
+                            self.swap_hl()
+                        }else {
+                            panic!("SWAP with {:?} not implemented", target);
+                        }
+                    },
+                    _ => panic!("SWAP with {:?} not implemented", target),
+                }
+            }
             Instructions::LD(target, source) => {
                 match target {
                     InstParam::Register8Bit(target_register) => {

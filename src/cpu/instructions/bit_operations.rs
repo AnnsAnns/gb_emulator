@@ -1,5 +1,5 @@
 use crate::cpu::{
-    instructions::{ConditionCodes, FlagState, InstructionResult,Instructions,InstParam},
+    instructions::{ConditionCodes, FlagState, InstParam, InstructionResult, Instructions},
     registers::{Register16Bit, Register8Bit},
     CPU,
 };
@@ -124,6 +124,50 @@ impl CPU {
                 subtract: FlagState::NotAffected,
                 half_carry: FlagState::NotAffected,
                 carry: FlagState::NotAffected,
+            },
+        }
+    }
+
+    pub fn swap_r8(&mut self, target: Register8Bit)-> InstructionResult {
+        let register = self.get_8bit_register(target);
+        let value = register.rotate_left(4);
+
+        self.set_8bit_register(target, value);
+
+        InstructionResult {
+            cycles: 2,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: if value == 0 {
+                    FlagState::Set
+                }else {
+                    FlagState::NotAffected
+                },
+                subtract: FlagState::Unset,
+                half_carry: FlagState::Unset,
+                carry: FlagState::Unset,
+            },
+        }
+    }
+    pub fn swap_hl(&mut self)-> InstructionResult {
+        let memory_address = self.get_16bit_register(Register16Bit::HL);
+        let byte = self.memory.read_byte(memory_address);
+        let value = byte.rotate_left(4);
+
+        self.memory.write_byte(memory_address, value);
+
+        InstructionResult {
+            cycles: 4,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: if value == 0 {
+                    FlagState::Set
+                }else {
+                    FlagState::NotAffected
+                },
+                subtract: FlagState::Unset,
+                half_carry: FlagState::Unset,
+                carry: FlagState::Unset,
             },
         }
     }

@@ -90,6 +90,7 @@ pub enum Instructions {
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
     SET(InstParam,InstParam),
-
+    SWAP(InstParam),
+    
     NOP,
 }
