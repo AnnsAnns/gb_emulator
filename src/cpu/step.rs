@@ -1,4 +1,4 @@
-use super::{instructions::{InstParam, Instructions}, registers::{Register16Bit, Register8Bit}, CPU};
+use super::{instructions::{InstParam, Instructions}, registers::{self, Register16Bit, Register8Bit}, CPU};
 
 impl CPU {
     // Gets a 8-bit value from the HL register
@@ -22,6 +22,81 @@ impl CPU {
                     InstParam::Register8Bit(register) => self.add_a_r8(register.clone()),
                     InstParam::Number8Bit(number) => self.add_a_hl(),
                     _ => panic!("ADD with {:?} not implemented", param),
+                }
+            }
+            Instructions::BIT(bit,target) => {
+                
+                match target {
+                    InstParam::Register8Bit(register) => {
+                        match bit {
+                            InstParam::Unsigned3Bit(targeted_bit) => self.bit_u3_r8(*targeted_bit, *register),
+                            _ => panic!("BIT with {:?} not implemented", bit),
+                        }
+                    },
+                    InstParam::Register16Bit(register) => {
+                        if *register == Register16Bit::HL {
+                            match bit {
+                                InstParam::Unsigned3Bit(targeted_bit) => self.bit_u3_hl(*targeted_bit),
+                                _ => panic!("BIT with {:?} not implemented", bit),
+                            }
+                        }else {
+                            panic!("BIT with {:?} not implemented", target);
+                        }
+                    },
+                    _ => panic!("BIT with {:?} not implemented", target),
+                }
+            }
+            Instructions::RES(bit,target) => {
+                match bit {
+                    InstParam::Unsigned3Bit(targeted_bit) => {
+                        match target {
+                            InstParam::Register8Bit(register) => {
+                                self.res_u3_r8(*targeted_bit, *register)
+                            }
+                            InstParam::Register16Bit(register) => {
+                                if *register == Register16Bit::HL {
+                                    self.res_u3_hl(*targeted_bit)
+                                }else {
+                                    panic!("RES with {:?} not implemented", target);
+                                }
+                            }
+                            _ => panic!("RES with {:?} not implemented", target),
+                        }
+                    }
+                    _ => panic!("RES with {:?} not implemented", target),
+                }
+            }
+            Instructions::SET(bit,target) => {
+                match bit {
+                    InstParam::Unsigned3Bit(targeted_bit) => {
+                        match target {
+                            InstParam::Register8Bit(register) => {
+                                self.set_u3_r8(*targeted_bit, *register)
+                            }
+                            InstParam::Register16Bit(register) => {
+                                if *register == Register16Bit::HL {
+                                    self.set_u3_hl(*targeted_bit)
+                                }else {
+                                    panic!("SET with {:?} not implemented", target);
+                                }
+                            }
+                            _ => panic!("SET with {:?} not implemented", target),
+                        }
+                    }
+                    _ => panic!("SET with {:?} not implemented", target),
+                }
+            }
+            Instructions::SWAP(target) => {
+                match target {
+                    InstParam::Register8Bit(register) => self.swap_r8(*register),
+                    InstParam::Register16Bit(register) => {
+                        if *register == Register16Bit::HL {
+                            self.swap_hl()
+                        }else {
+                            panic!("SWAP with {:?} not implemented", target);
+                        }
+                    },
+                    _ => panic!("SWAP with {:?} not implemented", target),
                 }
             }
             Instructions::LD(target, source) => {
