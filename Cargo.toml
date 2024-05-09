@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 num_enum = "0.7.2"
 macroquad = "=0.4.5"
+
+[features]
+ci = []

@@ -1,6 +1,7 @@
+use std::{thread::sleep, time::Duration};
+
 use super::*;
 
-#[macroquad::test]
 async fn test_test() {
     // Inititalize General Settings
     let gb_settings = GbSettings { ..Default::default()};
