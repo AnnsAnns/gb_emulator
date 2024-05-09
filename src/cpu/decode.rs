@@ -97,7 +97,7 @@ impl CPU {
                 
                 }
             }
-            _ => return Err(format!("Unknown opcode {:#?}", opcode)),
+            _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
         })
     }
 }
