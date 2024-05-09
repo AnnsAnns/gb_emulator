@@ -19,6 +19,28 @@ impl CPU {
                     _ => panic!("ADD with {:?} not implemented", param),
                 }
             }
+            Instructions::BIT(bit,target) => {
+                
+                match target {
+                    InstParam::Register8Bit(register) => {
+                        match bit {
+                            InstParam::Unsigned3Bit(targeted_bit) => self.bit_u3_r8(*targeted_bit, *register),
+                            _ => panic!("BIT with {:?} not implemented", bit),
+                        }
+                    },
+                    InstParam::Register16Bit(register) => {
+                        if *register == Register16Bit::HL {
+                            match bit {
+                                InstParam::Unsigned3Bit(targeted_bit) => self.bit_u3_hl(*targeted_bit),
+                                _ => panic!("BIT with {:?} not implemented", bit),
+                            }
+                        }else {
+                            panic!("BIT with {:?} not implemented", target);
+                        }
+                    },
+                    _ => panic!("BIT with {:?} not implemented", target),
+                }
+            }
             Instructions::LD(target, source) => {
                 match target {
                     InstParam::Register8Bit(target_register) => {
