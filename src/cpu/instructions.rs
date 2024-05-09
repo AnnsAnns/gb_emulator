@@ -4,6 +4,7 @@ pub mod arithmetic_and_logic;
 pub mod misc;
 pub mod load;
 pub mod bit_operations;
+pub mod stack_operations;
 
 /// The Flag States after an instruction
 /// Set: The flag is set
