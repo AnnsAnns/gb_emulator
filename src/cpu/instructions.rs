@@ -84,13 +84,18 @@ pub enum Instructions {
     XOR(InstParam),
     OR(InstParam),
     CP(InstParam),
-    HALT,
+    INC(InstParam),
+    DEC(InstParam),
 
     LD(InstParam, InstParam),
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
     SET(InstParam,InstParam),
     SWAP(InstParam),
-    
+
+    RLCA,
+    RLA,
+    RRCA,
+    HALT,
     NOP,
 }

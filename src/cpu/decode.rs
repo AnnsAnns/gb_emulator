@@ -6,6 +6,7 @@ use super::{
 
 impl CPU {
     /// Decode the tail of an opcode to a 8 Bit Register
+    /// @warning This function only covers 0x4X till 0xBX!!!
     fn tail_to_inst_param(&self, tail: u8) -> InstParam {
         // The tail repeats every 8 values, e.g. 0x0 & 0x8 are the same (B)
         let tail = if tail > 0x7 { tail - 0x8 } else { tail };
@@ -45,6 +46,20 @@ impl CPU {
         Err("CB prefixed instructions not implemented".to_string())
     }
 
+    pub fn get_number_16bit(&self) -> InstParam {
+        InstParam::Number16Bit(
+            self.memory
+                .read_word(self.get_16bit_register(Register16Bit::PC) + 1),
+        )
+    }
+
+    pub fn get_number_8bit(&self) -> InstParam {
+        InstParam::Number8Bit(
+            self.memory
+                .read_byte(self.get_16bit_register(Register16Bit::PC) + 1),
+        )
+    }
+
     /// Decode normal 8bit instructions
     pub fn decode(&self, opcode: u8) -> Result<Instructions, String> {
         // Split the opcode into head and tail
@@ -56,14 +71,51 @@ impl CPU {
         Ok(match head {
             0x0 => match tail {
                 0x0 => Instructions::NOP,
-                _ => return Err(format!("Unknown opcode {:#?}", opcode)),
+                0x1 => Instructions::LD(
+                    InstParam::Register16Bit(Register16Bit::BC),
+                    self.get_number_16bit(),
+                ),
+                0x2 => Instructions::LD(
+                    InstParam::Register16Bit(Register16Bit::BC),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0x3 => Instructions::INC(InstParam::Register16Bit(Register16Bit::BC)),
+                0x4 => Instructions::INC(InstParam::Register8Bit(Register8Bit::B)),
+                0x5 => Instructions::DEC(InstParam::Register8Bit(Register8Bit::B)),
+                0x6 => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::B),
+                    self.get_number_8bit(),
+                ),
+                0x7 => Instructions::RLCA,
+                0x8 => Instructions::LD(
+                    self.get_number_16bit(),
+                    InstParam::Register16Bit(Register16Bit::SP),
+                ),
+                0x9 => Instructions::ADD(InstParam::Register16Bit(Register16Bit::BC)),
+                0xA => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Register16Bit(Register16Bit::BC),
+                ),
+                0xB => Instructions::DEC(InstParam::Register16Bit(Register16Bit::BC)),
+                0xC => Instructions::INC(InstParam::Register8Bit(Register8Bit::C)),
+                0xD => Instructions::DEC(InstParam::Register8Bit(Register8Bit::C)),
+                0xE => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::C),
+                    self.get_number_8bit(),
+                ),
+                0xF => Instructions::RRCA,
+                _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+            },
+            0x3 => match tail {
+                0xC => Instructions::INC(InstParam::Register8Bit(Register8Bit::A)),
+                _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
             },
             // LD instructions (& HALT)
             0x4..=0x7 => {
                 let value = self.tail_to_inst_param(tail);
                 let ld_target = match self.opcode_to_ld_target(opcode) {
                     Some(target) => target,
-                    None => return Err(format!("Unknown opcode {:#?}", opcode)),
+                    None => return Err(format!("Unknown opcode {:#02X}", opcode)),
                 };
 
                 // There is a single opcode within this range that is not a LD instruction
@@ -84,7 +136,7 @@ impl CPU {
                         0x9 => Instructions::SBC(value),
                         0xA => Instructions::XOR(value),
                         0xB => Instructions::CP(value),
-                        _ => return Err(format!("Unknown opcode {:#?}", opcode)),
+                        _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
                     }
                 } else {
                     match head {
@@ -92,9 +144,8 @@ impl CPU {
                         0x5 => Instructions::SUB(value),
                         0x6 => Instructions::AND(value),
                         0x7 => Instructions::OR(value),
-                        _ => return Err(format!("Unknown opcode {:#?}", opcode)),
+                        _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
                     }
-                
                 }
             }
             _ => return Err(format!("Unknown opcode {:#02X}", opcode)),

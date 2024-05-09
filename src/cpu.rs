@@ -6,7 +6,7 @@ use self::instructions::{InstructionResult, Instructions};
 
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
-mod registers;
+pub mod registers;
 pub mod instructions;
 pub mod decode;
 mod step;
@@ -45,16 +45,18 @@ impl CPU {
 
     /// Set the next instruction to be executed
     /// This is used for testing 
-    #[cfg(test)]
     pub fn set_instruction(&mut self, instruction: Instructions) {
         self.next_instruction = instruction;
     }
 
     /// Get the last step result
     /// This is used for testing purposes
-    #[cfg(test)]
     pub fn get_last_step_result(&self) -> InstructionResult {
         self.last_step_result.clone()
+    }
+
+    pub fn get_instruction(&self) -> &Instructions {
+        &self.next_instruction
     }
 
     #[cfg(test)]
