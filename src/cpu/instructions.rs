@@ -71,6 +71,7 @@ pub enum InstParam {
     Register16Bit(Register16Bit),
     ConditionCodes(InstructionCondition),
     Number8Bit(u8),
+    SignedNumber8Bit(i8),
     Number16Bit(u16),
     Offset,
     Unsigned3Bit(u8),
@@ -90,10 +91,14 @@ pub enum Instructions {
     DEC(InstParam),
 
     LD(InstParam, InstParam),
+
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
     SET(InstParam,InstParam),
     SWAP(InstParam),
+
+    PUSH(InstParam),
+    POP(InstParam),
 
     RLCA,
     RLA,

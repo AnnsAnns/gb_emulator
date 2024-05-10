@@ -110,24 +110,52 @@ impl CPU { //maybe move ld, dec and inc to their files?
         }
     }
     pub fn pop_af (&mut self) -> InstructionResult {
-
+        let memory_address = self.get_16bit_register(Register16Bit::SP);
+        let low_value = self.memory.read_byte(memory_address);
+        self.inc_sp();
+        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 4;
+        self.inc_sp();
+        let combined_value:u16 = high_value+(low_value as u16);
+        self.set_16bit_register(Register16Bit::AF, combined_value);
 
         InstructionResult {
-            cycles: 2,
+            cycles: 3,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: FlagState::NotAffected,
-                subtract: FlagState::NotAffected,
-                half_carry: FlagState::NotAffected,
-                carry: FlagState::NotAffected,
+                zero: if (low_value & 128) != 0 {
+                    FlagState::Set
+                }else {
+                    FlagState::Unset
+                },
+                subtract: if (low_value & 64) != 0 {
+                    FlagState::Set
+                }else {
+                    FlagState::Unset
+                },
+                half_carry: if (low_value & 32) != 0 {
+                    FlagState::Set
+                }else {
+                    FlagState::Unset
+                },
+                carry: if (low_value & 16) != 0 {
+                    FlagState::Set
+                }else {
+                    FlagState::Unset
+                },
             },
         }
     }
     pub fn pop_r16 (&mut self, target:Register16Bit) -> InstructionResult {
-
+        let memory_address = self.get_16bit_register(Register16Bit::SP);
+        let low_value = self.memory.read_byte(memory_address);
+        self.inc_sp();
+        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 4;
+        self.inc_sp();
+        let combined_value: u16 = high_value + (low_value as u16);
+        self.set_16bit_register(target, combined_value);
 
         InstructionResult {
-            cycles: 2,
+            cycles: 3,
             bytes: 1,
             condition_codes: ConditionCodes {
                 zero: FlagState::NotAffected,
@@ -138,10 +166,20 @@ impl CPU { //maybe move ld, dec and inc to their files?
         }
     }
     pub fn push_af (&mut self) -> InstructionResult {
-
+        self.dec_sp();
+        let value = self.get_8bit_register(Register8Bit::A);
+        let memory_address = self.get_16bit_register(Register16Bit::SP);
+        self.memory.write_byte(memory_address, value);
+        self.dec_sp();
+        let mut flags: u8 = 0;
+        if self.is_zero_flag_set() {flags += 128;}
+        if self.is_subtraction_flag_set() {flags += 64;}
+        if self.is_half_carry_flag_set() {flags += 32;}
+        if self.is_carry_flag_set() {flags += 16;}
+        self.memory.write_byte(memory_address-1, flags);
 
         InstructionResult {
-            cycles: 2,
+            cycles: 4,
             bytes: 1,
             condition_codes: ConditionCodes {
                 zero: FlagState::NotAffected,
@@ -152,10 +190,32 @@ impl CPU { //maybe move ld, dec and inc to their files?
         }
     }
     pub fn push_r16 (&mut self, target:Register16Bit) -> InstructionResult {
+        self.dec_sp();
+        let memory_address = self.get_16bit_register(Register16Bit::SP);
+        let value1;
+        let value2;
+        match target {
+            Register16Bit::BC => {
+                value1 = self.get_8bit_register(Register8Bit::B);
+                value2 = self.get_8bit_register(Register8Bit::C);
+            },
+            Register16Bit::DE => {
+                value1 = self.get_8bit_register(Register8Bit::D);
+                value2 = self.get_8bit_register(Register8Bit::E);
+            },
+            Register16Bit::HL => {
+                value1 = self.get_8bit_register(Register8Bit::H);
+                value2 = self.get_8bit_register(Register8Bit::L);
+            },
+            _ => panic!("push with {:?} not intended", target),
+        }
+        self.memory.write_byte(memory_address, value1);
+        self.dec_sp();
+        self.memory.write_byte(memory_address-1, value2);
 
 
         InstructionResult {
-            cycles: 2,
+            cycles: 4,
             bytes: 1,
             condition_codes: ConditionCodes {
                 zero: FlagState::NotAffected,

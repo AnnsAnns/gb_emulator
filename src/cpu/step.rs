@@ -24,12 +24,43 @@ impl CPU {
             Instructions::NOP => self.nop(),
             Instructions::ADD(param) => match param {
                 InstParam::Register8Bit(register) => self.add_a_r8(register.clone()),
+                InstParam::Register16Bit(register) =>  self.add_hl_r16(*register),
+                InstParam::SignedNumber8Bit(value) =>  self.add_sp_e8(*value),
                 _ => panic!("ADD with {:?} not implemented", param),
             },
             Instructions::INC(param) => match param {
                 InstParam::Register8Bit(register) => self.inc(register.clone()),
+                InstParam::Register16Bit(register) => match register {
+                    Register16Bit::SP => self.inc_sp(),
+                    _ => panic!("INC with {:?} not implemented", register),
+                    
+                }
                 _ => panic!("INC with {:?} not implemented", param),
             },
+            Instructions::DEC(param) => match param {
+                InstParam::Register16Bit(register) => match register {
+                    Register16Bit::SP => self.dec_sp(),
+                    _ => panic!("INC with {:?} not implemented", register),
+                    
+                }
+                _ => panic!("INC with {:?} not implemented", param),
+            },
+            Instructions::PUSH(target) => match target {
+                InstParam::Register16Bit(register) => {
+                    if *register == Register16Bit::AF {
+                        self.push_af()}
+                    else { self.push_r16(*register)}
+                }
+                _ => panic!("PUSH with {:?} not implemented", target),
+            }
+            Instructions::POP(target) => match target {
+                InstParam::Register16Bit(register) => {
+                    if *register == Register16Bit::AF {
+                        self.pop_af()}
+                    else { self.pop_r16(*register)}
+                }
+                _ => panic!("PUSH with {:?} not implemented", target),
+            }
             Instructions::BIT(bit, target) => match target {
                 InstParam::Register8Bit(register) => match bit {
                     InstParam::Unsigned3Bit(targeted_bit) => {
@@ -120,7 +151,14 @@ impl CPU {
                         }
                     }
                     InstParam::Register16Bit(target_register) => {
-                        if *target_register == Register16Bit::HL {
+                        if *target_register == Register16Bit::SP {
+                            match source {
+                                InstParam::Register16Bit(source_register) => self.ld_sp_hl(),
+                                InstParam::Number16Bit(source_address) => self.ld_sp_n16(*source_address),
+                                _ => panic!("LD with {:?} not implemented", source),
+                            }
+                        }
+                        else if *target_register == Register16Bit::HL {
                             //TODO what about HLI und HLD?
                             match source {
                                 InstParam::Register8Bit(source_register) => {
@@ -133,6 +171,7 @@ impl CPU {
                             }
                         } else {
                             match source {
+                                InstParam::SignedNumber8Bit(source_number) => self.ld_hl_sp_plus_e8(*source_number),
                                 InstParam::Number16Bit(source_number) => {
                                     self.ld_r16_n16(*target_register, *source_number)
                                 }
@@ -143,7 +182,11 @@ impl CPU {
                             }
                         }
                     }
-                    InstParam::Number16Bit(number) => self.ld_n16_a(*number),
+                    InstParam::Number16Bit(number) => match source {
+                        InstParam::Register8Bit(source_register) => self.ld_n16_a(*number),
+                        InstParam::Register16Bit(source_register) => self.ld_n16_sp(*number),
+                        _ => panic!("LD with n16 address of {:?} not implemented", source),
+                    }
                     _ => panic!("Handling of {:?} not implemented", target),
                 }
             }
