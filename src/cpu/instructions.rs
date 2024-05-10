@@ -1,6 +1,7 @@
 use super::registers::{Register16Bit, Register8Bit};
 
 pub mod arithmetic_and_logic;
+pub mod bit_shift;
 pub mod misc;
 pub mod load;
 
