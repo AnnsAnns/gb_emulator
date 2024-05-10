@@ -167,11 +167,11 @@ impl CPU {
                                 InstParam::Number8Bit(source_number) => {
                                     self.ld_hl_n8(*source_number)
                                 }
+                                InstParam::SignedNumber8Bit(source_number) => self.ld_hl_sp_plus_e8(*source_number),
                                 _ => panic!("Handling of {:?} not implemented", source),
                             }
                         } else {
                             match source {
-                                InstParam::SignedNumber8Bit(source_number) => self.ld_hl_sp_plus_e8(*source_number),
                                 InstParam::Number16Bit(source_number) => {
                                     self.ld_r16_n16(*target_register, *source_number)
                                 }

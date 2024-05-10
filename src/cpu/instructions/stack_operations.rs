@@ -113,7 +113,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
         let memory_address = self.get_16bit_register(Register16Bit::SP);
         let low_value = self.memory.read_byte(memory_address);
         self.inc_sp();
-        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 4;
+        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 8;
         self.inc_sp();
         let combined_value:u16 = high_value+(low_value as u16);
         self.set_16bit_register(Register16Bit::AF, combined_value);
@@ -149,7 +149,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
         let memory_address = self.get_16bit_register(Register16Bit::SP);
         let low_value = self.memory.read_byte(memory_address);
         self.inc_sp();
-        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 4;
+        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 8;
         self.inc_sp();
         let combined_value: u16 = high_value + (low_value as u16);
         self.set_16bit_register(target, combined_value);
@@ -227,3 +227,135 @@ impl CPU { //maybe move ld, dec and inc to their files?
     }
 }
 
+#[test]
+pub fn stack_ops_test() {
+    let mut cpu = CPU::new();
+    let mut registers;
+    // 1) ADD
+    cpu.set_16bit_register(Register16Bit::SP, 0xFF00);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 4;
+    expected_result.bytes = 2;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Set};
+    assert_correct_instruction_step(&mut cpu, Instructions::ADD(super::InstParam::SignedNumber8Bit(0xF0u8 as i8)), expected_result); //-16
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::NotAffected,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::ADD(super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::SP as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFEF0u16);
+
+    // 2) DEC und INC SP
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::SP as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFEF1u16);
+
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
+    
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::SP as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFEF0u16);
+
+    // 3) LD
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 3;
+    expected_result.bytes = 3;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::SP), super::InstParam::Number16Bit(0xFF00)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::SP as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFF00u16);
+    
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 5;
+    expected_result.bytes = 3;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Number16Bit(0xFF01), super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
+    
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 3;
+    expected_result.bytes = 2;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Set};
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::HL), super::InstParam::SignedNumber8Bit(0xF0u8 as i8)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::HL as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFEF0u16);
+
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::SP), super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::SP as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xFEF0u16);
+
+    // 4) PUSH and POP
+    cpu.set_16bit_register(Register16Bit::SP, 0xFF00);
+    cpu.set_16bit_register(Register16Bit::AF, 0xAAA0);
+    cpu.set_16bit_register(Register16Bit::DE, 0xA1A0);
+    // Push to Stack
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 4;
+    expected_result.bytes = 1;
+    cpu.set_zero_flag();
+    cpu.set_half_carry_flag();
+    assert_correct_instruction_step(&mut cpu, Instructions::PUSH(super::InstParam::Register16Bit(Register16Bit::AF)), expected_result);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 4;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::PUSH(super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
+    cpu.set_16bit_register(Register16Bit::AF, 0);
+    cpu.set_16bit_register(Register16Bit::DE, 0);
+    //Pop from stack
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 3;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::POP(super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
+
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 3;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Set,subtract:FlagState::Unset,half_carry:FlagState::Set,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::POP(super::InstParam::Register16Bit(Register16Bit::AF)), expected_result);
+    let mem = cpu.get_memory().read_byte(0xFEFF);
+    assert_eq!(mem, 0xAA);
+    let mem = cpu.get_memory().read_byte(0xFEFE);
+    assert_eq!(mem, 0xA0);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::AF as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xAAA0);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::DE as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0xA1A0);
+}
