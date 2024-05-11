@@ -189,7 +189,41 @@ impl CPU {
                     }
                     _ => panic!("Handling of {:?} not implemented", target),
                 }
-            }
+            },
+            Instructions::RET(condition) => match condition {
+                InstParam::ConditionCodes(cond) => self.ret_cc(true), //TODO what are the possible instruction conditions and how do I handle them
+                _ => self.ret(),
+            },
+            Instructions::RETI => self.reti(),
+            Instructions::CALL(target_or_condition, optional_target) => match target_or_condition {
+                InstParam::Number16Bit(target_addr) => self.call_n16(*target_addr),
+                InstParam::ConditionCodes(cond) => match optional_target {
+                    InstParam::Number16Bit(target_addr) => self.call_cc_n16(true,*target_addr), //TODO what are the possible instruction conditions and how do I handle them
+                    _ => panic!("CALL of {:?} not implemented", optional_target)
+                }
+                _ => panic!("CALL of {:?} not implemented", target_or_condition)
+            },
+            Instructions::JP(target_or_condition, optional_target) => match target_or_condition {
+                InstParam::Register16Bit(target_reg) => if *target_reg == Register16Bit::HL {self.jp_hl()} else {panic!("JP to {:?} not implemented", target_reg)},
+                InstParam::Number16Bit(target_addr) => self.jp_n16(*target_addr),
+                InstParam::ConditionCodes(cond) => match optional_target {
+                    InstParam::Number16Bit(target_addr) => self.jp_cc_n16(true,*target_addr), //TODO what are the possible instruction conditions and how do I handle them
+                    _ => panic!("CALL of {:?} not implemented", optional_target)
+                }
+                _ => panic!("CALL of {:?} not implemented", target_or_condition)
+            },
+            Instructions::JR(target_or_condition, optional_target) => match target_or_condition {
+                InstParam::SignedNumber8Bit(target_addr) => self.jr_n16(*target_addr),
+                InstParam::ConditionCodes(cond) => match optional_target {
+                    InstParam::SignedNumber8Bit(target_addr) => self.jr_cc_n16(true,*target_addr), //TODO what are the possible instruction conditions and how do I handle them
+                    _ => panic!("CALL of {:?} not implemented", optional_target)
+                }
+                _ => panic!("CALL of {:?} not implemented", target_or_condition)
+            },
+            Instructions::RST(vec) => match vec {
+                InstParam::Number8Bit(target_addr) => self.rst_vec(*target_addr),
+                _ => panic!("RST of {:?} not implemented", vec),
+            },
             _ => panic!("Handling of {:?} not implemented", self.next_instruction),
         };
 

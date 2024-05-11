@@ -20,6 +20,20 @@ impl CPU {
             },
         }
     }
+    /// activates the IME flag, enabling Interrupts
+    pub fn ei(&mut self) -> InstructionResult {
+        todo!();
+        InstructionResult {
+            cycles: 1,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
 }
 
 #[test]
