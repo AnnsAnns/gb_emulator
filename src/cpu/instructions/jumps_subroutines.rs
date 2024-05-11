@@ -24,7 +24,7 @@ impl CPU {
             },
         }
     }
-    /// loads address in target in PC, realising a jump
+    /// loads address in target in PC, realising a jump. Currently jumps to the adress and then increases it by the bytes of the JP not sure if intended to do that after the jump
     pub fn jp_n16(&mut self, target: u16) -> InstructionResult {
         
         self.set_16bit_register(Register16Bit::PC, target);
@@ -62,7 +62,19 @@ impl CPU {
         pub fn call_n16(&mut self, target: u16) -> InstructionResult {
             let value = self.get_16bit_register(Register16Bit::PC);
             self.set_16bit_register(Register16Bit::PC, value+3);
-            self.push_r16(Register16Bit::PC);
+
+            //push pc to stack
+            self.dec_sp();
+            let memory_address = self.get_16bit_register(Register16Bit::SP);
+            let pc = self.get_16bit_register(Register16Bit::PC);
+            let value1:u8 = (pc >> 8) as u8;
+            let value2:u8 = pc as u8;
+
+            self.memory.write_byte(memory_address, value1);
+            self.dec_sp();
+            self.memory.write_byte(memory_address-1, value2);
+
+
             self.jp_n16(target);
 
             InstructionResult {
@@ -79,10 +91,7 @@ impl CPU {
         /// if condition cc is true: pushes the next instructions address on the stack, then does a jp_n16
         pub fn call_cc_n16(&mut self, cc: bool, target: u16) -> InstructionResult {
             if cc {
-                let value = self.get_16bit_register(Register16Bit::PC);
-                self.set_16bit_register(Register16Bit::PC, value+3);
-                self.push_r16(Register16Bit::PC);
-                self.jp_n16(target);
+                self.call_n16(target);
             }
 
             InstructionResult {
@@ -161,7 +170,7 @@ impl CPU {
         }
         /// relativ jump to the address of the next instruction+signed_offset(8bit), signed_offset has to be in range -128 to 127 
         pub fn jr_n16(&mut self,signed_offset: i8) -> InstructionResult {
-            let next_address = self.get_16bit_register(Register16Bit::PC) + 2;
+            let next_address = self.get_16bit_register(Register16Bit::PC);
             let jump_address = (next_address as i16 + signed_offset as i16) as u16;
             self.jp_n16(jump_address);
 
@@ -194,3 +203,67 @@ impl CPU {
             }
         }
 }
+
+#[test]
+pub fn jumps_subroutines_test() {
+    let mut cpu = CPU::new();
+    let mut registers;
+    // 1) CALL and JP
+    cpu.set_16bit_register(Register16Bit::SP, 0xF000);
+    cpu.set_16bit_register(Register16Bit::PC, 0x000A);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 6;
+    expected_result.bytes = 3;
+    assert_correct_instruction_step(&mut cpu, Instructions::CALL(super::InstParam::Number16Bit(0x00A0), super::InstParam::Number16Bit(0x0A00)), expected_result);
+
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::PC as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0x00A3);
+
+    cpu.set_16bit_register(Register16Bit::HL, 0x0A00);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 1;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::JP(super::InstParam::Register16Bit(Register16Bit::HL), super::InstParam::Number16Bit(0x000A)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::PC as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0x0A01);
+    // 2) RET
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 4;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::RET(super::InstParam::Offset), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::PC as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0x000E);
+    // 3) JR
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 3;
+    expected_result.bytes = 2;
+    let before = cpu.get_16bit_register(Register16Bit::PC);
+    assert_eq!(before, 0x000E);
+    assert_correct_instruction_step(&mut cpu, Instructions::JR(super::InstParam::SignedNumber8Bit(5),super::InstParam::SignedNumber8Bit(10)), expected_result);
+    let result = cpu.get_16bit_register(Register16Bit::PC);
+    assert_eq!(result, before+7);
+    // 4) RST
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 4;
+    expected_result.bytes = 1;
+    assert_correct_instruction_step(&mut cpu, Instructions::RST(super::InstParam::Number8Bit(0x18)), expected_result);
+    registers = cpu.get_registry_dump();
+    let register_value = Register16Bit::PC as usize;
+    let high = registers[register_value.clone()] as u16;
+    let low = registers[register_value + 1] as u16;
+    let result = (high << 8) | low;
+    assert_eq!(result, 0x19);
+}
+    

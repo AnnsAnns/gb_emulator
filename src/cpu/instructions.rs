@@ -62,6 +62,10 @@ impl InstructionResult {
 pub enum InstructionCondition {
     Zero,
     NotZero,
+    Subtract,
+    NotSubtract,
+    Halfcarry,
+    NotHalfcarry,
     Carry,
     NotCarry,
 }

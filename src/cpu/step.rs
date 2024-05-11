@@ -1,5 +1,5 @@
 use super::{
-    instructions::{InstParam, Instructions},
+    instructions::{InstParam, InstructionCondition, Instructions},
     registers::{self, Register16Bit, Register8Bit},
     CPU,
 };
@@ -191,14 +191,14 @@ impl CPU {
                 }
             },
             Instructions::RET(condition) => match condition {
-                InstParam::ConditionCodes(cond) => self.ret_cc(true), //TODO what are the possible instruction conditions and how do I handle them
+                InstParam::ConditionCodes(cond) => self.ret_cc(self.check_condition(cond)),
                 _ => self.ret(),
             },
             Instructions::RETI => self.reti(),
             Instructions::CALL(target_or_condition, optional_target) => match target_or_condition {
                 InstParam::Number16Bit(target_addr) => self.call_n16(*target_addr),
                 InstParam::ConditionCodes(cond) => match optional_target {
-                    InstParam::Number16Bit(target_addr) => self.call_cc_n16(true,*target_addr), //TODO what are the possible instruction conditions and how do I handle them
+                    InstParam::Number16Bit(target_addr) => self.call_cc_n16(self.check_condition(cond),*target_addr),
                     _ => panic!("CALL of {:?} not implemented", optional_target)
                 }
                 _ => panic!("CALL of {:?} not implemented", target_or_condition)
@@ -207,7 +207,7 @@ impl CPU {
                 InstParam::Register16Bit(target_reg) => if *target_reg == Register16Bit::HL {self.jp_hl()} else {panic!("JP to {:?} not implemented", target_reg)},
                 InstParam::Number16Bit(target_addr) => self.jp_n16(*target_addr),
                 InstParam::ConditionCodes(cond) => match optional_target {
-                    InstParam::Number16Bit(target_addr) => self.jp_cc_n16(true,*target_addr), //TODO what are the possible instruction conditions and how do I handle them
+                    InstParam::Number16Bit(target_addr) => self.jp_cc_n16(self.check_condition(cond),*target_addr),
                     _ => panic!("CALL of {:?} not implemented", optional_target)
                 }
                 _ => panic!("CALL of {:?} not implemented", target_or_condition)
@@ -215,7 +215,7 @@ impl CPU {
             Instructions::JR(target_or_condition, optional_target) => match target_or_condition {
                 InstParam::SignedNumber8Bit(target_addr) => self.jr_n16(*target_addr),
                 InstParam::ConditionCodes(cond) => match optional_target {
-                    InstParam::SignedNumber8Bit(target_addr) => self.jr_cc_n16(true,*target_addr), //TODO what are the possible instruction conditions and how do I handle them
+                    InstParam::SignedNumber8Bit(target_addr) => self.jr_cc_n16(self.check_condition(cond),*target_addr),
                     _ => panic!("CALL of {:?} not implemented", optional_target)
                 }
                 _ => panic!("CALL of {:?} not implemented", target_or_condition)
@@ -233,5 +233,17 @@ impl CPU {
             Register16Bit::PC,
             self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
         );
+    }
+    fn check_condition(&self, cond: &InstructionCondition) -> bool {
+        match cond {
+            InstructionCondition::Zero => if self.is_zero_flag_set() {true} else {false},
+            InstructionCondition::NotZero => if self.is_zero_flag_set() {false} else {true},
+            InstructionCondition::Subtract => if self.is_subtraction_flag_set() {true} else {false},
+            InstructionCondition::NotSubtract => if self.is_subtraction_flag_set() {false} else {true},
+            InstructionCondition::Halfcarry => if self.is_half_carry_flag_set() {true} else {false},
+            InstructionCondition::NotHalfcarry => if self.is_half_carry_flag_set() {false} else {true},
+            InstructionCondition::Carry => if self.is_carry_flag_set() {true} else {false},
+            InstructionCondition::NotCarry => if self.is_carry_flag_set() {false} else {true},
+        }
     }
 }
