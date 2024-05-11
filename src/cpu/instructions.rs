@@ -6,6 +6,7 @@ pub mod misc;
 pub mod load;
 pub mod bit_operations;
 pub mod stack_operations;
+pub mod jumps_subroutines;
 
 /// The Flag States after an instruction
 /// Set: The flag is set
@@ -61,6 +62,10 @@ impl InstructionResult {
 pub enum InstructionCondition {
     Zero,
     NotZero,
+    Subtract,
+    NotSubtract,
+    Halfcarry,
+    NotHalfcarry,
     Carry,
     NotCarry,
 }
@@ -99,6 +104,13 @@ pub enum Instructions {
 
     PUSH(InstParam),
     POP(InstParam),
+
+    CALL(InstParam, InstParam),
+    JP(InstParam, InstParam),
+    JR(InstParam, InstParam),
+    RET(InstParam),
+    RETI,
+    RST(InstParam),
 
     RLCA,
     RLA,

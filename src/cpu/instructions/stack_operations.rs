@@ -8,6 +8,7 @@ use crate::cpu::{
 use crate::test_helpers::{assert_correct_instruction_step};
 
 impl CPU { //maybe move ld, dec and inc to their files?
+    /// decrements sp
     pub fn dec_sp(&mut self) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
         let value = sp-1;
@@ -24,6 +25,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// increments sp
     pub fn inc_sp(&mut self) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
         let value = sp+1;
@@ -40,6 +42,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// loads value n16 and into sp
     pub fn ld_sp_n16(&mut self, value:u16) -> InstructionResult {
 
         self.set_16bit_register(Register16Bit::SP, value);
@@ -54,6 +57,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// loads sp into memory at address n16 and n16+1
     pub fn ld_n16_sp(&mut self, target:u16) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
         let value = (sp & 0xFF) as u8;
@@ -92,7 +96,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
-    // Load register  HL into register SP
+    /// Load register  HL into register SP
     pub fn ld_sp_hl (&mut self) -> InstructionResult {
         let value = self.get_16bit_register(Register16Bit::HL);
 
@@ -109,6 +113,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// Pops 16bit-register AF from the stack, incrementing the stack pointer twice during this.
     pub fn pop_af (&mut self) -> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::SP);
         let low_value = self.memory.read_byte(memory_address);
@@ -145,6 +150,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// Pops 16bit-register target from the stack back into the register, incrementing the stack pointer twice during this.
     pub fn pop_r16 (&mut self, target:Register16Bit) -> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::SP);
         let low_value = self.memory.read_byte(memory_address);
@@ -165,6 +171,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// Pushes 16bit-register AF on the stack, decrementing the stack pointer twice during this.
     pub fn push_af (&mut self) -> InstructionResult {
         self.dec_sp();
         let value = self.get_8bit_register(Register8Bit::A);
@@ -189,6 +196,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
         }
     }
+    /// Pushes 16bit-register target on the stack, decrementing the stack pointer twice during this.
     pub fn push_r16 (&mut self, target:Register16Bit) -> InstructionResult {
         self.dec_sp();
         let memory_address = self.get_16bit_register(Register16Bit::SP);
