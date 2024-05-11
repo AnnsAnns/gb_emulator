@@ -5,6 +5,8 @@ pub mod bit_shift;
 pub mod misc;
 pub mod load;
 pub mod bit_operations;
+pub mod stack_operations;
+pub mod jumps_subroutines;
 
 /// The Flag States after an instruction
 /// Set: The flag is set
@@ -60,6 +62,10 @@ impl InstructionResult {
 pub enum InstructionCondition {
     Zero,
     NotZero,
+    Subtract,
+    NotSubtract,
+    Halfcarry,
+    NotHalfcarry,
     Carry,
     NotCarry,
 }
@@ -70,6 +76,7 @@ pub enum InstParam {
     Register16Bit(Register16Bit),
     ConditionCodes(InstructionCondition),
     Number8Bit(u8),
+    SignedNumber8Bit(i8),
     Number16Bit(u16),
     Offset,
     Unsigned3Bit(u8),
@@ -89,10 +96,21 @@ pub enum Instructions {
     DEC(InstParam),
 
     LD(InstParam, InstParam),
+
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
     SET(InstParam,InstParam),
     SWAP(InstParam),
+
+    PUSH(InstParam),
+    POP(InstParam),
+
+    CALL(InstParam, InstParam),
+    JP(InstParam, InstParam),
+    JR(InstParam, InstParam),
+    RET(InstParam),
+    RETI,
+    RST(InstParam),
 
     RLCA,
     RLA,

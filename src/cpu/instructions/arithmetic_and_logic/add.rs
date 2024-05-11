@@ -144,7 +144,7 @@ impl CPU {
             cycles: 4,
             bytes: 2,
             condition_codes: ConditionCodes {
-                zero: FlagState::NotAffected,
+                zero: FlagState::Unset,
                 subtract: FlagState::Unset,
                 half_carry: if (sp & 0xF) + (value as u16 & 0xF) > 0xF {
                     FlagState::Set
