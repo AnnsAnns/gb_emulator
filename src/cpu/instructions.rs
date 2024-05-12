@@ -68,6 +68,7 @@ pub enum InstructionCondition {
     NotHalfcarry,
     Carry,
     NotCarry,
+    SkipConditionCodes,
 }
 
 #[derive(Debug, PartialEq)]
