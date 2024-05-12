@@ -58,7 +58,7 @@ impl InstructionResult {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum InstructionCondition {
     Zero,
     NotZero,
@@ -71,7 +71,7 @@ pub enum InstructionCondition {
     SkipConditionCodes,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum InstParam {
     Register8Bit(Register8Bit),
     Register16Bit(Register16Bit),
@@ -83,7 +83,7 @@ pub enum InstParam {
     Unsigned3Bit(u8),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Instructions {
     ADD(InstParam),
     ADC(InstParam),

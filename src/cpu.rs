@@ -64,7 +64,10 @@ impl CPU {
         self.registers.clone()
     }
 
-    #[cfg(test)]
+
+    /// Gets the full memory of the CPU
+    /// This is used for testing purposes
+    /// @warning This is a very expensive operation
     pub fn get_memory(&self) -> Memory {
         self.memory.clone()
     }

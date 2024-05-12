@@ -11,11 +11,13 @@ impl CPU {
             .read_byte(self.get_16bit_register(Register16Bit::HL))
     }
 
-    pub fn prepare_and_decode_next_instruction(&mut self) {
-        println!("🖱️ Current PC: {:#06X}", self.get_16bit_register(Register16Bit::PC));
+    pub fn prepare_and_decode_next_instruction(&mut self) -> Result<Instructions, String> {
+        //println!("🖱️ Current PC: {:#06X}", self.get_16bit_register(Register16Bit::PC));
         let opcode = self.get_next_opcode();
-        println!("🤖 Next opcode: {:#02X}", opcode);
-        self.next_instruction = self.decode(opcode).unwrap();
+        //println!("🤖 Next opcode: {:#02X}", opcode);
+        let instruction = self.decode(opcode)?;
+        self.next_instruction = instruction.clone();
+        Ok(instruction)
     }
 
     /// Does a step (calls function and sets last_step_result),

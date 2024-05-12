@@ -26,7 +26,6 @@ pub enum Register16Bit {
     PC = 10,
 }
 
-
 impl CPU {
     /// Get an 8-bit register (e.g. A or F)
     pub fn get_8bit_register(&self, register: Register8Bit) -> u8 {
