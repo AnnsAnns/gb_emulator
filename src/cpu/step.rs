@@ -49,6 +49,18 @@ impl CPU {
                 }
                 _ => return Err(format!("INC with {:?} not implemented", param)),
             },
+            Instructions::SUB(param) => match param {
+                InstParam::Register8Bit(register) => self.sub_and_subc(self.get_8bit_register(*register), 1, 1, false),
+                InstParam::Register16Bit(_) => self.sub_and_subc(self.get_n8_from_hl(), 2, 1, false),
+                InstParam::Number8Bit(value) => self.sub_and_subc(*value, 2, 2, false),
+                _ => return Err(format!("SUB with {:?} not implemented", param)),
+            },
+            Instructions::SBC(param) => match param {
+                InstParam::Register8Bit(register) => self.sub_and_subc(self.get_8bit_register(*register), 1, 1, true),
+                InstParam::Register16Bit(_) => self.sub_and_subc(self.get_n8_from_hl(), 2, 1, true),
+                InstParam::Number8Bit(value) => self.sub_and_subc(*value, 2, 2, true),
+                _ => return Err(format!("SBC with {:?} not implemented", param)),
+            },
             Instructions::OR(param) => match param {
                 InstParam::Register8Bit(register) => self.or(self.get_8bit_register(*register), 1, 1),
                 InstParam::Register16Bit(_) => self.or(self.get_n8_from_hl(), 2, 1),
