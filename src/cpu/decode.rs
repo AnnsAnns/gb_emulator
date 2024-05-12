@@ -70,6 +70,9 @@ impl CPU {
             0x3 => {
                 match tail {
                     0x0 => Instructions::JR(InstParam::ConditionCodes(InstructionCondition::NotCarry), InstParam::Number8Bit(self.get_8bit_from_pc())),
+                    0x1 => Instructions::LD(InstParam::Register16Bit(Register16Bit::SP), InstParam::Number16Bit(self.get_16bit_from_pc())),
+                    0x2 => Instructions::LDHLDA, // LD (HL-), A
+                    0x3 => Instructions::INC(InstParam::Register16Bit(Register16Bit::SP)),
                     0xC => Instructions::INC(InstParam::Register8Bit(Register8Bit::A)),
                     _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
                 }

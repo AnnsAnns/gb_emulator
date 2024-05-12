@@ -59,12 +59,9 @@ async fn main() {
         root_ui().label(None, format!("SP: {:#06X}", sp).as_str());
         let instruction = cpu.prepare_and_decode_next_instruction();
         root_ui().label(None, format!("Instruction: {:?}", instruction).as_str());
-        if instruction.is_ok() {
-            cpu.step();
-        }
         root_ui().label(
             None,
-            format!("Last Step Result: {:?}", cpu.get_last_step_result()).as_str(),
+            format!("Last Step Result: {:?}", cpu.step()).as_str(),
         );
 
         root_ui().label(
