@@ -104,10 +104,10 @@ impl CPU {
                     }
                 } else {
                     match head {
-                        0x4 => Instructions::ADD(value),
-                        0x5 => Instructions::SUB(value),
-                        0x6 => Instructions::AND(value),
-                        0x7 => Instructions::OR(value),
+                        0x8 => Instructions::ADD(value),
+                        0x9 => Instructions::SUB(value),
+                        0xA => Instructions::AND(value),
+                        0xB => Instructions::OR(value),
                         _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
                     }
                 

@@ -113,7 +113,7 @@ async fn main() {
 
         next_frame().await;
 
-        sleep(Duration::from_millis(2000));
+        sleep(Duration::from_millis(1000));
     }
 }
 
