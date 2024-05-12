@@ -1,11 +1,14 @@
 use crate::cpu::{
-    instructions::{ConditionCodes, FlagState, InstParam, InstructionResult, Instructions},
+    instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
 };
 
 #[cfg(test)]
-use crate::test_helpers::{assert_correct_instruction_step};
+use crate::cpu::instructions::Instructions;
+
+#[cfg(test)]
+use crate::test_helpers::assert_correct_instruction_step;
 
 impl CPU { //maybe move ld, dec and inc to their files?
     /// decrements sp

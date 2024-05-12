@@ -3,7 +3,10 @@ use crate::cpu::CPU;
 #[cfg(test)]
 use crate::test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step};
 
-use super::{ConditionCodes, FlagState, InstructionResult, Instructions};
+use super::{ConditionCodes, FlagState, InstructionResult};
+
+#[cfg(test)]
+use crate::cpu::instructions::Instructions;
 
 impl CPU {
     /// NOP instruction
