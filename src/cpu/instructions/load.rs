@@ -282,7 +282,7 @@ impl CPU {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
 
         self.memory.write_byte(memory_address, value);
-        self.set_16bit_register(Register16Bit::HL, memory_address-1u16);
+        self.set_16bit_register(Register16Bit::HL, memory_address.wrapping_sub(1));
 
         InstructionResult {
             cycles: 2,
@@ -302,7 +302,7 @@ impl CPU {
         let value = self.memory.read_byte(memory_address);
 
         self.set_8bit_register(Register8Bit::A, value);
-        self.set_16bit_register(Register16Bit::HL, memory_address-1u16);
+        self.set_16bit_register(Register16Bit::HL, memory_address.wrapping_sub(1));
 
         InstructionResult {
             cycles: 2,
