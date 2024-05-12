@@ -49,6 +49,12 @@ impl CPU {
                 }
                 _ => panic!("INC with {:?} not implemented", param),
             },
+            Instructions::OR(param) => match param {
+                InstParam::Register8Bit(register) => self.or(self.get_8bit_register(*register), 1, 1),
+                InstParam::Register16Bit(_) => self.or(self.get_n8_from_hl(), 2, 1),
+                InstParam::Number8Bit(value) => self.or(*value, 2, 2),
+                _ => panic!("OR with {:?} not implemented", param),
+            },
             Instructions::PUSH(target) => match target {
                 InstParam::Register16Bit(register) => {
                     if *register == Register16Bit::AF {
