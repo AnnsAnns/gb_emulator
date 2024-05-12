@@ -11,9 +11,13 @@ impl CPU {
             .read_byte(self.get_16bit_register(Register16Bit::HL))
     }
 
-    pub fn prepare_and_decode_next_instruction(&mut self) {
+    pub fn prepare_and_decode_next_instruction(&mut self) -> Result<Instructions, String> {
+        //println!("🖱️ Current PC: {:#06X}", self.get_16bit_register(Register16Bit::PC));
         let opcode = self.get_next_opcode();
-        self.next_instruction = self.decode(opcode).unwrap();
+        //println!("🤖 Next opcode: {:#02X}", opcode);
+        let instruction = self.decode(opcode)?;
+        self.next_instruction = instruction.clone();
+        Ok(instruction)
     }
 
     /// Does a step (calls function and sets last_step_result),
@@ -234,6 +238,7 @@ impl CPU {
             self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
         );
     }
+
     fn check_condition(&self, cond: &InstructionCondition) -> bool {
         match cond {
             InstructionCondition::Zero => if self.is_zero_flag_set() {true} else {false},
@@ -244,6 +249,7 @@ impl CPU {
             InstructionCondition::NotHalfcarry => if self.is_half_carry_flag_set() {false} else {true},
             InstructionCondition::Carry => if self.is_carry_flag_set() {true} else {false},
             InstructionCondition::NotCarry => if self.is_carry_flag_set() {false} else {true},
+            InstructionCondition::SkipConditionCodes => true,
         }
     }
 }
