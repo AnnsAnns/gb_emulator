@@ -70,6 +70,9 @@ impl CPU {
             0x3 => {
                 match tail {
                     0x0 => Instructions::JR(InstParam::ConditionCodes(InstructionCondition::NotCarry), InstParam::Number8Bit(self.get_8bit_from_pc())),
+                    0x1 => Instructions::LD(InstParam::Register16Bit(Register16Bit::SP), InstParam::Number16Bit(self.get_16bit_from_pc())),
+                    0x2 => Instructions::LDHLDA, // LD (HL-), A
+                    0x3 => Instructions::INC(InstParam::Register16Bit(Register16Bit::SP)),
                     0xC => Instructions::INC(InstParam::Register8Bit(Register8Bit::A)),
                     _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
                 }
@@ -104,10 +107,10 @@ impl CPU {
                     }
                 } else {
                     match head {
-                        0x4 => Instructions::ADD(value),
-                        0x5 => Instructions::SUB(value),
-                        0x6 => Instructions::AND(value),
-                        0x7 => Instructions::OR(value),
+                        0x8 => Instructions::ADD(value),
+                        0x9 => Instructions::SUB(value),
+                        0xA => Instructions::AND(value),
+                        0xB => Instructions::OR(value),
                         _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
                     }
                 

@@ -27,7 +27,7 @@ async fn main() {
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
     let mut cpu = cpu::CPU::new();
-    cpu.load_from_file("./test_roms/cpu_instrs.gb");
+    cpu.load_from_file("./2048.gb");
 
     #[rustfmt::skip]
     let test_tile: [u8; 16] = [
@@ -59,12 +59,9 @@ async fn main() {
         root_ui().label(None, format!("SP: {:#06X}", sp).as_str());
         let instruction = cpu.prepare_and_decode_next_instruction();
         root_ui().label(None, format!("Instruction: {:?}", instruction).as_str());
-        if instruction.is_ok() {
-            cpu.step();
-        }
         root_ui().label(
             None,
-            format!("Last Step Result: {:?}", cpu.get_last_step_result()).as_str(),
+            format!("Last Step Result: {:?}", cpu.step()).as_str(),
         );
 
         root_ui().label(
@@ -113,7 +110,7 @@ async fn main() {
 
         next_frame().await;
 
-        sleep(Duration::from_millis(2000));
+        sleep(Duration::from_millis(50));
     }
 }
 
