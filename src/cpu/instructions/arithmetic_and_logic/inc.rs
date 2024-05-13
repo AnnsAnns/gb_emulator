@@ -16,13 +16,13 @@ impl CPU {
             },
         }
     }
-    /// incements the 16bit_register register
+    /// increments the 16bit_register register, wraps on overflow
     pub fn inc_r16(&mut self, register: Register16Bit) -> InstructionResult {
-        let value = self.get_16bit_register(register)+1;
+        let (value,overflow) = self.get_16bit_register(register).overflowing_add(1);
         self.set_16bit_register(register, value);
 
         InstructionResult {
-            cycles: 1,
+            cycles: 2,
             bytes: 1,
             condition_codes: ConditionCodes {
                 zero: FlagState::NotAffected,

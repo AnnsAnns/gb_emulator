@@ -36,7 +36,7 @@ impl CPU {
                 InstParam::Register8Bit(register) => self.inc(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.inc_sp(),
-                    _ => return Err(format!("INC with {:?} not implemented", register)),
+                    _ => self.inc_r16(register.clone()),
                     
                 }
                 _ => return Err(format!("INC with {:?} not implemented", param)),
@@ -44,7 +44,7 @@ impl CPU {
             Instructions::DEC(param) => match param {
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.dec_sp(),
-                    _ => return Err(format!("INC with {:?} not implemented", register)),
+                    _ => self.dec_r16(register.clone()),
                     
                 }
                 _ => return Err(format!("INC with {:?} not implemented", param)),
