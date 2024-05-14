@@ -29,25 +29,18 @@ impl Memory {
 
 #[cfg(test)]
 pub mod test_helper {
-    use std::{fs, num::ParseIntError};
+
+    use std::fs;
+
     use crate::memory::Memory;
 
     pub fn file_to_memory(memory: &mut Memory, offset: u16, file_path: &str) {
-        let contents = fs::read_to_string(file_path).expect("Could not read file!");
+        let data: Vec<u8> = fs::read(file_path).expect("Could not read file");
 
-        let memory_content = decode_hex(&contents).expect("Error while decoding hex file");
-
-        for (pos, byte) in memory_content.iter().enumerate() {
+        for (pos, byte) in data.iter().enumerate() {
             memory.write_byte(offset + pos as u16, *byte);
             //let wrote = memory.read_byte(offset + pos as u16);
             //println!("{:#X}", wrote);
         }
-    }
-
-    pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
-        (0..s.len() - 1)
-            .step_by(2)
-            .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
-            .collect()
     }
 }
