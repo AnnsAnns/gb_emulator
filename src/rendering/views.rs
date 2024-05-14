@@ -76,3 +76,21 @@ pub fn draw_gb_display(offset_x: f32, offset_y: f32, image: &Image, gb_settings:
         BLACK,
     );
 }
+
+pub fn draw_background_viewer(offset_x: f32, offset_y: f32, image: &Image, gb_settings: &GbSettings) {
+    let tex2d_params = DrawTextureParams {
+        dest_size: Option::Some(Vec2::new(
+            image.width() as f32 * gb_settings.scaling,
+            image.height() as f32 * gb_settings.scaling,
+        )),
+        source: None,
+        rotation: 0.,
+        flip_x: false,
+        flip_y: false,
+        pivot: None,
+    };
+
+    let tex2d = Texture2D::from_image(&image);
+    tex2d.set_filter(FilterMode::Nearest);
+    draw_texture_ex(&tex2d, offset_x, offset_y, WHITE, tex2d_params);
+}
