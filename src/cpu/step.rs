@@ -69,8 +69,8 @@ impl CPU {
             },
             Instructions::LDAHLD => self.ld_a_hld(),
             Instructions::LDHLDA => self.ld_hld_a(),
-            Instructions::LDAHLD => self.ld_a_hld(),
-            Instructions::LDHLDA => self.ld_hli_a(),
+            Instructions::LDAHLI => self.ld_a_hli(),
+            Instructions::LDHLIA => self.ld_hli_a(),
             Instructions::PUSH(target) => match target {
                 InstParam::Register16Bit(register) => {
                     if *register == Register16Bit::AF {
@@ -145,6 +145,28 @@ impl CPU {
                 }
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
+            Instructions::LDH(target, source) => {
+                match target {
+                    InstParam::Number16Bit(source_number) => self.ldh_n16_a(*source_number),
+                    InstParam::Register8Bit(target_register) => {
+                        if *target_register == Register8Bit::A {
+                            match source {
+                                InstParam::Number16Bit(source_number) => {
+                                    self.ldh_a_n16(*source_number)
+                                }
+                                InstParam::Register8Bit(source_register) => {
+                                    if *source_register == Register8Bit::C {self.ldh_a_c()} 
+                                    else {return Err(format!("Handling of {:?} not implemented", source_register))}
+                                }
+                                _ => return Err(format!("Handling of {:?} not implemented", source)),
+                            }
+                        }
+                        else if *target_register == Register8Bit::C {self.ldh_c_a()}
+                        else {return Err(format!("Handling of {:?} not implemented", source))}
+                    }
+                    _ => return Err(format!("Handling of {:?} not implemented", source)),
+                }
+            }
             Instructions::LD(target, source) => {
                 match target {
                     InstParam::Register8Bit(target_register) => {

@@ -97,6 +97,7 @@ pub enum Instructions {
     DEC(InstParam),
 
     LD(InstParam, InstParam),
+    LDH(InstParam, InstParam),
     LDHLIA, // LD (HL+), A
     LDAHLI, // LD A, (HL+)
     LDHLDA, // LD (HL-), A
