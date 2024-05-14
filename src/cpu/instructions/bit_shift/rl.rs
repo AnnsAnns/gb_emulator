@@ -4,9 +4,6 @@ use crate::cpu::{
     CPU,
 };
 
-///Bitmask to controll if a 1 or 0 is shifted into carrybit
-const SHIFT_INTO_CARRY_L: u8 = 0b1000_0000;
-
 impl CPU {
     fn rl_u8(
         &mut self,
@@ -14,7 +11,8 @@ impl CPU {
         throug_carry: bool,
         set_zero: bool,
     ) -> (ConditionCodes, u8) {
-        let new_carry = value & SHIFT_INTO_CARRY_L;
+        let shift_into_carry_l: u8 = 0b1000_0000;
+        let new_carry = value & shift_into_carry_l;
         let shift_into_result = if throug_carry && self.is_carry_flag_set()
             || !throug_carry && new_carry != 0
         {
@@ -56,11 +54,10 @@ impl CPU {
 
     fn rl_x_hl(
         &mut self,
-        target: Register16Bit,
         through_carry: bool,
         set_zero: bool,
     ) -> ConditionCodes {
-        let mem_addr = self.get_16bit_register(target);
+        let mem_addr = self.get_16bit_register(Register16Bit::HL);
         let value = self.memory.read_byte(mem_addr);
         let (condition_codes_result, result) = self.rl_u8(value, through_carry, set_zero);
         self.memory.write_byte(mem_addr, result);
@@ -77,13 +74,13 @@ impl CPU {
         }
     }
 
-    pub fn rl_hl(&mut self, target: Register16Bit) -> InstructionResult {
+    pub fn rl_hl(&mut self) -> InstructionResult {
         let through_carry = true;
         let set_zero = true;
         InstructionResult {
             cycles: 4,
             bytes: 2,
-            condition_codes: self.rl_x_hl(target, through_carry, set_zero),
+            condition_codes: self.rl_x_hl(through_carry, set_zero),
         }
     }
 
@@ -107,13 +104,13 @@ impl CPU {
         }
     }
 
-    pub fn rl_c_hl(&mut self, target: Register16Bit) -> InstructionResult {
+    pub fn rl_c_hl(&mut self) -> InstructionResult {
         let through_carry = false;
         let set_zero = true;
         InstructionResult {
             cycles: 4,
             bytes: 2,
-            condition_codes: self.rl_x_hl(target, through_carry, set_zero),
+            condition_codes: self.rl_x_hl(through_carry, set_zero),
         }
     }
 
@@ -171,20 +168,20 @@ pub fn rl_test() {
     //Test rl_hl
     cpu.clear_carry_flag();
     let mem_addr = 0b0000_0000_1000_0000;
-    cpu.set_16bit_register(Register16Bit::BC, mem_addr);
+    cpu.set_16bit_register(Register16Bit::HL, mem_addr);
     cpu.memory.write_byte(mem_addr, 128);
 
-    instruction_result = cpu.rl_hl(Register16Bit::BC);
+    instruction_result = cpu.rl_hl();
     assert_eq!(cpu.memory.read_byte(mem_addr), 0);
     assert!(instruction_result.condition_codes.carry == FlagState::Set);
     cpu.set_carry_flag();
 
-    instruction_result = cpu.rl_hl(Register16Bit::BC);
+    instruction_result = cpu.rl_hl();
     assert_eq!(cpu.memory.read_byte(mem_addr), 1);
     assert!(instruction_result.condition_codes.carry == FlagState::Unset);
     cpu.clear_carry_flag();
 
-    instruction_result = cpu.rl_hl(Register16Bit::BC);
+    instruction_result = cpu.rl_hl();
     assert_eq!(cpu.memory.read_byte(mem_addr), 2);
     assert!(instruction_result.condition_codes.carry == FlagState::Unset);
 
@@ -227,20 +224,20 @@ pub fn rl_test() {
     //Test rl_c_hl
     cpu.clear_carry_flag();
     let mem_addr = 0b0000_0000_1000_0000;
-    cpu.set_16bit_register(Register16Bit::BC, mem_addr);
+    cpu.set_16bit_register(Register16Bit::HL, mem_addr);
     cpu.memory.write_byte(mem_addr, 128);
 
-    instruction_result = cpu.rl_c_hl(Register16Bit::BC);
+    instruction_result = cpu.rl_c_hl();
     assert_eq!(cpu.memory.read_byte(mem_addr), 1);
     assert!(instruction_result.condition_codes.carry == FlagState::Set);
     cpu.set_carry_flag();
 
-    instruction_result = cpu.rl_c_hl(Register16Bit::BC);
+    instruction_result = cpu.rl_c_hl();
     assert_eq!(cpu.memory.read_byte(mem_addr), 2);
     assert!(instruction_result.condition_codes.carry == FlagState::Unset);
     cpu.clear_carry_flag();
 
-    instruction_result = cpu.rl_c_hl(Register16Bit::BC);
+    instruction_result = cpu.rl_c_hl();
     assert_eq!(cpu.memory.read_byte(mem_addr), 4);
     assert!(instruction_result.condition_codes.carry == FlagState::Unset);
 }
