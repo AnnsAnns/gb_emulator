@@ -97,6 +97,15 @@ impl CPU {
             condition_codes: self.add_8bit(value, Register8Bit::A, false),
         }
     }
+    /// Add an 8-bit value plus the carry flag to the A register
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADC_A,n8
+    pub fn adc_a_n8(&mut self, value: u8) -> InstructionResult {
+        InstructionResult {
+            cycles: 2,
+            bytes: 2,
+            condition_codes: self.add_8bit(value, Register8Bit::A, true),
+        }
+    }
 
     /// add the value of a 16-bit register to HL
     pub fn add_hl_r16(&mut self, source: Register16Bit) -> InstructionResult {

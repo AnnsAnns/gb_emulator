@@ -16,6 +16,25 @@ impl CPU {
             },
         }
     }
+    /// increments the byte pointed to by HL
+    pub fn inc_hl(&mut self) -> InstructionResult {
+        let addr = self.get_16bit_register(Register16Bit::HL);
+        let r8_value = self.memory.read_byte(addr);
+        let (value,overflow) = r8_value.overflowing_add(1);
+        self.memory.write_byte(addr, value);
+        let tail = r8_value & 0xF;
+
+        InstructionResult {
+            cycles: 3,
+            bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
+                subtract: FlagState::Set,
+                half_carry: if tail == 0 {FlagState::Set} else {FlagState::NotAffected},
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
     /// increments the 16bit_register register, wraps on overflow
     pub fn inc_r16(&mut self, register: Register16Bit) -> InstructionResult {
         let (value,overflow) = self.get_16bit_register(register).overflowing_add(1);

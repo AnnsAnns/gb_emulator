@@ -28,22 +28,32 @@ impl CPU {
             Instructions::NOP => self.nop(),
             Instructions::ADD(param) => match param {
                 InstParam::Register8Bit(register) => self.add_a_r8(register.clone()),
-                InstParam::Register16Bit(register) =>  self.add_hl_r16(*register),
+                InstParam::Register16Bit(register) =>  if *register == Register16Bit::HL {self.add_a_hl()} else {self.add_hl_r16(*register)}, //works unless we need to add hl to hl
                 InstParam::SignedNumber8Bit(value) =>  self.add_sp_e8(*value),
+                InstParam::Number8Bit(value) =>  self.add_a_n8(*value),
+                _ => return Err(format!("ADD with {:?} not implemented", param)),
+            },
+            Instructions::ADC(param) => match param {
+                InstParam::Register8Bit(register) => self.adc_a_r8(register.clone()),
+                InstParam::Register16Bit(register) =>  self.adc_a_hl(),
+                InstParam::Number8Bit(value) =>  self.adc_a_n8(*value),
                 _ => return Err(format!("ADD with {:?} not implemented", param)),
             },
             Instructions::INC(param) => match param {
                 InstParam::Register8Bit(register) => self.inc(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.inc_sp(),
+                    Register16Bit::HL => self.inc_hl(),
                     _ => self.inc_r16(register.clone()),
                     
                 }
                 _ => return Err(format!("INC with {:?} not implemented", param)),
             },
             Instructions::DEC(param) => match param {
+                InstParam::Register8Bit(register) => self.dec_r8(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.dec_sp(),
+                    Register16Bit::HL => self.dec_hl(),
                     _ => self.dec_r16(register.clone()),
                     
                 }
@@ -61,11 +71,29 @@ impl CPU {
                 InstParam::Number8Bit(value) => self.sub_and_subc(*value, 2, 2, true),
                 _ => return Err(format!("SBC with {:?} not implemented", param)),
             },
+            Instructions::CP(param) => match param {
+                InstParam::Register8Bit(register) => self.cp_a_r8(*register),
+                InstParam::Register16Bit(_) => self.cp_a_hl(),
+                InstParam::Number8Bit(value) => self.cp_a_n8(*value),
+                _ => return Err(format!("AND with {:?} not implemented", param)),
+            },
             Instructions::OR(param) => match param {
                 InstParam::Register8Bit(register) => self.or(self.get_8bit_register(*register), 1, 1),
                 InstParam::Register16Bit(_) => self.or(self.get_n8_from_hl(), 2, 1),
                 InstParam::Number8Bit(value) => self.or(*value, 2, 2),
                 _ => return Err(format!("OR with {:?} not implemented", param)),
+            },
+            Instructions::XOR(param) => match param {
+                InstParam::Register8Bit(register) => self.xor(self.get_8bit_register(*register), 1, 1),
+                InstParam::Register16Bit(_) => self.xor(self.get_n8_from_hl(), 2, 1),
+                InstParam::Number8Bit(value) => self.xor(*value, 2, 2),
+                _ => return Err(format!("XOR with {:?} not implemented", param)),
+            },
+            Instructions::AND(param) => match param {
+                InstParam::Register8Bit(register) => self.and_a_r8(*register),
+                InstParam::Register16Bit(_) => self.and_a_hl(),
+                InstParam::Number8Bit(value) => self.and_a_n8(*value),
+                _ => return Err(format!("AND with {:?} not implemented", param)),
             },
             Instructions::LDAHLD => self.ld_a_hld(),
             Instructions::LDHLDA => self.ld_hld_a(),
