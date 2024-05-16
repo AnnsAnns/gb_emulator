@@ -2,16 +2,18 @@ use crate::cpu::{instructions::{ConditionCodes, FlagState, InstructionResult}, r
 
 impl CPU {
     pub fn inc(&mut self, register: Register8Bit) -> InstructionResult {
-        let (result, overflow) = self.get_8bit_register(register).overflowing_add(1);
+        let r8_value = self.get_8bit_register(register);
+        let (result, overflow) = r8_value.overflowing_add(1);
         self.set_8bit_register(register, result);
+        let tail = r8_value & 0xF;
 
         InstructionResult {
             cycles: 1,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: if result == 0 { FlagState::Set } else { FlagState::Unset },
+                zero: if result == 0 { FlagState::Set } else { FlagState::Unset},
                 subtract: FlagState::Unset,
-                half_carry: if overflow { FlagState::Set } else { FlagState::Unset },
+                half_carry: if tail == 15 {FlagState::Set} else {FlagState::Unset},
                 carry: FlagState::NotAffected,
             },
         }
@@ -28,9 +30,9 @@ impl CPU {
             cycles: 3,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
-                subtract: FlagState::Set,
-                half_carry: if tail == 0 {FlagState::Set} else {FlagState::NotAffected},
+                zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
+                subtract: FlagState::Unset,
+                half_carry: if tail == 15 {FlagState::Set} else {FlagState::Unset},
                 carry: FlagState::NotAffected,
             },
         }
