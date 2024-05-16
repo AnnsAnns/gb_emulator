@@ -4,6 +4,10 @@ use super::Memory;
 impl Memory {
     /// Read a byte from memory
     pub fn read_byte(&self, address: u16) -> u8 {
+        if address >= 0xFFFF {
+            eprintln!("Invalid memory address: {:#06X}", address);
+            return 0;
+        }
         self.memory[address as usize]
     }
 

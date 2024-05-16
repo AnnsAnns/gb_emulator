@@ -5,7 +5,7 @@ pub mod cpu;
 pub mod memory;
 pub mod rendering;
 
-use std::{thread::sleep, time::Duration};
+use std::{intrinsics::breakpoint, thread::sleep, time::Duration};
 
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{render_settings::*, tiles::*, views::*};
@@ -27,7 +27,7 @@ async fn main() {
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
     let mut cpu = cpu::CPU::new();
-    cpu.load_from_file("./2048.gb");
+    cpu.load_from_file("./test_roms/cpu_instrs.gb");
 
     #[rustfmt::skip]
     let test_tile: [u8; 16] = [
@@ -110,7 +110,7 @@ async fn main() {
 
         next_frame().await;
 
-        sleep(Duration::from_millis(50));
+        sleep(Duration::from_millis(3000));
     }
 }
 
