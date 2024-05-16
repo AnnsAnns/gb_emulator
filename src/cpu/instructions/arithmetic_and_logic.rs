@@ -166,3 +166,118 @@ pub fn arithmetics_8bit_16bit_test() {
     assert_eq!(registers[Register8Bit::A as usize], 3);
     //<<---------8bit Arithmetics---------<<
 }
+
+#[test]
+pub fn logic_8bit_16bit_test() {
+    let mut cpu = CPU::new();
+    let mut registers;
+    //CP
+    cpu.set_8bit_register(Register8Bit::A, 15);
+    cpu.set_8bit_register(Register8Bit::B, 15);
+    cpu.set_16bit_register(Register16Bit::HL, 10);
+    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 16);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 1;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Set,subtract:FlagState::Set,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::CP(super::InstParam::Register8Bit(Register8Bit::B)), expected_result);
+
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 2;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Set,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::CP(super::InstParam::Number8Bit(5)), expected_result);
+
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Set,half_carry:FlagState::Set,carry:FlagState::Set};
+    assert_correct_instruction_step(&mut cpu, Instructions::CP(super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    //check A for no changes
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 15);
+    //AND
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 2;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Set,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::AND(super::InstParam::Number8Bit(0b00000011)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 3);
+
+    cpu.set_8bit_register(Register8Bit::A, 15);
+    cpu.set_8bit_register(Register8Bit::B, 0);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 1;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Set,subtract:FlagState::Unset,half_carry:FlagState::Set,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::AND(super::InstParam::Register8Bit(Register8Bit::B)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 0);
+    
+    cpu.set_8bit_register(Register8Bit::A, 9);
+    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 10);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Set,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::AND(super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 8);
+    //OR
+    cpu.set_8bit_register(Register8Bit::A, 9);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 2;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::OR(super::InstParam::Number8Bit(0b00000010)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 11);
+
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 1;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::OR(super::InstParam::Register8Bit(Register8Bit::B)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 11);
+
+    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 15);
+    cpu.set_8bit_register(Register8Bit::A, 0b00110000);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::OR(super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 0b00111111);
+    
+    //XOR
+    cpu.set_8bit_register(Register8Bit::A, 9);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 2;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::XOR(super::InstParam::Number8Bit(0b00000010)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 11);
+
+    cpu.set_8bit_register(Register8Bit::B, 0b0111);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 1;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::XOR(super::InstParam::Register8Bit(Register8Bit::B)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 12);
+
+    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 31);
+    cpu.set_8bit_register(Register8Bit::A, 0b00110000);
+    let mut expected_result = InstructionResult::default();
+    expected_result.cycles = 2;
+    expected_result.bytes = 1;
+    expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::Unset};
+    assert_correct_instruction_step(&mut cpu, Instructions::XOR(super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 0b00101111);
+}

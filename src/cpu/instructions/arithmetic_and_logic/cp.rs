@@ -11,10 +11,10 @@ impl CPU {
             cycles: 1,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
+                zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::NotAffected},
-                carry: if overflow { FlagState::Set } else { FlagState::NotAffected},
+                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::Unset},
+                carry: if overflow { FlagState::Set } else { FlagState::Unset},
             },
         }
     }
@@ -28,10 +28,10 @@ impl CPU {
             cycles: 2,
             bytes: 2,
             condition_codes: ConditionCodes {
-                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
+                zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::NotAffected},
-                carry: if overflow { FlagState::Set } else { FlagState::NotAffected},
+                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::Unset},
+                carry: if overflow { FlagState::Set } else { FlagState::Unset},
             },
         }
     }
@@ -47,10 +47,10 @@ impl CPU {
             cycles: 2,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
+                zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::NotAffected},
-                carry: if overflow { FlagState::Set } else { FlagState::NotAffected},
+                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::Unset},
+                carry: if overflow { FlagState::Set } else { FlagState::Unset},
             },
         }
     }

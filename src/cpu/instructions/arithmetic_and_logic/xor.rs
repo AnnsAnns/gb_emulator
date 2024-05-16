@@ -15,7 +15,7 @@ impl CPU {
                     if result == 0 {
                         FlagState::Set
                     } else {
-                        FlagState::NotAffected
+                        FlagState::Unset
                     }
                 },
                 subtract: FlagState::Unset,
