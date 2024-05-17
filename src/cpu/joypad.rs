@@ -6,12 +6,13 @@ impl CPU {
     pub fn update_key_input(&mut self) {
         let keys_down = get_keys_down();
 
-        let mut output = 0xCF;
+        let mut output = 0xFF;
 
         let joypad_selects = self.memory.read_byte(0xFF00);
 
         //is button flag on
         if (joypad_selects & 0x20) == 0 {
+            output &= !(1 << 5);
             if keys_down.contains(&KeyCode::Enter) {
                 //start key
                 output &= !(1 << 3);
@@ -27,6 +28,7 @@ impl CPU {
 
         //is direction flag on
         if (joypad_selects & 0x10) == 0 {
+            output &= !(1 << 4);
             if keys_down.contains(&KeyCode::Left) {
                 output &= !(1 << 1);
             } else if keys_down.contains(&KeyCode::Right) {
