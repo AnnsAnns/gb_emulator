@@ -10,6 +10,7 @@ pub mod registers;
 pub mod instructions;
 pub mod decode;
 mod step;
+mod joypad;
 
 /// The CPU of the Gameboy
 pub struct CPU {

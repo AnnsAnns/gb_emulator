@@ -27,7 +27,7 @@ async fn main() {
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
     let mut cpu = cpu::CPU::new();
-    cpu.load_from_file("./2048.gb");
+    cpu.load_from_file("./test_roms/individual/01-special.gb");
 
     #[rustfmt::skip]
     let test_tile: [u8; 16] = [
@@ -102,6 +102,9 @@ async fn main() {
             )
             .as_str(),
         );
+
+        cpu.update_key_input();
+        root_ui().label(None, format!("FF00: {:#06b}", cpu.get_mem_reg(0xFF00)).as_str());
 
         // root_ui().label(
         //     None,
