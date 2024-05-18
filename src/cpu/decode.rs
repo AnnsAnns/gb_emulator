@@ -165,7 +165,7 @@ impl CPU {
                 ),
                 0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xF => Instructions::RRCA,
-                _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                _ => self.not_implemented(opcode)?,
             },
             0x1 => {
                 match tail {
@@ -189,7 +189,7 @@ impl CPU {
                     ),
                     0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                     0xF => Instructions::RRA,
-                    _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                    _ => self.not_implemented(opcode)?,
                 }
             },
             0x2 => {
@@ -210,7 +210,7 @@ impl CPU {
                     0xA => Instructions::LDAHLI,
                     0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                     0xF => Instructions::CPL,
-                    _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                    _ => self.not_implemented(opcode)?,
                 }
             }
             0x3 => {
@@ -231,7 +231,7 @@ impl CPU {
                     0xA => Instructions::LDAHLD,
                     0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                     0xF => Instructions::CCF,
-                    _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                    _ => self.not_implemented(opcode)?,
                 }
             }
             // LD instructions (& HALT)
@@ -239,7 +239,7 @@ impl CPU {
                 let value = self.tail_to_inst_param(tail);
                 let ld_target = match self.opcode_to_ld_target(opcode) {
                     Some(target) => target,
-                    None => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                    None => return self.not_implemented(opcode),
                 };
 
                 // There is a single opcode within this range that is not a LD instruction
@@ -260,7 +260,7 @@ impl CPU {
                         0x9 => Instructions::SBC(value),
                         0xA => Instructions::XOR(value),
                         0xB => Instructions::CP(value),
-                        _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                        _ => self.not_implemented(opcode)?,
                     }
                 } else {
                     match head {
@@ -268,7 +268,7 @@ impl CPU {
                         0x9 => Instructions::SUB(value),
                         0xA => Instructions::AND(value),
                         0xB => Instructions::OR(value),
-                        _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                        _ => self.not_implemented(opcode)?,
                     }
                 }
             }
@@ -314,7 +314,7 @@ impl CPU {
                 ),
                 0xE => Instructions::ADC(InstParam::Number8Bit(self.get_8bit_from_pc())),
                 0xF => Instructions::RST(InstParam::Number8Bit(0x08)),
-                _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+                _ => self.not_implemented(opcode)?,
             },
             0xD => {
                 self.not_implemented(opcode)?
@@ -325,7 +325,7 @@ impl CPU {
             0xF => {
                 self.not_implemented(opcode)?
             },
-            _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+            _ => self.not_implemented(opcode)?,
         })
     }
 }
