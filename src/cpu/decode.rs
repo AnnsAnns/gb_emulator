@@ -133,7 +133,7 @@ impl CPU {
     }
 
     fn not_implemented(&self, opcode: u8) -> Result<Instructions, String> {
-        Err(format!("Opcode not implemented: {:#02X}", opcode))
+        Err(format!("Opcode is not implemented (yet): {:#02X}", opcode))
     }
 
     pub fn decode(&self, opcode: u8) -> Result<Instructions, String> {
@@ -293,6 +293,15 @@ impl CPU {
                 0xE => Instructions::ADC(InstParam::Number8Bit(self.get_8bit_from_pc())),
                 0xF => Instructions::RST(InstParam::Number8Bit(0x08)),
                 _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
+            },
+            0xD => {
+                self.not_implemented(opcode)?
+            },
+            0xE => {
+                self.not_implemented(opcode)?
+            },
+            0xF => {
+                self.not_implemented(opcode)?
             },
             _ => return Err(format!("Unknown opcode {:#02X}", opcode)),
         })
