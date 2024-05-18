@@ -16,35 +16,52 @@
 0xF -> RRCA
 0x10 -> STOP
 0x11 -> LD(Register16Bit(DE), Number16Bit(0))
+0x12 -> LD(Register16Bit(DE), Register8Bit(A))
 0x13 -> INC(Register16Bit(DE))
 0x14 -> INC(Register8Bit(D))
 0x15 -> DEC(Register8Bit(D))
 0x16 -> LD(Register8Bit(D), Number8Bit(0))
+0x17 -> RLA
+0x18 -> JR(ConditionCodes(SkipConditionCodes), Number8Bit(0))
 0x19 -> ADD_HL(Register16Bit(DE))
+0x1A -> LD(Register8Bit(A), Number8Bit(0))
 0x1B -> DEC(Register16Bit(DE))
 0x1C -> INC(Register8Bit(E))
 0x1D -> DEC(Register8Bit(E))
 0x1E -> LD(Register8Bit(E), Number8Bit(0))
+0x1F -> RRA
+0x20 -> JR(ConditionCodes(NotZero), Number8Bit(0))
 0x21 -> LD(Register16Bit(HL), Number16Bit(0))
+0x22 -> LDHLIA
 0x23 -> INC(Register16Bit(HL))
 0x24 -> INC(Register8Bit(H))
 0x25 -> DEC(Register8Bit(H))
 0x26 -> LD(Register8Bit(H), Number8Bit(0))
+0x27 -> DAA
+0x28 -> JR(ConditionCodes(Zero), Number8Bit(0))
 0x29 -> ADD_HL(Register16Bit(HL))
+0x2A -> LDAHLI
 0x2B -> DEC(Register16Bit(HL))
 0x2C -> INC(Register8Bit(L))
 0x2D -> DEC(Register8Bit(L))
 0x2E -> LD(Register8Bit(L), Number8Bit(0))
+0x2F -> CPL
+0x30 -> JR(ConditionCodes(NotCarry), Number8Bit(0))
 0x31 -> LD(Register16Bit(SP), Number16Bit(0))
+0x32 -> LDHLDA
 0x33 -> INC(Register16Bit(SP))
 0x34 -> INC(Number16Bit(0))
 0x35 -> DEC(Number16Bit(0))
 0x36 -> LD(Number16Bit(0), Number8Bit(0))
+0x37 -> SCF
+0x38 -> JR(ConditionCodes(Carry), Number8Bit(0))
 0x39 -> ADD_HL(Register16Bit(SP))
+0x3A -> LDAHLD
 0x3B -> DEC(Register16Bit(SP))
 0x3C -> INC(Register8Bit(A))
 0x3D -> DEC(Register8Bit(A))
 0x3E -> LD(Register8Bit(A), Number8Bit(0))
+0x3F -> CCF
 0x40 -> LD(Register8Bit(B), Register8Bit(B))
 0x41 -> LD(Register8Bit(B), Register8Bit(C))
 0x42 -> LD(Register8Bit(B), Register8Bit(D))

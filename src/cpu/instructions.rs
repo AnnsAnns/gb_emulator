@@ -125,4 +125,9 @@ pub enum Instructions {
     HALT,
     NOP,
     STOP,
+    RRA,
+    DAA,
+    CPL,
+    SCF,
+    CCF,
 }
