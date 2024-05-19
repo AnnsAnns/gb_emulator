@@ -129,4 +129,7 @@ pub enum Instructions {
     CPL,
     SCF,
     CCF,
+    RLC(InstParam),
+    RL(InstParam),
+    SLA(InstParam),
 }
