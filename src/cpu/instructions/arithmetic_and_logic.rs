@@ -18,7 +18,7 @@ use crate::test_helpers::{assert_correct_instruction_step};
 
 #[test]
 pub fn arithmetics_8bit_16bit_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut registers;
     //>>---------8bit Arithmetics--------->>
     // 1) ADD A,r8 
@@ -169,7 +169,7 @@ pub fn arithmetics_8bit_16bit_test() {
 
 #[test]
 pub fn logic_8bit_16bit_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut registers;
     //CP
     cpu.set_8bit_register(Register8Bit::A, 15);

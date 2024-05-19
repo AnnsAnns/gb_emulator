@@ -176,7 +176,7 @@ impl CPU {
 
 #[test]
 pub fn nop_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 1;
@@ -186,7 +186,7 @@ pub fn nop_test() {
 
 #[test]
 pub fn ccf_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result_1 = InstructionResult::default();
     cpu.set_carry_flag();
     expected_result_1.bytes = 1;
@@ -214,7 +214,7 @@ pub fn ccf_test() {
 
 #[test]
 pub fn cpl_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     let value_start = 0b10101010;
     let value_expected_result = 0b01010101;
@@ -236,7 +236,7 @@ pub fn cpl_test() {
 
 #[test]
 pub fn daa_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     let value_start = 0x9A;
     let value_expected_result = 0x00;
@@ -258,7 +258,7 @@ pub fn daa_test() {
 
 #[test]
 pub fn di_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     cpu.interrupt_master_enable = true;
     expected_result.bytes = 1;
@@ -275,7 +275,7 @@ pub fn di_test() {
 
 #[test]
 pub fn ei_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 1;

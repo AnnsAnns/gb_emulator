@@ -240,7 +240,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
 
 #[test]
 pub fn stack_ops_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut registers;
     // 1) ADD
     cpu.set_16bit_register(Register16Bit::SP, 0xFF00);

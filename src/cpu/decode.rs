@@ -471,7 +471,7 @@ impl CPU {
 /// Please cross-reference with a Gameboy opcode table
 #[test]
 pub fn test_decode() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut decoded_values = String::new();
     let mut failed_values = String::new();
 

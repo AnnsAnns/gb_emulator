@@ -29,7 +29,7 @@ async fn main() {
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
-    let mut cpu = cpu::CPU::new();
+    let mut cpu = cpu::CPU::new(true);
     cpu.load_from_file("./test_data/individual/09-op r,r.gb");
 
     #[rustfmt::skip]

@@ -28,10 +28,10 @@ pub struct CPU {
 /// Note, please look at the relevant modules for the actual implementations
 impl CPU {
     /// Create a new CPU
-    pub fn new() -> CPU {
+    pub fn new(enable_bootrom: bool) -> CPU {
         CPU {
             registers: [0; 12],
-            memory: Memory::new(),
+            memory: Memory::new(enable_bootrom),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
             interrupt_master_enable: false,

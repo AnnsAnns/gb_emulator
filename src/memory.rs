@@ -38,7 +38,7 @@ pub struct Memory {
 /// For further abstractions see the respective modules
 impl Memory {
     /// Create a new Memory
-    pub fn new() -> Memory {
+    pub fn new(enable_bootrom: bool) -> Memory {
         let rom_file = include_bytes!("../bin/DMG_ROM.bin");
 
         let mut boot_rom = [0; ROM_SIZE];
@@ -48,7 +48,7 @@ impl Memory {
         
         Memory {
             memory: [0; MEMORY_SIZE],
-            boot_rom_enabled: true,
+            boot_rom_enabled: enable_bootrom,
             boot_rom,
         }
     }
