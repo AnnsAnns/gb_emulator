@@ -5,10 +5,11 @@ pub mod cpu;
 pub mod memory;
 pub mod rendering;
 
-use std::{thread::sleep, time::Duration};
+use std::{thread::sleep, time::{self, Duration}};
 
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{render_settings::*, tiles::*, views::*};
+use simple_logger::SimpleLogger;
 
 use crate::{
     cpu::registers::{Register16Bit, Register8Bit},
@@ -17,7 +18,9 @@ use crate::{
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
-    println!("Hello, world!");
+    SimpleLogger::new().init().unwrap();
+    
+    log::info!("Hello, world!");
 
     let gb_settings = GbSettings {
         ..Default::default()
@@ -27,7 +30,7 @@ async fn main() {
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
     let mut cpu = cpu::CPU::new();
-    cpu.load_from_file("./2048.gb");
+    cpu.load_from_file("./test_data/individual/06-ld r,r.gb");
 
     #[rustfmt::skip]
     let test_tile: [u8; 16] = [
@@ -41,6 +44,9 @@ async fn main() {
     );
 
     loop {
+        // Get start time
+        let start_time = time::Instant::now();
+
         let pc = cpu.get_16bit_register(Register16Bit::PC);
         let sp = cpu.get_16bit_register(Register16Bit::SP);
 
@@ -59,9 +65,13 @@ async fn main() {
         root_ui().label(None, format!("SP: {:#06X}", sp).as_str());
         let instruction = cpu.prepare_and_decode_next_instruction();
         root_ui().label(None, format!("Instruction: {:?}", instruction).as_str());
+        let result = cpu.step();
+        
+        log::debug!("➡️ Result: {:?}", result);
+
         root_ui().label(
             None,
-            format!("Last Step Result: {:?}", cpu.step()).as_str(),
+            format!("Last Step Result: {:?}", result).as_str(),
         );
 
         root_ui().label(
@@ -110,7 +120,11 @@ async fn main() {
 
         next_frame().await;
 
-        sleep(Duration::from_millis(50));
+        let elapsed_time = start_time.elapsed();
+        // We run at 60Hz so we need to calculate the time we need to sleep
+        let time_to_sleep = Duration::from_secs_f32(1.0 / 60.0) - elapsed_time;
+        log::debug!("⌛ Time to sleep: {:?} | Total Duration was {:?}", time_to_sleep, elapsed_time);
+        sleep(time_to_sleep);
     }
 }
 

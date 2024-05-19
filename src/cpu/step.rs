@@ -14,10 +14,11 @@ impl CPU {
     }
 
     pub fn prepare_and_decode_next_instruction(&mut self) -> Result<Instructions, String> {
-        //println!("🖱️ Current PC: {:#06X}", self.get_16bit_register(Register16Bit::PC));
+        log::debug!("🖱️ Current PC: {:#06X}", self.get_16bit_register(Register16Bit::PC));
         let opcode = self.get_next_opcode();
-        //println!("🤖 Next opcode: {:#02X}", opcode);
+        log::debug!("🤖 Next opcode: {:#02X}", opcode);
         let instruction = self.decode(opcode)?;
+        log::debug!("📖 Decoded instruction: {:#?}", instruction);
         self.next_instruction = instruction.clone();
         Ok(instruction)
     }

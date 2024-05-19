@@ -46,7 +46,7 @@ impl Memory {
 
         for (i, byte) in rom.iter().enumerate() {
             if i >= 0xFFFF {
-                eprintln!("ROM is too large for memory: size: {}", rom.len());
+                log::error!("ROM is too large for memory: size: {}", rom.len());
                 break;
             }
 

@@ -16,7 +16,7 @@ pub fn update_tile_atlas(
         let pal_idx =
             ((data[data_index] >> (i % 8)) & 1) + (((data[data_index + 1] >> (i % 8)) & 1) * 2);
 
-        //println!("LO: {:#x} | HI: {:#x} -> ", data[data_index], data[(data_index)+1]);
+        // log::debug!("LO: {:#x} | HI: {:#x} -> ", data[data_index], data[(data_index)+1]);
 
         atlas.set_pixel(
             offset_x + 8 - (i as u32 % 8),
