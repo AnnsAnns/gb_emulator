@@ -30,7 +30,13 @@ async fn main() {
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
     let mut cpu = cpu::CPU::new(true);
-    cpu.load_from_file("./test_data/individual/09-op r,r.gb");
+
+    // Check whether DrMario.gb exists otherwise use the test ROM
+    if std::fs::metadata("./game.gb").is_err() {
+        cpu.load_from_file("./test_data/cpu_instrs/individual/09-op r,r.gb");
+    } else {
+        cpu.load_from_file("./game.gb");
+    }
 
     #[rustfmt::skip]
     let test_tile: [u8; 16] = [
