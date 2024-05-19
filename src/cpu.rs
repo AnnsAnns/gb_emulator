@@ -21,6 +21,10 @@ pub struct CPU {
     memory: Memory,
     next_instruction: Instructions,
     last_step_result: InstructionResult,
+    interrupt_master_enable: bool,
+    /// 0 if nothing to do, 2 if ime needs to be set abfer next instruction, 1 if ime needs to be set after this instruction
+    enable_ime: i32, 
+    low_power_mode: bool,
 }
 
 /// Note, please look at the relevant modules for the actual implementations
@@ -32,6 +36,9 @@ impl CPU {
             memory: Memory::new(),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
+            interrupt_master_enable: false,
+            enable_ime: 0,
+            low_power_mode: false,
         }
     }
 
