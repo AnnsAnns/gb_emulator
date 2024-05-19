@@ -1,3 +1,6 @@
+use std::{io::Write, mem};
+use std::sync::{Arc, Mutex};
+
     /// Module for memory abstraction
 
 // These following modules do most of the abstraction work
@@ -23,6 +26,8 @@ pub struct Memory {
     /// 0xFF80 - 0xFFFE: High RAM (HRAM)
     /// 0xFFFF: Interrupt Enable Register
     memory: [u8; 0xFFFF],
+    boot_rom_enabled: bool,
+    boot_rom: [u8; 0xFF],
 }
 
 /// Implementation of the Memory
@@ -32,6 +37,8 @@ impl Memory {
     pub fn new() -> Memory {
         Memory {
             memory: [0; 0xFFFF],
+            boot_rom_enabled: true,
+            boot_rom: include_bytes!("../bin/DMG_ROM.bin").to_vec().try_into().unwrap(),
         }
     }
 
@@ -52,5 +59,16 @@ impl Memory {
 
             self.memory[i] = *byte;
         }
+    }
+
+    /// Creates a new thread to dump the memory to a file (non-blocking)
+    pub fn dump_to_file(&self) {
+        let memory = self.memory.clone();
+
+        std::thread::spawn(move || {
+            let mut file = std::fs::File::create("memory_dump.bin").expect("Unable to create file");
+
+            file.write_all(&memory).expect("Unable to write data to file");
+        });
     }
 }

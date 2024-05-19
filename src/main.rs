@@ -30,7 +30,7 @@ async fn main() {
     let combined_image = Image::gen_image_color(160, 144, GREEN);
 
     let mut cpu = cpu::CPU::new();
-    cpu.load_from_file("./test_data/individual/06-ld r,r.gb");
+    cpu.load_from_file("./test_data/individual/09-op r,r.gb");
 
     #[rustfmt::skip]
     let test_tile: [u8; 16] = [
@@ -44,9 +44,6 @@ async fn main() {
     );
 
     loop {
-        // Get start time
-        let start_time = time::Instant::now();
-
         let pc = cpu.get_16bit_register(Register16Bit::PC);
         let sp = cpu.get_16bit_register(Register16Bit::SP);
 
@@ -60,6 +57,9 @@ async fn main() {
             &tile_atlas,
             &gb_settings,
         );
+
+        // Get start time
+        let start_time = time::Instant::now();
 
         root_ui().label(None, format!("PC: {:#06X}", pc).as_str());
         root_ui().label(None, format!("SP: {:#06X}", sp).as_str());
@@ -120,9 +120,15 @@ async fn main() {
 
         next_frame().await;
 
+        // Dump memory for debugging purposes
+        cpu.dump_memory();
+
         let elapsed_time = start_time.elapsed();
         // We run at 60Hz so we need to calculate the time we need to sleep
-        let time_to_sleep = Duration::from_secs_f32(1.0 / 60.0) - elapsed_time;
+        let time_to_sleep = match Duration::from_secs_f32(1.0 / 60.0).checked_sub(elapsed_time) {
+            Some(time) => time,
+            None => Duration::from_secs_f32(0.0),
+        };
         log::debug!("⌛ Time to sleep: {:?} | Total Duration was {:?}", time_to_sleep, elapsed_time);
         sleep(time_to_sleep);
     }

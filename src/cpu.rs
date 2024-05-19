@@ -2,13 +2,11 @@ use crate::memory::Memory;
 
 use self::instructions::{InstructionResult, Instructions};
 
-
-
+pub mod decode;
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
-pub mod registers;
 pub mod instructions;
-pub mod decode;
+pub mod registers;
 mod step;
 
 /// The CPU of the Gameboy
@@ -23,7 +21,7 @@ pub struct CPU {
     last_step_result: InstructionResult,
     interrupt_master_enable: bool,
     /// 0 if nothing to do, 2 if ime needs to be set abfer next instruction, 1 if ime needs to be set after this instruction
-    enable_ime: i32, 
+    enable_ime: i32,
     low_power_mode: bool,
 }
 
@@ -46,14 +44,19 @@ impl CPU {
         self.memory.load_from_file(file);
     }
 
-    pub fn get_next_opcode(&self) -> u8 {
-        self.memory.read_byte(self.get_16bit_register(registers::Register16Bit::PC))
+    pub fn get_next_opcode(&mut self) -> u8 {
+        self.memory
+            .read_byte(self.get_16bit_register(registers::Register16Bit::PC))
     }
 
     /// Set the next instruction to be executed
-    /// This is used for testing 
+    /// This is used for testing
     pub fn set_instruction(&mut self, instruction: Instructions) {
         self.next_instruction = instruction;
+    }
+
+    pub fn dump_memory(&self) {
+        self.memory.dump_to_file();
     }
 
     /// Get the last step result
@@ -70,7 +73,6 @@ impl CPU {
     pub fn get_registry_dump(&self) -> [u8; 12] {
         self.registers.clone()
     }
-
 
     /// Gets the full memory of the CPU
     /// This is used for testing purposes
