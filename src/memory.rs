@@ -80,7 +80,7 @@ impl Memory {
             let mut file = std::fs::File::create("memory_dump.bin").expect("Unable to create file");
 
             for byte in 0..MEMORY_SIZE {
-                file.write(memory.read_byte(byte as u16).to_le_bytes().as_ref()).expect("Unable to write to file");
+                file.write_all(memory.read_byte(byte as u16).to_le_bytes().as_ref()).expect("Unable to write to file");
             }
         });
     }
