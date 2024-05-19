@@ -26,10 +26,10 @@ pub enum FlagState {
 /// carry: The carry flag (C)
 #[derive(Debug, PartialEq, Clone)]
 pub struct ConditionCodes {
-    zero: FlagState,
-    subtract: FlagState,
-    half_carry: FlagState,
-    carry: FlagState,
+    pub zero: FlagState,
+    pub subtract: FlagState,
+    pub half_carry: FlagState,
+    pub carry: FlagState,
 }
 
 /// The result of an instruction

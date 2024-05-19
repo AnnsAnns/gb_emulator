@@ -1,7 +1,7 @@
 use core::task;
 
 use super::{
-    instructions::{InstParam, InstructionCondition, InstructionResult, Instructions},
+    instructions::{FlagState, InstParam, InstructionCondition, InstructionResult, Instructions},
     registers::{self, Register16Bit, Register8Bit},
     CPU,
 };
@@ -426,6 +426,31 @@ impl CPU {
             self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
         );
         self.update_ime();
+
+        match self.last_step_result.condition_codes.carry {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_carry_flag(),
+            FlagState::Unset => self.clear_carry_flag(),
+        }
+
+        match self.last_step_result.condition_codes.half_carry {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_half_carry_flag(),
+            FlagState::Unset => self.clear_half_carry_flag(),
+        }
+
+        match self.last_step_result.condition_codes.subtract {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_subtraction_flag(),
+            FlagState::Unset => self.clear_subtraction_flag(),
+        }
+
+        match self.last_step_result.condition_codes.zero {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_zero_flag(),
+            FlagState::Unset => self.clear_zero_flag(),
+        }
+
         Ok(&self.last_step_result)
     }
 
