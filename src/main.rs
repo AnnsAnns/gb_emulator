@@ -132,6 +132,9 @@ async fn main() {
             .as_str(),
         );
 
+        cpu.update_key_input();
+        root_ui().label(None, format!("FF00: {:#06b}", cpu.get_mem_reg(0xFF00)).as_str());
+
         // root_ui().label(
         //     None,
         //     format!("Memory: {:#?}", cpu.get_memory().return_full_memory()).as_str(),

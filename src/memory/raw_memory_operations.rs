@@ -20,8 +20,19 @@ impl Memory {
             self.boot_rom_enabled = false;
         }
 
-        self.memory[address as usize] = value;
+        //Prevents overwriting of the last 4 bits in FF00 which are mapped to controller input
+        if address == 0xFF00 {
+            let prev = self.read_byte(address);
+            self.memory[address as usize] = (value & 0xF0) | (prev & 0xF);
+        } else {
+            self.memory[address as usize] = value; 
+        }
     }
+
+    //Writes the actual controller inputs into memory
+    pub fn write_controller_byte(&mut self, value: u8) {
+        self.memory[0xFF00] = value; 
+    }    
 
     /// Read a word from memory
     /// Used to read 16-bit values from memory

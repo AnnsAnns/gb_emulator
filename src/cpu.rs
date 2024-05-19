@@ -8,6 +8,7 @@ mod flags;
 pub mod instructions;
 pub mod registers;
 mod step;
+mod joypad;
 
 /// The CPU of the Gameboy
 pub struct CPU {
