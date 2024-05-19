@@ -49,7 +49,7 @@ async fn main() {
 
     request_new_screen_size(
         160.0 * SCALING,
-        14.0 * SCALING,
+        144.0 * SCALING,
     );
 
     let mut frame_counter = 0;
