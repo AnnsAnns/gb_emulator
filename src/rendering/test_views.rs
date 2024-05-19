@@ -111,6 +111,8 @@ async fn golden_image_layout() {
     };
     let tile_viewer_size = tile_viewer.size();
 
+    let mut emulation_controls = EmulationControls::new(5.0, gb_display_size.y + 10.0, 1.0);
+
     request_new_screen_size(
         background_viewer_size.x + tile_viewer_size.x + gb_display_size.x + 20.0,
         tile_viewer_size.y + 10.0,
@@ -125,6 +127,8 @@ async fn golden_image_layout() {
 
     loop {
         //update_tile_atlas(9, &test_tile, &mut tile_atlas, &PALETTE);
+
+        emulation_controls.draw();
 
         background_viewer.draw(&background_image);
 
