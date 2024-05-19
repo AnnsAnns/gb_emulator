@@ -356,8 +356,8 @@ impl CPU {
                     InstParam::Register8Bit(Register8Bit::A),
                 ),
                 0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::HL)),
-                0x2 => Instructions::LD(
-                    InstParam::Number8Bit(self.get_8bit_register(Register8Bit::C)),
+                0x2 => Instructions::LDH(
+                    InstParam::Register8Bit(Register8Bit::C),
                     InstParam::Register8Bit(Register8Bit::A),
                 ),
                 0x3 | 0x4 => Instructions::INVALID,
@@ -386,9 +386,9 @@ impl CPU {
                     InstParam::Number8Bit(self.get_8bit_from_pc()),
                 ),
                 0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::AF)),
-                0x2 => Instructions::LD(
+                0x2 => Instructions::LDH(
                     InstParam::Register8Bit(Register8Bit::A),
-                    InstParam::Number8Bit(self.get_8bit_register(Register8Bit::C)),
+                    InstParam::Register8Bit(Register8Bit::C),
                 ),
                 0x3 => Instructions::DI,
                 0x4 => Instructions::INVALID,

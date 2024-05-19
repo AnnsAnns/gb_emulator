@@ -241,11 +241,13 @@ impl CPU {
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             }
             Instructions::LDH(target, source) => match target {
-                InstParam::Number16Bit(source_number) => self.ldh_n16_a(*source_number),
+                InstParam::Number16Bit(target_number) => self.ldh_n16_a(*target_number),
+                InstParam::Number8Bit(target_number) => self.ldh_a8_a(*target_number),
                 InstParam::Register8Bit(target_register) => {
                     if *target_register == Register8Bit::A {
                         match source {
                             InstParam::Number16Bit(source_number) => self.ldh_a_n16(*source_number),
+                            InstParam::Number8Bit(source_number) => self.ldh_a_a8(*source_number),
                             InstParam::Register8Bit(source_register) => {
                                 if *source_register == Register8Bit::C {
                                     self.ldh_a_c()
@@ -280,6 +282,9 @@ impl CPU {
                                 InstParam::Register8Bit(source_register) => {
                                     self.ld_r8_r8(*target_register, *source_register)
                                 }
+                                InstParam::Number8Bit(source_number) => {
+                                    self.ld_r8_n8(*target_register, *source_number)
+                                }
                                 _ => {
                                     return Err(format!("Handling of {:?} not implemented", source))
                                 }
@@ -311,7 +316,6 @@ impl CPU {
                                 _ => return Err(format!("LD with {:?} not implemented", source)),
                             }
                         } else if *target_register == Register16Bit::HL {
-                            //TODO what about HLI und HLD?
                             match source {
                                 InstParam::Register8Bit(source_register) => {
                                     self.ld_hl_r8(*source_register)
