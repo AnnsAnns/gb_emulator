@@ -5,7 +5,10 @@ pub mod cpu;
 pub mod memory;
 pub mod rendering;
 
-use std::{thread::sleep, time::{self, Duration}};
+use std::{
+    thread::sleep,
+    time::{self, Duration},
+};
 
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{render_settings::*, tiles::*, views::*};
@@ -16,10 +19,12 @@ use crate::{
     rendering::utils::draw_scaled_text,
 };
 
+const FRAME_TIME: f32 = 5.0;
+
 #[macroquad::main("GB Emulator")]
 async fn main() {
     SimpleLogger::new().init().unwrap();
-    
+
     log::info!("Hello, world!");
 
     let gb_settings = GbSettings {
@@ -69,18 +74,27 @@ async fn main() {
         // Get start time
         let start_time = time::Instant::now();
 
-        root_ui().label(None, format!("PC: {:#06X}", pc).as_str());
-        root_ui().label(None, format!("SP: {:#06X}", sp).as_str());
         let instruction = cpu.prepare_and_decode_next_instruction();
         root_ui().label(None, format!("Instruction: {:?}", instruction).as_str());
         let result = cpu.step();
-        
+
         log::debug!("➡️ Result: {:?}", result);
 
-        root_ui().label(
-            None,
-            format!("Last Step Result: {:?}", result).as_str(),
-        );
+        match result {
+            Ok(result) => {
+                root_ui().label(
+                    None,
+                    format!(
+                        "Step Result: Cycles: {} | Bytes: {}",
+                        result.cycles, result.bytes
+                    )
+                    .as_str(),
+                );
+            }
+            Err(error) => {
+                root_ui().label(None, format!("Error: {:?}", error).as_str());
+            }
+        }
 
         root_ui().label(
             None,
@@ -109,14 +123,19 @@ async fn main() {
             .as_str(),
         );
 
+        let pc_following_word = cpu.get_memory().read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
         root_ui().label(
             None,
             format!(
-                "AF: {:#06X} BC: {:#06X} DE: {:#06X} HL: {:#06X}",
+                "AF: {:#06X} BC: {:#06X} DE: {:#06X} HL: {:#06X} SP: {:#06X} PC: {:#06X} Following Word: {:#06X}",
                 cpu.get_16bit_register(Register16Bit::AF),
                 cpu.get_16bit_register(Register16Bit::BC),
                 cpu.get_16bit_register(Register16Bit::DE),
-                cpu.get_16bit_register(Register16Bit::HL)
+                cpu.get_16bit_register(Register16Bit::HL),
+                sp,
+                pc,
+                pc_following_word
             )
             .as_str(),
         );
@@ -135,13 +154,27 @@ async fn main() {
 
         let elapsed_time = start_time.elapsed();
         // We run at 60Hz so we need to calculate the time we need to sleep
-        let time_to_sleep = match Duration::from_secs_f32(1.0 / 60.0).checked_sub(elapsed_time) {
-            Some(time) => time,
-            None => Duration::from_secs_f32(0.0),
-        };
-        log::debug!("⌛ Time to sleep: {:?} | Total Duration was {:?}", time_to_sleep, elapsed_time);
+        let time_to_sleep =
+            match Duration::from_secs_f32(1.0 / FRAME_TIME).checked_sub(elapsed_time) {
+                Some(time) => time,
+                None => Duration::from_secs_f32(0.0),
+            };
+        log::debug!(
+            "⌛ Time to sleep: {:?} | Total Duration was {:?}",
+            time_to_sleep,
+            elapsed_time
+        );
+        root_ui().label(
+            None,
+            format!(
+                "Free Time: {:.2}ms - Render Time: {:.2?}ms",
+                time_to_sleep.as_micros() as f64 / 1000.0,
+                elapsed_time.as_micros() as f64 / 1000.0
+            )
+            .as_str(),
+        );
         sleep(time_to_sleep);
-        
+
         frame_counter += 1;
     }
 }
