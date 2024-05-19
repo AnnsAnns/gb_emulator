@@ -40,7 +40,7 @@ impl CPU {
             }
         }
         
-        self.memory.write_byte(0xFF00, output);
+        self.memory.write_controller_byte(output);
     }
 
     pub fn get_mem_reg(& self, address: u16) -> u8 {

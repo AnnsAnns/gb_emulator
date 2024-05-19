@@ -29,6 +29,11 @@ impl Memory {
         }
     }
 
+    //Writes the actual controller inputs into memory
+    pub fn write_controller_byte(&mut self, value: u8) {
+        self.memory[0xFF00] = value; 
+    }    
+
     /// Read a word from memory
     /// Used to read 16-bit values from memory
     /// The GB is little-endian, so the low byte is first
