@@ -81,11 +81,14 @@ pub enum InstParam {
     Number16Bit(u16),
     Offset,
     Unsigned3Bit(u8),
+    None,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instructions {
     ADD(InstParam),
+    ADD_HL(InstParam),
+    ADD_SP(InstParam),
     ADC(InstParam),
     SUB(InstParam),
     SBC(InstParam),
@@ -102,6 +105,7 @@ pub enum Instructions {
     LDAHLI, // LD A, (HL+)
     LDHLDA, // LD (HL-), A
     LDAHLD, // LD A, (HL-)
+    LD_HL_SP_SIGNED(InstParam),
 
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
@@ -118,9 +122,23 @@ pub enum Instructions {
     RETI,
     RST(InstParam),
 
-    RLCA,
-    RLA,
-    RRCA,
+    RL(InstParam),
+    RLC(InstParam),
+    RR(InstParam),
+    RRC(InstParam),
+    SLA(InstParam),
+    SRL(InstParam),
+    SRA(InstParam),
+
+    CCF,
+    CPL,
+    DAA,
+    DI,
+    EI,
     HALT,
     NOP,
+    SCF,
+    STOP, 
+    
+    INVALID, // Invalid instruction
 }

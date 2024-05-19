@@ -20,16 +20,17 @@ impl CPU {
     pub fn dec_r8(&mut self, register: Register8Bit) -> InstructionResult {
         let r8_value = self.get_8bit_register(register);
         let (value,overflow) = r8_value.overflowing_sub(1);
-        self.set_8bit_register(register, value);
         let tail = r8_value & 0xF;
+        self.set_8bit_register(register, value);
+
 
         InstructionResult {
             cycles: 1,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
+                zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail == 0 {FlagState::Set} else {FlagState::NotAffected},
+                half_carry: if tail == 0 {FlagState::Set} else {FlagState::Unset},
                 carry: FlagState::NotAffected,
             },
         }
@@ -46,9 +47,9 @@ impl CPU {
             cycles: 3,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: if value == 0 {FlagState::Set} else {FlagState::NotAffected},
+                zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail == 0 {FlagState::Set} else {FlagState::NotAffected},
+                half_carry: if tail == 0 {FlagState::Set} else {FlagState::Unset},
                 carry: FlagState::NotAffected,
             },
         }

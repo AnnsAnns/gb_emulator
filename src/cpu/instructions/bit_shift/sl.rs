@@ -54,7 +54,7 @@ impl CPU {
 
 #[test]
 pub fn sl_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
 
     //Test sra_r8
     cpu.clear_carry_flag();

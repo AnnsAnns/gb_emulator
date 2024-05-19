@@ -4,13 +4,21 @@ use super::Memory;
 impl Memory {
     /// Read a byte from memory
     pub fn read_byte(&self, address: u16) -> u8 {
-        self.memory[address as usize]
+        if self.boot_rom_enabled && address < 0xFF {
+            self.boot_rom[address as usize]
+        } else {
+            self.memory[address as usize]
+        }
     }
 
     /// Write a byte to memory
     /// Usage: memory.write_byte(0xFF00, 0x3F);
     /// This will write the value 0x3F to the I/O register at 0xFF00 (JOYP)
     pub fn write_byte(&mut self, address: u16, value: u8) {
+        // Special case for disabling the boot rom
+        if address == 0xFF50 {
+            self.boot_rom_enabled = false;
+        }
 
         //Prevents overwriting of the last 4 bits in FF00 which are mapped to controller input
         if address == 0xFF00 {
@@ -30,5 +38,24 @@ impl Memory {
         let low_byte = self.read_byte(address) as u16;
         let high_byte = self.read_byte(address + 1) as u16;
         (high_byte << 8) | low_byte
+    }
+
+}
+
+#[cfg(test)]
+pub mod test_helper {
+
+    use std::fs;
+
+    use crate::memory::Memory;
+
+    pub fn file_to_memory(memory: &mut Memory, offset: u16, file_path: &str) {
+        let data: Vec<u8> = fs::read(file_path).expect("Could not read file");
+
+        for (pos, byte) in data.iter().enumerate() {
+            memory.write_byte(offset + pos as u16, *byte);
+            //let wrote = memory.read_byte(offset + pos as u16);
+            //println!("{:#X}", wrote);
+        }
     }
 }

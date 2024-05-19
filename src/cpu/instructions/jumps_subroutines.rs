@@ -206,7 +206,7 @@ impl CPU {
 
 #[test]
 pub fn jumps_subroutines_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut registers;
     // 1) CALL and JP
     cpu.set_16bit_register(Register16Bit::SP, 0xF000);

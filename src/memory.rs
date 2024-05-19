@@ -1,8 +1,15 @@
-/// Module for memory abstraction
+use std::{io::Write, mem};
+use std::sync::{Arc, Mutex};
+
+    /// Module for memory abstraction
 
 // These following modules do most of the abstraction work
 pub mod raw_memory_operations;
 pub mod io_abstraction;
+
+const MEMORY_SIZE: usize = 65537;
+const ROM_SIZE: usize = 256;
+
 
 /// Abstraction over the raw memory of the Gameboy
 #[derive(Debug, Clone)]
@@ -22,22 +29,33 @@ pub struct Memory {
     /// 0xFF00 - 0xFF7F: I/O Registers
     /// 0xFF80 - 0xFFFE: High RAM (HRAM)
     /// 0xFFFF: Interrupt Enable Register
-    memory: [u8; 0xFFFF],
+    memory: [u8; MEMORY_SIZE],
+    boot_rom_enabled: bool,
+    boot_rom: [u8; ROM_SIZE],
 }
 
 /// Implementation of the Memory
 /// For further abstractions see the respective modules
 impl Memory {
     /// Create a new Memory
-    pub fn new() -> Memory {
+    pub fn new(enable_bootrom: bool) -> Memory {
+        let rom_file = include_bytes!("../bin/DMG_ROM.bin");
+
+        let mut boot_rom = [0; ROM_SIZE];
+        for (i, byte) in rom_file.iter().enumerate() {
+            boot_rom[i] = *byte;
+        }
+        
         Memory {
-            memory: [0; 0xFFFF],
+            memory: [0; MEMORY_SIZE],
+            boot_rom_enabled: enable_bootrom,
+            boot_rom,
         }
     }
 
     /// This is used for testing purposes
     /// @warning This is really expensive and should only be used for testing
-    pub fn return_full_memory(&self) -> [u8; 0xFFFF] {
+    pub fn return_full_memory(&self) -> [u8; MEMORY_SIZE] {
         self.memory.clone()
     }
 
@@ -46,11 +64,24 @@ impl Memory {
 
         for (i, byte) in rom.iter().enumerate() {
             if i >= 0xFFFF {
-                eprintln!("ROM is too large for memory: size: {}", rom.len());
+                log::error!("ROM is too large for memory: size: {}", rom.len());
                 break;
             }
 
             self.memory[i] = *byte;
         }
+    }
+
+    /// Creates a new thread to dump the memory to a file (non-blocking)
+    pub fn dump_to_file(&self) {
+        let memory = self.clone();
+
+        std::thread::spawn(move || {
+            let mut file = std::fs::File::create("memory_dump.bin").expect("Unable to create file");
+
+            for byte in 0..MEMORY_SIZE {
+                file.write_all(memory.read_byte(byte as u16).to_le_bytes().as_ref()).expect("Unable to write to file");
+            }
+        });
     }
 }

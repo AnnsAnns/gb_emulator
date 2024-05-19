@@ -2,13 +2,11 @@ use crate::memory::Memory;
 
 use self::instructions::{InstructionResult, Instructions};
 
-
-
+pub mod decode;
 /// These are the actual abstractions and implementations of the CPU
 mod flags;
-pub mod registers;
 pub mod instructions;
-pub mod decode;
+pub mod registers;
 mod step;
 mod joypad;
 
@@ -22,17 +20,24 @@ pub struct CPU {
     memory: Memory,
     next_instruction: Instructions,
     last_step_result: InstructionResult,
+    interrupt_master_enable: bool,
+    /// 0 if nothing to do, 2 if ime needs to be set abfer next instruction, 1 if ime needs to be set after this instruction
+    enable_ime: i32,
+    low_power_mode: bool,
 }
 
 /// Note, please look at the relevant modules for the actual implementations
 impl CPU {
     /// Create a new CPU
-    pub fn new() -> CPU {
+    pub fn new(enable_bootrom: bool) -> CPU {
         CPU {
             registers: [0; 12],
-            memory: Memory::new(),
+            memory: Memory::new(enable_bootrom),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
+            interrupt_master_enable: false,
+            enable_ime: 0,
+            low_power_mode: false,
         }
     }
 
@@ -40,14 +45,19 @@ impl CPU {
         self.memory.load_from_file(file);
     }
 
-    pub fn get_next_opcode(&self) -> u8 {
-        self.memory.read_byte(self.get_16bit_register(registers::Register16Bit::PC))
+    pub fn get_next_opcode(&mut self) -> u8 {
+        self.memory
+            .read_byte(self.get_16bit_register(registers::Register16Bit::PC))
     }
 
     /// Set the next instruction to be executed
-    /// This is used for testing 
+    /// This is used for testing
     pub fn set_instruction(&mut self, instruction: Instructions) {
         self.next_instruction = instruction;
+    }
+
+    pub fn dump_memory(&self) {
+        self.memory.dump_to_file();
     }
 
     /// Get the last step result
@@ -64,7 +74,6 @@ impl CPU {
     pub fn get_registry_dump(&self) -> [u8; 12] {
         self.registers.clone()
     }
-
 
     /// Gets the full memory of the CPU
     /// This is used for testing purposes

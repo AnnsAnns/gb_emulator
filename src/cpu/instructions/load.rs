@@ -339,7 +339,7 @@ impl CPU {
 
 #[test]
 pub fn load_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     let mut registers;
 
