@@ -4,13 +4,22 @@ use super::Memory;
 impl Memory {
     /// Read a byte from memory
     pub fn read_byte(&self, address: u16) -> u8 {
-        self.memory[address as usize]
+        if self.boot_rom_enabled && address < 0xFF {
+            self.boot_rom[address as usize]
+        } else {
+            self.memory[address as usize]
+        }
     }
 
     /// Write a byte to memory
     /// Usage: memory.write_byte(0xFF00, 0x3F);
     /// This will write the value 0x3F to the I/O register at 0xFF00 (JOYP)
     pub fn write_byte(&mut self, address: u16, value: u8) {
+        // Special case for disabling the boot rom
+        if address == 0xFF50 {
+            self.boot_rom_enabled = false;
+        }
+
         self.memory[address as usize] = value;
     }
 

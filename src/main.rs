@@ -43,6 +43,8 @@ async fn main() {
         (10.0 * 24.0) * gb_settings.scaling + 25.0,
     );
 
+    let mut frame_counter = 0;
+
     loop {
         let pc = cpu.get_16bit_register(Register16Bit::PC);
         let sp = cpu.get_16bit_register(Register16Bit::SP);
@@ -120,8 +122,10 @@ async fn main() {
 
         next_frame().await;
 
-        // Dump memory for debugging purposes
-        cpu.dump_memory();
+        // Dump memory for debugging purposes (only every 60 frames)
+        if frame_counter % 60 == 0 {
+            cpu.dump_memory();
+        }
 
         let elapsed_time = start_time.elapsed();
         // We run at 60Hz so we need to calculate the time we need to sleep
@@ -131,6 +135,8 @@ async fn main() {
         };
         log::debug!("⌛ Time to sleep: {:?} | Total Duration was {:?}", time_to_sleep, elapsed_time);
         sleep(time_to_sleep);
+        
+        frame_counter += 1;
     }
 }
 
