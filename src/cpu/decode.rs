@@ -185,7 +185,7 @@ impl CPU {
                 0x7 => Instructions::RL(InstParam::Register8Bit(Register8Bit::A)),
                 0x8 => Instructions::JR(
                     InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
-                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8),
                 ),
                 0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xA => Instructions::LD(
@@ -202,7 +202,7 @@ impl CPU {
             0x2 => match tail {
                 0x0 => Instructions::JR(
                     InstParam::ConditionCodes(InstructionCondition::NotZero),
-                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8),
                 ),
                 0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0x2 => Instructions::LDHLIA,
@@ -210,7 +210,7 @@ impl CPU {
                 0x7 => Instructions::DAA,
                 0x8 => Instructions::JR(
                     InstParam::ConditionCodes(InstructionCondition::Zero),
-                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8),
                 ),
                 0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xA => Instructions::LDAHLI,
@@ -229,7 +229,7 @@ impl CPU {
                 0x7 => Instructions::SCF,
                 0x8 => Instructions::JR(
                     InstParam::ConditionCodes(InstructionCondition::Carry),
-                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8),
                 ),
                 0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xA => Instructions::LDAHLD,

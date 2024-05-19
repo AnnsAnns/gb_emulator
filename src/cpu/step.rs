@@ -318,6 +318,9 @@ impl CPU {
                                 }
                                 InstParam::Number8Bit(source_number) => {
                                     self.ld_hl_n8(*source_number)
+                                },
+                                InstParam::Number16Bit(source_number) => {
+                                    self.ld_r16_n16(Register16Bit::HL, *source_number)
                                 }
                                 InstParam::SignedNumber8Bit(source_number) => {
                                     self.ld_hl_sp_plus_e8(*source_number)
@@ -381,9 +384,9 @@ impl CPU {
                     InstParam::Number16Bit(target_addr) => {
                         self.jp_cc_n16(self.check_condition(cond), *target_addr)
                     }
-                    _ => return Err(format!("CALL of {:?} not implemented", optional_target)),
+                    _ => return Err(format!("JP of {:?} not implemented", optional_target)),
                 },
-                _ => return Err(format!("CALL of {:?} not implemented", target_or_condition)),
+                _ => return Err(format!("JP of {:?} not implemented", target_or_condition)),
             },
             Instructions::JR(target_or_condition, optional_target) => match target_or_condition {
                 InstParam::SignedNumber8Bit(target_addr) => self.jr_n16(*target_addr),
