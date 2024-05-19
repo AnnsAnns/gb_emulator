@@ -338,17 +338,28 @@ impl CPU {
 /// Please cross-reference with a Gameboy opcode table
 #[test]
 pub fn test_decode() {
-    let cpu = CPU::new();
+    let mut cpu = CPU::new();
     let mut decoded_values = String::new();
     let mut failed_values = String::new();
 
     for i in 0..=0xFF {
-        let decoded_value = cpu.decode(i);
+        // Write the opcode for 0xCB to memory
+        cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::SP)+1, i.clone());
 
-        if let Ok(val) = decoded_value {
-            decoded_values.push_str(&format!("{:#02X} -> {:?}\n", i, val));
-        } else {
-            failed_values.push_str(&format!("{:#02X} -> {:?}\n", i, decoded_value.unwrap_err()));
+        for opcode in [i, 0xCB] {
+            let decoded_value = cpu.decode(opcode);
+
+            let opcode = if opcode == 0xCB {
+                format!("0xCB | {:#02X}", i)
+            } else {
+                format!("{:#02X}", i)
+            };
+
+            if let Ok(val) = decoded_value {
+                decoded_values.push_str(&format!("{} -> {:?}\n", opcode, val));
+            } else {
+                failed_values.push_str(&format!("{} -> {:?}\n", opcode, decoded_value.unwrap_err()));
+            }
         }
     }
 
