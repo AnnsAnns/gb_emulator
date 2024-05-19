@@ -1,4 +1,4 @@
-/// Module for memory abstraction
+    /// Module for memory abstraction
 
 // These following modules do most of the abstraction work
 pub mod raw_memory_operations;

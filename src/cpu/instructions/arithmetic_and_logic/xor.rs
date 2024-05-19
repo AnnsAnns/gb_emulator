@@ -1,12 +1,10 @@
 use crate::cpu::{instructions::{ConditionCodes, FlagState, InstructionResult}, registers::Register8Bit, CPU};
 
 impl CPU {
-    pub fn sub_and_subc(&mut self, value: u8, cycles: u8, bytes: u8, add_carry: bool) -> InstructionResult {
+    pub fn xor(&mut self, value: u8, cycles: u8, bytes: u8) -> InstructionResult {
         let a = self.get_8bit_register(Register8Bit::A);
-        let carry = if add_carry && self.is_carry_flag_set() { 1 } else { 0 };
-        let result = a.wrapping_sub(value).wrapping_sub(carry);
-        let tail = a & 0xF;
-        
+        let result = a ^ value;
+
         self.set_8bit_register(Register8Bit::A, result);
 
         InstructionResult {
@@ -20,10 +18,10 @@ impl CPU {
                         FlagState::Unset
                     }
                 },
-                subtract: FlagState::Set,
-                half_carry: if value > tail {FlagState::Set} else {FlagState::Unset},
-                carry: if value > a {FlagState::Set} else {FlagState::Unset},
+                subtract: FlagState::Unset,
+                half_carry: FlagState::Unset,
+                carry: FlagState::Unset,
             },
         }
-    } 
+    }
 }

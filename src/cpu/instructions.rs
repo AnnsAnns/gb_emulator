@@ -81,6 +81,7 @@ pub enum InstParam {
     Number16Bit(u16),
     Offset,
     Unsigned3Bit(u8),
+    None,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -121,22 +122,22 @@ pub enum Instructions {
     RETI,
     RST(InstParam),
 
-    RLCA,
-    RLA,
-    RRCA,
-    HALT,
-    NOP,
-    STOP,
-    RRA,
-    DAA,
-    CPL,
-    SCF,
-    CCF,
-    RLC(InstParam),
     RL(InstParam),
+    RLC(InstParam),
+    RR(InstParam),
+    RRC(InstParam),
+    SLA(InstParam),
+    SRL(InstParam),
+    SRA(InstParam),
+
+    CCF,
+    CPL,
+    DAA,
     DI,
     EI,
-    SLA(InstParam),
+    HALT,
+    NOP,
+    SCF,
 
     INVALID, // Invalid instruction
 }
