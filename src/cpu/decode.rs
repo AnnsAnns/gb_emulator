@@ -319,9 +319,99 @@ impl CPU {
                 0xF => Instructions::RST(InstParam::Number8Bit(0x08)),
                 _ => self.not_implemented(opcode)?,
             },
-            0xD => self.not_implemented(opcode)?,
-            0xE => self.not_implemented(opcode)?,
-            0xF => self.not_implemented(opcode)?,
+            0xD => match tail {
+                0x0 => Instructions::RET(InstParam::ConditionCodes(InstructionCondition::NotCarry)),
+                0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::DE)),
+                0x2 => Instructions::JP(
+                    InstParam::ConditionCodes(InstructionCondition::NotCarry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0x3 => Instructions::INVALID,
+                0x4 => Instructions::CALL(
+                    InstParam::ConditionCodes(InstructionCondition::NotCarry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::DE)),
+                0x6 => Instructions::SUB(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0x7 => Instructions::RST(InstParam::Number8Bit(0x10)),
+                0x8 => Instructions::RET(InstParam::ConditionCodes(InstructionCondition::Carry)),
+                0x9 => Instructions::RETI,
+                0xA => Instructions::JP(
+                    InstParam::ConditionCodes(InstructionCondition::Carry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0xB => Instructions::INVALID,
+                0xC => Instructions::CALL(
+                    InstParam::ConditionCodes(InstructionCondition::Carry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0xD => Instructions::INVALID,
+                0xE => Instructions::SBC(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0xF => Instructions::RST(InstParam::Number8Bit(0x18)),
+                _ => self.not_implemented(opcode)?,
+            },
+            0xE => match tail {
+                0x0 => Instructions::LDH(
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::HL)),
+                0x2 => Instructions::LD(
+                    InstParam::Number8Bit(self.get_8bit_register(Register8Bit::C)),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0x3 | 0x4 => Instructions::INVALID,
+                0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::HL)),
+                0x6 => Instructions::AND(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0x7 => Instructions::RST(InstParam::Number8Bit(0x20)),
+                0x8 => {
+                    Instructions::ADD_SP(InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8))
+                }
+                0x9 => Instructions::JP(
+                    InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
+                    InstParam::Register16Bit(Register16Bit::HL),
+                ),
+                0xA => Instructions::LD(
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0xB..=0xD => Instructions::INVALID,
+                0xE => Instructions::XOR(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0xF => Instructions::RST(InstParam::Number8Bit(0x28)),
+                _ => self.not_implemented(opcode)?,
+            },
+            0xF => match tail {
+                0x0 => Instructions::LDH(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::AF)),
+                0x2 => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number8Bit(self.get_8bit_register(Register8Bit::C)),
+                ),
+                0x3 => Instructions::DI,
+                0x4 => Instructions::INVALID,
+                0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::AF)),
+                0x6 => Instructions::OR(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0x7 => Instructions::RST(InstParam::Number8Bit(0x30)),
+                0x8 => Instructions::LD_HL_SP_SIGNED(InstParam::SignedNumber8Bit(
+                    self.get_8bit_from_pc() as i8,
+                )),
+                0x9 => Instructions::LD(
+                    InstParam::Register16Bit(Register16Bit::SP),
+                    InstParam::Register16Bit(Register16Bit::HL),
+                ),
+                0xA => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0xB => Instructions::EI,
+                0xC | 0xD => Instructions::INVALID,
+                0xE => Instructions::CP(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0xF => Instructions::RST(InstParam::Number8Bit(0x38)),
+                _ => self.not_implemented(opcode)?,
+            },
             _ => self.not_implemented(opcode)?,
         })
     }

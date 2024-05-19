@@ -87,6 +87,7 @@ pub enum InstParam {
 pub enum Instructions {
     ADD(InstParam),
     ADD_HL(InstParam),
+    ADD_SP(InstParam),
     ADC(InstParam),
     SUB(InstParam),
     SBC(InstParam),
@@ -98,10 +99,12 @@ pub enum Instructions {
     DEC(InstParam),
 
     LD(InstParam, InstParam),
+    LDH(InstParam, InstParam),
     LDHLIA, // LD (HL+), A
     LDAHLI, // LD A, (HL+)
     LDHLDA, // LD (HL-), A
     LDAHLD, // LD A, (HL-)
+    LD_HL_SP_SIGNED(InstParam),
 
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
@@ -131,5 +134,9 @@ pub enum Instructions {
     CCF,
     RLC(InstParam),
     RL(InstParam),
+    DI,
+    EI,
     SLA(InstParam),
+
+    INVALID, // Invalid instruction
 }
