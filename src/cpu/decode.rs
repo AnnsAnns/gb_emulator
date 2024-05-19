@@ -128,7 +128,7 @@ impl CPU {
                 InstParam::Register8Bit(register_8bit),
                 InstParam::Number8Bit(self.get_8bit_from_pc()),
             ),
-           _ => return Err(format!("Not covered in common {:#02X}", opcode)),
+            _ => return Err(format!("Not covered in common {:#02X}", opcode)),
         })
     }
 
@@ -137,6 +137,11 @@ impl CPU {
     }
 
     pub fn decode(&self, opcode: u8) -> Result<Instructions, String> {
+        // 0xCB is a prefixed opcode with a completely different table
+        if opcode == 0xCB {
+            return self.decode_prefixed();
+        }
+
         // Split the opcode into head and tail
         // The head is the first 4 bits of the opcode e.g. 0x42 -> 0x4
         // The tail is the last 4 bits of the opcode e.g. 0x42 -> 0x2
@@ -160,80 +165,78 @@ impl CPU {
                 0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xA => Instructions::LD(
                     InstParam::Register8Bit(Register8Bit::A),
-                    InstParam::Number8Bit(self.memory
-                        .read_byte(self.get_16bit_register(Register16Bit::BC))),
+                    InstParam::Number8Bit(
+                        self.memory
+                            .read_byte(self.get_16bit_register(Register16Bit::BC)),
+                    ),
                 ),
                 0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xF => Instructions::RRC(InstParam::Register8Bit(Register8Bit::A)),
                 _ => self.not_implemented(opcode)?,
             },
-            0x1 => {
-                match tail {
-                    0x0 => Instructions::STOP,
-                    0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0x2 => Instructions::LD(
-                        InstParam::Register16Bit(Register16Bit::DE),
-                        InstParam::Register8Bit(Register8Bit::A),
+            0x1 => match tail {
+                0x0 => Instructions::STOP,
+                0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0x2 => Instructions::LD(
+                    InstParam::Register16Bit(Register16Bit::DE),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0x7 => Instructions::RL(InstParam::Register8Bit(Register8Bit::A)),
+                0x8 => Instructions::JR(
+                    InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0xA => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number8Bit(
+                        self.memory
+                            .read_byte(self.get_16bit_register(Register16Bit::DE)),
                     ),
-                    0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0x7 => Instructions::RL(InstParam::Register8Bit(Register8Bit::A)),
-                    0x8 => Instructions::JR(
-                        InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
-                        InstParam::Number8Bit(self.get_8bit_from_pc()),
-                    ),
-                    0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0xA => Instructions::LD(
-                        InstParam::Register8Bit(Register8Bit::A),
-                        InstParam::Number8Bit(self.memory
-                            .read_byte(self.get_16bit_register(Register16Bit::DE))),
-                    ),
-                    0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0xF => Instructions::RR(InstParam::Register8Bit(Register8Bit::A)),
-                    _ => self.not_implemented(opcode)?,
-                }
+                ),
+                0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
+                0xF => Instructions::RR(InstParam::Register8Bit(Register8Bit::A)),
+                _ => self.not_implemented(opcode)?,
             },
-            0x2 => {
-                match tail {
-                    0x0 => Instructions::JR(
-                        InstParam::ConditionCodes(InstructionCondition::NotZero),
-                        InstParam::Number8Bit(self.get_8bit_from_pc()),
-                    ),
-                    0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0x2 => Instructions::LDHLIA,
-                    0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0x7 => Instructions::DAA,
-                    0x8 => Instructions::JR(
-                        InstParam::ConditionCodes(InstructionCondition::Zero),
-                        InstParam::Number8Bit(self.get_8bit_from_pc()),
-                    ),
-                    0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0xA => Instructions::LDAHLI,
-                    0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0xF => Instructions::CPL,
-                    _ => self.not_implemented(opcode)?,
-                }
-            }
-            0x3 => {
-                match tail {
-                    0x0 =>  Instructions::JR(
-                        InstParam::ConditionCodes(InstructionCondition::NotCarry),
-                        InstParam::Number8Bit(self.get_8bit_from_pc()),
-                    ),
-                    0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0x2 => Instructions::LDHLDA,
-                    0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0x7 => Instructions::SCF,
-                    0x8 => Instructions::JR(
-                        InstParam::ConditionCodes(InstructionCondition::Carry),
-                        InstParam::Number8Bit(self.get_8bit_from_pc()),
-                    ),
-                    0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0xA => Instructions::LDAHLD,
-                    0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
-                    0xF => Instructions::CCF,
-                    _ => self.not_implemented(opcode)?,
-                }
-            }
+            0x2 => match tail {
+                0x0 => Instructions::JR(
+                    InstParam::ConditionCodes(InstructionCondition::NotZero),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0x2 => Instructions::LDHLIA,
+                0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0x7 => Instructions::DAA,
+                0x8 => Instructions::JR(
+                    InstParam::ConditionCodes(InstructionCondition::Zero),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0xA => Instructions::LDAHLI,
+                0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
+                0xF => Instructions::CPL,
+                _ => self.not_implemented(opcode)?,
+            },
+            0x3 => match tail {
+                0x0 => Instructions::JR(
+                    InstParam::ConditionCodes(InstructionCondition::NotCarry),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0x2 => Instructions::LDHLDA,
+                0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0x7 => Instructions::SCF,
+                0x8 => Instructions::JR(
+                    InstParam::ConditionCodes(InstructionCondition::Carry),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
+                0xA => Instructions::LDAHLD,
+                0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
+                0xF => Instructions::CCF,
+                _ => self.not_implemented(opcode)?,
+            },
             // LD instructions (& HALT)
             0x4..=0x7 => {
                 let value = self.tail_to_inst_param(tail);
@@ -316,16 +319,146 @@ impl CPU {
                 0xF => Instructions::RST(InstParam::Number8Bit(0x08)),
                 _ => self.not_implemented(opcode)?,
             },
-            0xD => {
-                self.not_implemented(opcode)?
+            0xD => match tail {
+                0x0 => Instructions::RET(InstParam::ConditionCodes(InstructionCondition::NotCarry)),
+                0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::DE)),
+                0x2 => Instructions::JP(
+                    InstParam::ConditionCodes(InstructionCondition::NotCarry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0x3 => Instructions::INVALID,
+                0x4 => Instructions::CALL(
+                    InstParam::ConditionCodes(InstructionCondition::NotCarry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::DE)),
+                0x6 => Instructions::SUB(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0x7 => Instructions::RST(InstParam::Number8Bit(0x10)),
+                0x8 => Instructions::RET(InstParam::ConditionCodes(InstructionCondition::Carry)),
+                0x9 => Instructions::RETI,
+                0xA => Instructions::JP(
+                    InstParam::ConditionCodes(InstructionCondition::Carry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0xB => Instructions::INVALID,
+                0xC => Instructions::CALL(
+                    InstParam::ConditionCodes(InstructionCondition::Carry),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0xD => Instructions::INVALID,
+                0xE => Instructions::SBC(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0xF => Instructions::RST(InstParam::Number8Bit(0x18)),
+                _ => self.not_implemented(opcode)?,
             },
-            0xE => {
-                self.not_implemented(opcode)?
+            0xE => match tail {
+                0x0 => Instructions::LDH(
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::HL)),
+                0x2 => Instructions::LD(
+                    InstParam::Number8Bit(self.get_8bit_register(Register8Bit::C)),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0x3 | 0x4 => Instructions::INVALID,
+                0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::HL)),
+                0x6 => Instructions::AND(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0x7 => Instructions::RST(InstParam::Number8Bit(0x20)),
+                0x8 => {
+                    Instructions::ADD_SP(InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8))
+                }
+                0x9 => Instructions::JP(
+                    InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
+                    InstParam::Register16Bit(Register16Bit::HL),
+                ),
+                0xA => Instructions::LD(
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                    InstParam::Register8Bit(Register8Bit::A),
+                ),
+                0xB..=0xD => Instructions::INVALID,
+                0xE => Instructions::XOR(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0xF => Instructions::RST(InstParam::Number8Bit(0x28)),
+                _ => self.not_implemented(opcode)?,
             },
-            0xF => {
-                self.not_implemented(opcode)?
+            0xF => match tail {
+                0x0 => Instructions::LDH(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                ),
+                0x1 => Instructions::POP(InstParam::Register16Bit(Register16Bit::AF)),
+                0x2 => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number8Bit(self.get_8bit_register(Register8Bit::C)),
+                ),
+                0x3 => Instructions::DI,
+                0x4 => Instructions::INVALID,
+                0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::AF)),
+                0x6 => Instructions::OR(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0x7 => Instructions::RST(InstParam::Number8Bit(0x30)),
+                0x8 => Instructions::LD_HL_SP_SIGNED(InstParam::SignedNumber8Bit(
+                    self.get_8bit_from_pc() as i8,
+                )),
+                0x9 => Instructions::LD(
+                    InstParam::Register16Bit(Register16Bit::SP),
+                    InstParam::Register16Bit(Register16Bit::HL),
+                ),
+                0xA => Instructions::LD(
+                    InstParam::Register8Bit(Register8Bit::A),
+                    InstParam::Number16Bit(self.get_16bit_from_pc()),
+                ),
+                0xB => Instructions::EI,
+                0xC | 0xD => Instructions::INVALID,
+                0xE => Instructions::CP(InstParam::Number8Bit(self.get_8bit_from_pc())),
+                0xF => Instructions::RST(InstParam::Number8Bit(0x38)),
+                _ => self.not_implemented(opcode)?,
             },
             _ => self.not_implemented(opcode)?,
+        })
+    }
+
+    /// Decode a prefixed opcode
+    fn decode_prefixed(&self) -> Result<Instructions, String> {
+        let opcode = self
+            .memory
+            .read_byte(self.get_16bit_register(Register16Bit::PC) + 1);
+
+        let head = opcode >> 4;
+        let tail = opcode & 0xF;
+
+        let register_tail = if tail > 0x7 { tail - 0x8 } else { tail };
+        let register = match register_tail {
+            0x0 => InstParam::Register8Bit(Register8Bit::B),
+            0x1 => InstParam::Register8Bit(Register8Bit::C),
+            0x2 => InstParam::Register8Bit(Register8Bit::D),
+            0x3 => InstParam::Register8Bit(Register8Bit::E),
+            0x4 => InstParam::Register8Bit(Register8Bit::H),
+            0x5 => InstParam::Register8Bit(Register8Bit::L),
+            0x6 => InstParam::Number16Bit(self.get_16bit_register(Register16Bit::HL)),
+            0x7 => InstParam::Register8Bit(Register8Bit::A),
+            _ => return Err(format!("Unknown tail: {:#02X}", tail)),
+        };
+
+        // The second half of the tail is offset by 1
+        let offset: u8 = if tail >= 0x8 { 1 } else { 0 };
+
+        Ok(match head {
+            0x0 => Instructions::RLC(register),
+            0x1 => Instructions::RL(register),
+            0x2 => Instructions::SLA(register),
+            0x3 => Instructions::SWAP(register),
+            0x4 => Instructions::BIT(InstParam::Unsigned3Bit(0 + offset), register),
+            0x5 => Instructions::BIT(InstParam::Unsigned3Bit(2 + offset), register),
+            0x6 => Instructions::BIT(InstParam::Unsigned3Bit(4 + offset), register),
+            0x7 => Instructions::BIT(InstParam::Unsigned3Bit(6 + offset), register),
+            0x8 => Instructions::RES(InstParam::Unsigned3Bit(0 + offset), register),
+            0x9 => Instructions::RES(InstParam::Unsigned3Bit(2 + offset), register),
+            0xA => Instructions::RES(InstParam::Unsigned3Bit(4 + offset), register),
+            0xB => Instructions::RES(InstParam::Unsigned3Bit(6 + offset), register),
+            0xC => Instructions::SET(InstParam::Unsigned3Bit(0 + offset), register),
+            0xD => Instructions::SET(InstParam::Unsigned3Bit(2 + offset), register),
+            0xE => Instructions::SET(InstParam::Unsigned3Bit(4 + offset), register),
+            0xF => Instructions::SET(InstParam::Unsigned3Bit(6 + offset), register),
+            _ => return self.not_implemented(opcode),
         })
     }
 }
@@ -338,17 +471,33 @@ impl CPU {
 /// Please cross-reference with a Gameboy opcode table
 #[test]
 pub fn test_decode() {
-    let cpu = CPU::new();
+    let mut cpu = CPU::new();
     let mut decoded_values = String::new();
     let mut failed_values = String::new();
 
     for i in 0..=0xFF {
-        let decoded_value = cpu.decode(i);
+        // Write the opcode for 0xCB to memory
+        cpu.memory
+            .write_byte(cpu.get_16bit_register(Register16Bit::SP) + 1, i.clone());
 
-        if let Ok(val) = decoded_value {
-            decoded_values.push_str(&format!("{:#02X} -> {:?}\n", i, val));
-        } else {
-            failed_values.push_str(&format!("{:#02X} -> {:?}\n", i, decoded_value.unwrap_err()));
+        for opcode in [i, 0xCB] {
+            let decoded_value = cpu.decode(opcode);
+
+            let opcode = if opcode == 0xCB {
+                format!("0xCB | {:#02X}", i)
+            } else {
+                format!("{:#02X}", i)
+            };
+
+            if let Ok(val) = decoded_value {
+                decoded_values.push_str(&format!("{} -> {:?}\n", opcode, val));
+            } else {
+                failed_values.push_str(&format!(
+                    "{} -> {:?}\n",
+                    opcode,
+                    decoded_value.unwrap_err()
+                ));
+            }
         }
     }
 
