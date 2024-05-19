@@ -87,6 +87,7 @@ pub enum InstParam {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instructions {
     ADD(InstParam),
+    ADD_HL(InstParam),
     ADC(InstParam),
     SUB(InstParam),
     SBC(InstParam),
