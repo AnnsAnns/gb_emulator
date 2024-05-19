@@ -1,3 +1,5 @@
 /target
 /vendor
 memory_dump.bin
+decoded_values.txt
+failed_values.txt
