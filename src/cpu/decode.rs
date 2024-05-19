@@ -424,9 +424,9 @@ impl CPU {
 
         let head = opcode >> 4;
         let tail = opcode & 0xF;
-        let tail = if tail > 0x7 { tail - 0x8 } else { tail };
 
-        let register = match tail {
+        let register_tail = if tail > 0x7 { tail - 0x8 } else { tail };
+        let register = match register_tail {
             0x0 => InstParam::Register8Bit(Register8Bit::B),
             0x1 => InstParam::Register8Bit(Register8Bit::C),
             0x2 => InstParam::Register8Bit(Register8Bit::D),
