@@ -52,7 +52,7 @@ impl TileViewer {
     }
 
     pub fn size(&self) -> Vec2 {
-        Vec2 {x: 8.0 * 16.0 * self.scaling, y: 8.0 * 24.0 * self.scaling + 15.0}
+        Vec2 {x: 8.0 * 16.0 * self.scaling, y: 8.0 * 24.0 * self.scaling + 20.0}
     }
 
 }
