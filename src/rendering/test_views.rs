@@ -17,7 +17,7 @@ async fn golden_image_tile_viewer() {
 
     let mut atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
 
-    let mut cpu = cpu::CPU::new();
+    let mut cpu = cpu::CPU::new(false);
 
     file_to_memory(&mut cpu.get_memory(), 0x8000, "test_files/cgbBCE1-VRAM.bin");
 
@@ -54,7 +54,7 @@ async fn golden_image_background_viewer() {
     let mut background_image = Image::gen_image_color(32 * 8, 32 * 8, PINK);
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
 
-    let mut cpu = cpu::CPU::new();
+    let mut cpu = cpu::CPU::new(false);
 
     let mut background_viewer = BackgroundViewer {
         offset_x: 0.0,
@@ -118,7 +118,7 @@ async fn golden_image_layout() {
         tile_viewer_size.y + 10.0,
     );
 
-    let mut cpu = cpu::CPU::new();
+    let mut cpu = cpu::CPU::new(false);
 
     file_to_memory(&mut cpu.get_memory(), 0x8000, "test_files/Mindy1-VRAM.bin");
 
