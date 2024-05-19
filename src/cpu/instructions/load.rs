@@ -183,6 +183,25 @@ impl CPU {
             },
         }
     }
+    /// loads(copies) the value in register A into memory at the address $FF00+a8 
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH__C_,A
+    pub fn ldh_a8_a (&mut self, a8:u8)-> InstructionResult {
+        let target = 0xFF00u16 + a8 as u16;
+        let value = self.get_8bit_register(Register8Bit::A);
+        
+        self.memory.write_byte(target, value);
+
+        InstructionResult {
+            cycles: 3,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
     /// loads(copies) the value from memory at the address in 16bit-register source into register A
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_r16_
     pub fn ld_a_r16 (&mut self, source: Register16Bit)-> InstructionResult {
@@ -237,7 +256,7 @@ impl CPU {
             },
         }
     }
-    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + c into register A. TODO was ist C hier?
+    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + c into register A. 
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
     pub fn ldh_a_c (&mut self)-> InstructionResult {
         let source = 0xFF00u16 + self.get_8bit_register(Register8Bit::C) as u16;
@@ -247,6 +266,24 @@ impl CPU {
         InstructionResult {
             cycles: 2,
             bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + a8 into register A. 
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
+    pub fn ldh_a_a8 (&mut self, a8:u8)-> InstructionResult {
+        let source = 0xFF00u16 + a8 as u16;
+        let value = self.memory.read_byte(source);
+        self.set_8bit_register(Register8Bit::A, value);
+
+        InstructionResult {
+            cycles: 3,
+            bytes: 2,
             condition_codes: ConditionCodes {
                 zero: FlagState::NotAffected,
                 subtract: FlagState::NotAffected,
