@@ -1,7 +1,6 @@
 use macroquad::prelude::*;
 use crate::cpu;
 use crate::memory::raw_memory_operations::test_helper::*;
-use crate::rendering::render_settings::*;
 use crate::rendering::tiles::*;
 use crate::rendering::views::*;
 
@@ -9,15 +8,19 @@ use crate::rendering::views::*;
 #[macroquad::test]
 async fn golden_image_vram_viewer() {
     // Inititalize General Settings
-    let gb_settings = GbSettings {
-        ..Default::default()
-    };
+    const palette: [Color; 4] = [
+        Color::new(1.00, 1.00, 1.00, 1.00),
+        Color::new(0.18, 0.83, 0.18, 1.00),
+        Color::new(0.12, 0.54, 0.12, 1.00),
+        Color::new(0.06, 0.15, 0.06, 1.00)
+    ];
+    const scaling: f32 = 4.0;
 
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
 
     request_new_screen_size(
-        8.0 * 16.0 * gb_settings.scaling,
-        8.0 * 24.0 * gb_settings.scaling,
+        8.0 * 16.0 * scaling,
+        8.0 * 24.0 * scaling,
     );
 
     let mut cpu = cpu::CPU::new();
@@ -32,11 +35,11 @@ async fn golden_image_vram_viewer() {
         &cpu.get_memory(),
         16 * 24,
         &mut tile_atlas,
-        &gb_settings.palette,
+        &palette,
     );
 
     loop {
-        draw_tile_viewer(0.0, 0.0, &tile_atlas, &gb_settings);
+        draw_tile_viewer(0.0, 0.0, &tile_atlas, scaling);
 
         next_frame().await;
     }
@@ -45,9 +48,14 @@ async fn golden_image_vram_viewer() {
 #[macroquad::test]
 async fn golden_image_layout() {
     // Inititalize General Settings
-    let gb_settings = GbSettings {
-        ..Default::default()
-    };
+    const palette: [Color; 4] = [
+        Color::new(1.00, 1.00, 1.00, 1.00),
+        Color::new(0.18, 0.83, 0.18, 1.00),
+        Color::new(0.12, 0.54, 0.12, 1.00),
+        Color::new(0.06, 0.15, 0.06, 1.00)
+    ];
+    const scaling: f32 = 4.0;
+
 
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
     let combined_image = Image::gen_image_color(160, 144, GREEN);
@@ -59,19 +67,19 @@ async fn golden_image_layout() {
     ];
 
     request_new_screen_size(
-        (160.0 + 8.0 * 16.0) * gb_settings.scaling + 15.0,
-        (8.0 * 24.0) * gb_settings.scaling + 25.0,
+        (160.0 + 8.0 * 16.0) * scaling + 15.0,
+        (8.0 * 24.0) * scaling + 25.0,
     );
 
     loop {
-        update_tile_atlas(9, &test_tile, &mut tile_atlas, &gb_settings.palette);
+        update_tile_atlas(9, &test_tile, &mut tile_atlas, &palette);
 
-        draw_gb_display(5.0, 5.0, &combined_image, &gb_settings);
+        draw_gb_display(5.0, 5.0, &combined_image, scaling);
         draw_tile_viewer(
-            combined_image.width() as f32 * gb_settings.scaling + 10.0,
+            combined_image.width() as f32 * scaling + 10.0,
             5.0,
             &tile_atlas,
-            &gb_settings,
+            scaling,
         );
 
         next_frame().await;
@@ -81,9 +89,13 @@ async fn golden_image_layout() {
 #[macroquad::test]
 async fn golden_image_background_viewer() {
     // Inititalize General Settings
-    let gb_settings = GbSettings {
-        ..Default::default()
-    };
+    const palette: [Color; 4] = [
+        Color::new(1.00, 1.00, 1.00, 1.00),
+        Color::new(0.18, 0.83, 0.18, 1.00),
+        Color::new(0.12, 0.54, 0.12, 1.00),
+        Color::new(0.06, 0.15, 0.06, 1.00)
+    ];
+    const scaling: f32 = 4.0;
 
     let mut background_image = Image::gen_image_color(32 * 8, 32 * 8, PINK);
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
@@ -97,24 +109,24 @@ async fn golden_image_background_viewer() {
     );
 
     request_new_screen_size(
-        (32.0 * 8.0 + 16.0 * 8.0) * gb_settings.scaling,
-        (32.0 * 8.0) * gb_settings.scaling,
+        (32.0 * 8.0 + 16.0 * 8.0) * scaling,
+        (32.0 * 8.0) * scaling,
     );
 
     loop {
 
-        update_atlas_from_memory(&cpu.get_memory(), 16*24, &mut tile_atlas, &gb_settings.palette);
+        update_atlas_from_memory(&cpu.get_memory(), 16*24, &mut tile_atlas, &palette);
 
         update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
 
         draw_tile_viewer(
-            (32.0 * 8.0) * gb_settings.scaling + 10.0,
+            (32.0 * 8.0) * scaling + 10.0,
             0.0,
             &tile_atlas,
-            &gb_settings,
+            scaling,
         );
 
-        draw_background_viewer(0.0, 0.0, &background_image, &gb_settings);
+        draw_background_viewer(0.0, 0.0, &background_image, scaling);
 
         next_frame().await;
     }
