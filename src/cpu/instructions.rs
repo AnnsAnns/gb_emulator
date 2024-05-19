@@ -138,6 +138,7 @@ pub enum Instructions {
     HALT,
     NOP,
     SCF,
-
+    STOP, 
+    
     INVALID, // Invalid instruction
 }

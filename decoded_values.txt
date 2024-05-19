@@ -12,7 +12,7 @@
 0xCB | 0x5 -> RLC(Register8Bit(L))
 0x6 -> LD(Register8Bit(B), Number8Bit(6))
 0xCB | 0x6 -> RLC(Number16Bit(0))
-0x7 -> RLCA
+0x7 -> RLC(Register8Bit(A))
 0xCB | 0x7 -> RLC(Register8Bit(A))
 0x8 -> LD(Number16Bit(8), Register16Bit(SP))
 0xCB | 0x8 -> RLC(Register8Bit(B))
@@ -28,7 +28,7 @@
 0xCB | 0xD -> RLC(Register8Bit(L))
 0xE -> LD(Register8Bit(C), Number8Bit(14))
 0xCB | 0xE -> RLC(Number16Bit(0))
-0xF -> RRCA
+0xF -> RRC(Register8Bit(A))
 0xCB | 0xF -> RLC(Register8Bit(A))
 0x10 -> STOP
 0xCB | 0x10 -> RL(Register8Bit(B))
@@ -44,7 +44,7 @@
 0xCB | 0x15 -> RL(Register8Bit(L))
 0x16 -> LD(Register8Bit(D), Number8Bit(22))
 0xCB | 0x16 -> RL(Number16Bit(0))
-0x17 -> RLA
+0x17 -> RL(Register8Bit(A))
 0xCB | 0x17 -> RL(Register8Bit(A))
 0x18 -> JR(ConditionCodes(SkipConditionCodes), Number8Bit(24))
 0xCB | 0x18 -> RL(Register8Bit(B))
@@ -60,7 +60,7 @@
 0xCB | 0x1D -> RL(Register8Bit(L))
 0x1E -> LD(Register8Bit(E), Number8Bit(30))
 0xCB | 0x1E -> RL(Number16Bit(0))
-0x1F -> RRA
+0x1F -> RR(Register8Bit(A))
 0xCB | 0x1F -> RL(Register8Bit(A))
 0x20 -> JR(ConditionCodes(NotZero), Number8Bit(32))
 0xCB | 0x20 -> SLA(Register8Bit(B))
