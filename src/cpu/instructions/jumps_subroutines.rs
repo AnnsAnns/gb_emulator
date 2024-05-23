@@ -60,15 +60,13 @@ impl CPU {
     }
         /// pushes the next instructions address on the stack, then does a jp_n16
         pub fn call_n16(&mut self, target: u16) -> InstructionResult {
-            let value = self.get_16bit_register(Register16Bit::PC);
-            self.set_16bit_register(Register16Bit::PC, value+3);
+            let value = self.get_16bit_register(Register16Bit::PC)+3;
 
             //push pc to stack
             self.dec_sp();
             let memory_address = self.get_16bit_register(Register16Bit::SP);
-            let pc = self.get_16bit_register(Register16Bit::PC);
-            let value1:u8 = (pc >> 8) as u8;
-            let value2:u8 = pc as u8;
+            let value1:u8 = (value >> 8) as u8;
+            let value2:u8 = value as u8;
 
             self.memory.write_byte(memory_address, value1);
             self.dec_sp();
@@ -155,7 +153,20 @@ impl CPU {
         }
         /// calls address vec, for rst vectors: One of the RST vectors (0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, and 0x38)
         pub fn rst_vec(&mut self,vec: u8) -> InstructionResult {
-            self.call_n16(vec as u16);
+            let value = self.get_16bit_register(Register16Bit::PC)+1;
+
+            //push pc to stack
+            self.dec_sp();
+            let memory_address = self.get_16bit_register(Register16Bit::SP);
+            let value1:u8 = (value >> 8) as u8;
+            let value2:u8 = value as u8;
+
+            self.memory.write_byte(memory_address, value1);
+            self.dec_sp();
+            self.memory.write_byte(memory_address-1, value2);
+
+
+            self.jp_n16(vec as u16);
 
             InstructionResult {
                 cycles: 4,
@@ -221,7 +232,7 @@ pub fn jumps_subroutines_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0x00A3);
+    assert_eq!(result, 0x00A0);
 
     cpu.set_16bit_register(Register16Bit::HL, 0x0A00);
     let mut expected_result = InstructionResult::default();
@@ -233,7 +244,7 @@ pub fn jumps_subroutines_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0x0A01);
+    assert_eq!(result, 0x0A00);
     // 2) RET
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 4;
@@ -244,16 +255,16 @@ pub fn jumps_subroutines_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0x000E);
+    assert_eq!(result, 0x000D);
     // 3) JR
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 3;
     expected_result.bytes = 2;
-    let before = cpu.get_16bit_register(Register16Bit::PC);
-    assert_eq!(before, 0x000E);
+    let next_instr = cpu.get_16bit_register(Register16Bit::PC)+2;
+    assert_eq!(next_instr, 0x000F);
     assert_correct_instruction_step(&mut cpu, Instructions::JR(super::InstParam::SignedNumber8Bit(5),super::InstParam::SignedNumber8Bit(10)), expected_result);
     let result = cpu.get_16bit_register(Register16Bit::PC);
-    assert_eq!(result, before+7);
+    assert_eq!(result, next_instr+5);
     // 4) RST
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 4;
@@ -264,6 +275,6 @@ pub fn jumps_subroutines_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0x19);
+    assert_eq!(result, 0x18);
 }
     

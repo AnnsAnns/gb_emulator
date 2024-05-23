@@ -408,16 +408,20 @@ pub fn load_test() {
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 3;
     expected_result.cycles = 3;
-    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Number16Bit(0xFF00u16)), expected_result);
+    
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Number16Bit(0xF000u16)), expected_result);
     //6) LD [r16],A: [DE],A
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 2;
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 42);
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Register8Bit(Register8Bit::A)), expected_result);
     //7) LD A,[r16]: A,0xFF00u16
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 2;
+    assert_eq!(cpu.memory.read_byte(0xF000u16),42);
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::A), super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 42);
@@ -425,7 +429,7 @@ pub fn load_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0xFF00u16);
+    assert_eq!(result, 0xF000u16);
 
     //8) LD [n16],A
     cpu.ld_r8_n8(Register8Bit::A, 0);
@@ -453,11 +457,11 @@ pub fn load_test() {
     cpu.ld_r8_n8(Register8Bit::A, 111);
     cpu.ldh_n16_a(0xFEFF);
     cpu.ld_r8_n8(Register8Bit::A, 222);
-    cpu.ldh_n16_a(0xFF00);
+    cpu.ldh_n16_a(0xF000);
     cpu.ldh_a_n16(0xFEFF);
     registers = cpu.get_registry_dump();
     assert_ne!(registers[Register8Bit::A as usize], 111);
-    cpu.ldh_a_n16(0xFF00);
+    cpu.ldh_a_n16(0xF000);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 222);
     //12) LDI und LDD

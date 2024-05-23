@@ -101,17 +101,17 @@ impl CPU {
                 InstParam::Register16Bit(register_16bit),
                 InstParam::Number16Bit(self.get_16bit_from_pc()),
             ),
-            0x3 => Instructions::INC(InstParam::Register16Bit(register_16bit)),
+            0x3 => Instructions::INC(InstParam::Register16Bit(register_16bit),InstParam::Boolean(false)),
             0x4 => Instructions::INC(if head == 0x3 {
-                InstParam::Number16Bit(self.get_16bit_from_pc()) // Special case for (HL)
+                InstParam::Register16Bit(Register16Bit::HL) // Special case for (HL)
             } else {
                 InstParam::Register8Bit(register_8bit)
-            }),
+            }, if head == 0x3 {InstParam::Boolean(true)}else{InstParam::Boolean(false)}),
             0x5 => Instructions::DEC(if head == 0x3 {
-                InstParam::Number16Bit(self.get_16bit_from_pc()) // Special case for (HL)
+                InstParam::Register16Bit(Register16Bit::HL) // Special case for (HL)
             } else {
                 InstParam::Register8Bit(register_8bit)
-            }),
+            }, if head == 0x3 {InstParam::Boolean(true)}else{InstParam::Boolean(false)}),
             0x6 => Instructions::LD(
                 if head == 0x3 {
                     InstParam::Number16Bit(self.get_16bit_from_pc()) // Special case for (HL)
@@ -121,9 +121,9 @@ impl CPU {
                 InstParam::Number8Bit(self.get_8bit_from_pc()),
             ),
             0x9 => Instructions::ADD_HL(InstParam::Register16Bit(register_16bit)),
-            0xB => Instructions::DEC(InstParam::Register16Bit(register_16bit)),
-            0xC => Instructions::INC(InstParam::Register8Bit(register_8bit)),
-            0xD => Instructions::DEC(InstParam::Register8Bit(register_8bit)),
+            0xB => Instructions::DEC(InstParam::Register16Bit(register_16bit),InstParam::Boolean(false)),
+            0xC => Instructions::INC(InstParam::Register8Bit(register_8bit),InstParam::Boolean(false)),
+            0xD => Instructions::DEC(InstParam::Register8Bit(register_8bit),InstParam::Boolean(false)),
             0xE => Instructions::LD(
                 InstParam::Register8Bit(register_8bit),
                 InstParam::Number8Bit(self.get_8bit_from_pc()),

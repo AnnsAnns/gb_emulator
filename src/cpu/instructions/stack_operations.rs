@@ -265,7 +265,7 @@ pub fn stack_ops_test() {
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
     expected_result.bytes = 1;
-    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::SP),super::InstParam::Boolean(false)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;
     let high = registers[register_value.clone()] as u16;
@@ -276,7 +276,7 @@ pub fn stack_ops_test() {
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
     expected_result.bytes = 1;
-    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register16Bit(Register16Bit::SP),super::InstParam::Boolean(false)), expected_result);
     
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;

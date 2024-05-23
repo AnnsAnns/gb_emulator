@@ -47,20 +47,26 @@ impl CPU {
                 InstParam::Number8Bit(value) => self.adc_a_n8(*value),
                 _ => return Err(format!("ADD with {:?} not implemented", param)),
             },
-            Instructions::INC(param) => match param {
+            Instructions::INC(param, hl_memory) => match param {
                 InstParam::Register8Bit(register) => self.inc(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.inc_sp(),
-                    Register16Bit::HL => self.inc_hl(),
+                    Register16Bit::HL => match hl_memory {
+                        InstParam::Boolean(hl_with_memory) => if (*hl_with_memory) {self.inc_hl()} else {self.inc_r16(register.clone())},
+                        _ => return Err(format!("INC with {:?} not implemented", param)),
+                    },
                     _ => self.inc_r16(register.clone()),
                 },
                 _ => return Err(format!("INC with {:?} not implemented", param)),
             },
-            Instructions::DEC(param) => match param {
+            Instructions::DEC(param, hl_memory) => match param {
                 InstParam::Register8Bit(register) => self.dec_r8(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.dec_sp(),
-                    Register16Bit::HL => self.dec_hl(),
+                    Register16Bit::HL => match hl_memory {
+                        InstParam::Boolean(hl_with_memory) => if (*hl_with_memory) {self.dec_hl()} else {self.dec_r16(register.clone())},
+                        _ => return Err(format!("INC with {:?} not implemented", param)),
+                    },
                     _ => self.dec_r16(register.clone()),
                 },
                 _ => return Err(format!("INC with {:?} not implemented", param)),
@@ -422,13 +428,16 @@ impl CPU {
                 ))
             }
         };
-
+        
         // Move the program counter to the next instruction
         // Depending on the bytes of the last instruction
-        self.set_16bit_register(
-            Register16Bit::PC,
-            self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
-        );
+        match self.next_instruction { // We need to NOT update the PC for JP, CALL, RST, RET, RETI
+            Instructions::JP(_,_) | Instructions::CALL(_,_) | Instructions::RST(_) | Instructions::RET(_) | Instructions::RETI => {},
+            _ => {self.set_16bit_register(
+                Register16Bit::PC,
+                self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,)
+            }
+        }
         self.update_ime();
 
         match self.last_step_result.condition_codes.carry {

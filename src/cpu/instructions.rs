@@ -81,6 +81,7 @@ pub enum InstParam {
     Number16Bit(u16),
     Offset,
     Unsigned3Bit(u8),
+    Boolean(bool),
     None,
 }
 
@@ -96,8 +97,8 @@ pub enum Instructions {
     XOR(InstParam),
     OR(InstParam),
     CP(InstParam),
-    INC(InstParam),
-    DEC(InstParam),
+    INC(InstParam, InstParam),
+    DEC(InstParam, InstParam),
 
     LD(InstParam, InstParam),
     LDH(InstParam, InstParam),
