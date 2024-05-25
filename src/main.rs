@@ -12,18 +12,22 @@ use std::{
 
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{tiles::*, views::*};
-use simple_logger::SimpleLogger;
+
+#[macro_use]
+extern crate simple_log;
 
 use crate::{
     cpu::registers::{Register16Bit, Register8Bit},
     rendering::utils::draw_scaled_text,
 };
 
-const FRAME_TIME: f32 = 5.0;
+/// 60Hz
+/// This is the refresh rate of the Gameboy
+const FRAME_TIME: f32 = 30.0;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
-    SimpleLogger::new().init().unwrap();
+    simple_log::quick!();
 
     log::info!("Hello, world!");
 
