@@ -14,7 +14,10 @@ impl CPU {
 
         if overflow {
             log::debug!("Timer overflow - resetting to modulo & setting interrupt flag");
-            self.memory.write_byte(TIMER_COUNTER_ADDRESS, self.memory.read_byte(TIMER_MODULO_ADDRESS));
+            self.memory.write_byte(
+                TIMER_COUNTER_ADDRESS,
+                self.memory.read_byte(TIMER_MODULO_ADDRESS),
+            );
             self.set_interrupt_flag(InterruptTypes::Timer);
         } else {
             self.memory.write_byte(TIMER_COUNTER_ADDRESS, new_val);
@@ -25,6 +28,7 @@ impl CPU {
     pub fn get_timer_modulo(&mut self) -> u64 {
         let timer_speed = self.memory.read_byte(0xFF07) & 0b11;
 
+        // See: https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff07--tac-timer-control
         match timer_speed {
             0b00 => 256,
             0b01 => 4,

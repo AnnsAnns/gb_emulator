@@ -31,7 +31,6 @@ impl CPU {
     /// ensure to first set the next instruction
     /// by decoding it (see `decode.rs`)
     pub fn step(&mut self) -> Result<&InstructionResult, String> {
-
         // Check whether the elapsed time is equal or greater than CPU_FREQUENCY
         // Otherwise, sleep for the remaining time to ensure we're running at the correct speed
         if self.last_step_result.cycles == 0 {
@@ -52,7 +51,7 @@ impl CPU {
         if self.check_and_handle_interrupts() {
             self.last_step_result.cycles = 5;
             self.last_step_result.bytes = 0;
-            return Ok(&self.last_step_result)
+            return Ok(&self.last_step_result);
         }
 
         self.last_step_result = match &self.next_instruction {
