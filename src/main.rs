@@ -21,6 +21,8 @@ use crate::{
     rendering::utils::draw_scaled_text,
 };
 
+/// 60Hz
+/// This is the refresh rate of the Gameboy
 const FRAME_TIME: f32 = 30.0;
 
 #[macroquad::main("GB Emulator")]
