@@ -17,6 +17,7 @@ impl Memory {
     pub fn write_byte(&mut self, address: u16, value: u8) {
         // Special case for disabling the boot rom
         if address == 0xFF50 {
+            log::debug!("Disabling boot rom");
             self.boot_rom_enabled = false;
         }
 
