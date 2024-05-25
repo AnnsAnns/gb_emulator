@@ -8,7 +8,13 @@ mod flags;
 pub mod instructions;
 pub mod registers;
 mod step;
+mod interrupts;
 mod joypad;
+mod timer;
+
+/// 4.194304 MHz
+/// This is the frequency of the CPU
+pub const CPU_FREQUENCY: u128 = 4_194_304;
 
 /// The CPU of the Gameboy
 pub struct CPU {
@@ -24,6 +30,8 @@ pub struct CPU {
     /// 0 if nothing to do, 2 if ime needs to be set abfer next instruction, 1 if ime needs to be set after this instruction
     enable_ime: i32,
     low_power_mode: bool,
+    last_execution_time: std::time::Instant,
+    cycles: u64,
 }
 
 /// Note, please look at the relevant modules for the actual implementations
@@ -38,6 +46,8 @@ impl CPU {
             interrupt_master_enable: false,
             enable_ime: 0,
             low_power_mode: false,
+            last_execution_time: std::time::Instant::now(),
+            cycles: 0,
         }
     }
 
