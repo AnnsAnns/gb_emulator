@@ -20,6 +20,7 @@ impl Memory {
             0xFF50 => {
                 log::debug!("Disabling boot rom");
                 self.boot_rom_enabled = false;
+                self.memory[address as usize] = value;
             },
             // DIV register
             // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff04--div-divider-register
