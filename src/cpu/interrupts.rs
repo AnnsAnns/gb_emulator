@@ -16,6 +16,7 @@ const INTERRUPT_FLAG_ADDRESS: u16 = 0xFF0F;
 const INTERRUPT_ENABLE_ADDRESS: u16 = 0xFFFF;
 
 impl CPU {
+    /// Set the interrupt flag for the given interrupt
     pub fn set_interrupt_flag(&mut self, interrupt: InterruptTypes) {
         let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
         self.memory.write_byte(INTERRUPT_FLAG_ADDRESS, interrupt_flag | (1 << interrupt as u8));

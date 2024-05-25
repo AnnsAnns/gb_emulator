@@ -20,7 +20,10 @@ impl Memory {
             0xFF50 => {
                 log::debug!("Disabling boot rom");
                 self.boot_rom_enabled = false;
-            }
+            },
+            // DIV register
+            // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff04--div-divider-register
+            0xFF04 => self.memory[address as usize] = 0,
             // Prevents overwriting of the last 4 bits in FF00 which are mapped to controller input
             0xFF00 => {
                 let prev = self.read_byte(address);

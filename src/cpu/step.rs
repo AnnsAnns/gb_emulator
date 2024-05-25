@@ -495,6 +495,13 @@ impl CPU {
             FlagState::Unset => self.clear_zero_flag(),
         }
 
+        // Check whether we need to increase timer
+        let timer_modulo = self.get_timer_modulo();
+        let remaining_cycles = self.cycles / timer_modulo;
+        if remaining_cycles + self.last_step_result.cycles as u64 >= timer_modulo {
+            self.increment_timer();
+        }
+
         // Update the last execution time
         self.last_execution_time = std::time::Instant::now();
         self.cycles += self.last_step_result.cycles as u64;
