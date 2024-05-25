@@ -15,18 +15,18 @@ impl Memory {
     /// Usage: memory.write_byte(0xFF00, 0x3F);
     /// This will write the value 0x3F to the I/O register at 0xFF00 (JOYP)
     pub fn write_byte(&mut self, address: u16, value: u8) {
-        // Special case for disabling the boot rom
-        if address == 0xFF50 {
-            log::debug!("Disabling boot rom");
-            self.boot_rom_enabled = false;
-        }
-
-        //Prevents overwriting of the last 4 bits in FF00 which are mapped to controller input
-        if address == 0xFF00 {
-            let prev = self.read_byte(address);
-            self.memory[address as usize] = (value & 0xF0) | (prev & 0xF);
-        } else {
-            self.memory[address as usize] = value; 
+        match address {
+            // Special case for disabling the boot rom
+            0xFF50 => {
+                log::debug!("Disabling boot rom");
+                self.boot_rom_enabled = false;
+            }
+            // Prevents overwriting of the last 4 bits in FF00 which are mapped to controller input
+            0xFF00 => {
+                let prev = self.read_byte(address);
+                self.memory[address as usize] = (value & 0xF0) | (prev & 0xF);
+            },
+            _ => self.memory[address as usize] = value,
         }
     }
 
