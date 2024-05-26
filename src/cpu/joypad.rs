@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use super::CPU;
+use super::{interrupts::InterruptTypes, CPU};
 
 impl CPU {
     pub fn update_key_input(&mut self) {
@@ -38,6 +38,11 @@ impl CPU {
             } else if keys_down.contains(&KeyCode::Down) {
                 output &= !(1 << 3);
             }
+        }
+
+        // If the joypad selects have changed, we need to set the joypad interrupt flag
+        if joypad_selects != output {
+            self.set_interrupt_flag(InterruptTypes::Joypad);
         }
         
         self.memory.write_controller_byte(output);
