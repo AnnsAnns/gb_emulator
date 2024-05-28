@@ -29,8 +29,6 @@ const TIME_PER_FRAME: f32 = 1.0/60.0*1000.0;
 async fn main() {
     simple_log::quick!();
 
-    log::info!("Hello, world!");
-
     const PALETTE: [Color; 4] = [
         Color::new(1.00, 1.00, 1.00, 1.00),
         Color::new(0.18, 0.83, 0.18, 1.00),
@@ -63,8 +61,6 @@ async fn main() {
     };
     let tile_viewer_size = tile_viewer.size();
 
-    let mut emulation_controls = EmulationControls::new(5.0, gb_display_size.y + 10.0, 1.0);
-
     request_new_screen_size(
         background_viewer_size.x + tile_viewer_size.x + gb_display_size.x + 20.0,
         tile_viewer_size.y + 10.0,
@@ -94,12 +90,10 @@ async fn main() {
         // Draw at 60Hz so 60 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
             // Inform about the time it took to render the frame
-            root_ui().label(None, format!("⏱️ Frame time: {:?} | Target: {:?} | Frame: {:?}", ppu_time.elapsed(), TIME_PER_FRAME, frame).as_str());
+            root_ui().label(None, format!("Frame time: {:?} | Target: {:?} | Frame: {:?}", ppu_time.elapsed(), TIME_PER_FRAME, frame).as_str());
             ppu_time = time::Instant::now();
             update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
             update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
-
-            emulation_controls.draw();
 
             background_viewer.draw(&background_image);
 

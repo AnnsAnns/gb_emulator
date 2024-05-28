@@ -15,6 +15,9 @@ pub enum InterruptTypes {
 const INTERRUPT_FLAG_ADDRESS: u16 = 0xFF0F;
 const INTERRUPT_ENABLE_ADDRESS: u16 = 0xFFFF;
 const INTERRUPT_CALL_ADDRESS: u16 = 0x0040;
+const LCDY_ADDRESS: u16 = 0xFF44;
+const LYC_ADDRESS: u16 = 0xFF45;
+const STAT_ADDRESS: u16 = 0xFF41;
 
 impl CPU {
     pub fn set_vblank_interrupt(&mut self) {
@@ -32,13 +35,53 @@ impl CPU {
         );
     }
 
+    pub fn set_lcd_y_coordinate(&mut self, value: u8) {
+        self.memory.write_byte(LCDY_ADDRESS, value);
+
+        if self.is_lyc_equal_ly() {
+            self.set_interrupt_flag(InterruptTypes::LCDC);
+
+            // Set bit 2 of STAT register
+            let stat = self.memory.read_byte(STAT_ADDRESS);
+            self.memory.write_byte(STAT_ADDRESS, stat | 0b100);
+        } 
+    }
+
+    pub fn set_ppu_mode(&mut self, mode: u8) {
+        let stat = self.memory.read_byte(STAT_ADDRESS);
+        self.memory.write_byte(STAT_ADDRESS, stat | mode);
+
+        // Check if the mode 0 interrupt is enabled
+        if mode == 0 && (stat & 0b1000) != 0 {
+            self.set_interrupt_flag(InterruptTypes::LCDC);
+        }
+
+        // Check if the mode 1 interrupt is enabled
+        if mode == 1 && (stat & 0b10000) != 0 {
+            self.set_interrupt_flag(InterruptTypes::LCDC);
+        }
+
+        // Check if the mode 2 interrupt is enabled
+        if mode == 2 && (stat & 0b100000) != 0 {
+            self.set_interrupt_flag(InterruptTypes::LCDC);
+        }
+    }
+
+    pub fn get_ppu_mode(&self) -> u8 {
+        self.memory.read_byte(STAT_ADDRESS) & 0b11
+    }
+
+    pub fn is_lyc_equal_ly(&self) -> bool {
+        self.memory.read_byte(LYC_ADDRESS) == self.memory.read_byte(LCDY_ADDRESS)
+    }
+
     /// Check for interrupts and handle them
     /// Returns true if an interrupt was handled
     pub fn check_and_handle_interrupts(&mut self) -> bool {
         let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
         let interrupt_enable = self.memory.read_byte(INTERRUPT_ENABLE_ADDRESS);
 
-        if interrupt_flag == 0 || interrupt_enable == 0 {
+        if interrupt_flag == 0 || interrupt_enable == 0 || !self.ime_flag {
             return false;
         }
 

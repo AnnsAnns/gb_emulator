@@ -28,8 +28,9 @@ pub struct CPU {
     memory: Memory,
     next_instruction: Instructions,
     last_step_result: InstructionResult,
-    interrupt_master_enable: bool,
-    /// 0 if nothing to do, 2 if ime needs to be set abfer next instruction, 1 if ime needs to be set after this instruction
+    /// The global interrupt master enable flag
+    ime_flag: bool, 
+    /// 0 if nothing to do, 2 if ime needs to be set after next instruction, 1 if ime needs to be set after this instruction
     enable_ime: i32,
     low_power_mode: bool,
     last_execution_time: std::time::Instant,
@@ -45,8 +46,8 @@ impl CPU {
             memory: Memory::new(enable_bootrom),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
-            interrupt_master_enable: false,
             enable_ime: 0,
+            ime_flag: false,
             low_power_mode: false,
             last_execution_time: std::time::Instant::now(),
             cycles: 0,

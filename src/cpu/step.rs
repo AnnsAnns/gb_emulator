@@ -514,7 +514,7 @@ impl CPU {
 
     fn update_ime(&mut self) {
         if self.enable_ime == 1 {
-            self.interrupt_master_enable = true;
+            self.ime_flag = true;
             self.enable_ime = 0;
         }
         if self.enable_ime == 2 {
