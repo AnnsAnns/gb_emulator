@@ -6,8 +6,7 @@ pub mod memory;
 pub mod rendering;
 
 use std::{
-    thread::sleep,
-    time::{self, Duration},
+    f32::consts::E, thread::sleep, time::{self, Duration}
 };
 
 use macroquad::{prelude::*, ui::root_ui};
@@ -72,8 +71,11 @@ async fn main() {
 
     // Get start time
     let mut ppu_time = time::Instant::now();
+    let mut ppu_h_time = time::Instant::now(); // Horizontal time
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
+    let mut h_timeslots = TIME_PER_FRAME / 153.0;
+    let mut y_coordinate: u8 = 0;
 
     loop {
         let instruction = cpu.prepare_and_decode_next_instruction();
@@ -86,6 +88,31 @@ async fn main() {
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         cpu.update_key_input();
+
+        // Set the LCD Y coordinate
+        // This is a hack to get the LCD interrupts to work
+        // Without a proper PPU implementation
+        if (ppu_h_time.elapsed().as_millis() as f32) >= h_timeslots {
+            y_coordinate = if y_coordinate == 153 {
+                0
+            } else {
+                y_coordinate + 1
+            };
+
+            cpu.set_lcd_y_coordinate(y_coordinate);
+            ppu_h_time = time::Instant::now();
+
+            // Set the PPU mode
+            let mode = if y_coordinate >= 144 {
+                1
+            } else {
+                // Random mode either 2, 3 or 0
+                // Because we don't have a proper PPU implementation
+                (y_coordinate % 4) + 2
+            };
+
+            cpu.set_ppu_mode(mode);
+        }
 
         // Draw at 60Hz so 60 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
