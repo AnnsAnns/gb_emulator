@@ -19,6 +19,7 @@ const INTERRUPT_CALL_ADDRESS: u16 = 0x0040;
 impl CPU {
     pub fn set_vblank_interrupt(&mut self) {
         log::debug!("VBlank interrupt set");
+        self.memory.write_byte(0xFF44, 144);
         self.set_interrupt_flag(InterruptTypes::VBlank);
     }
 

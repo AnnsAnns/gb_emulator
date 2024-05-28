@@ -17,7 +17,7 @@ impl CPU {
             0x3 => InstParam::Register8Bit(Register8Bit::E),
             0x4 => InstParam::Register8Bit(Register8Bit::H),
             0x5 => InstParam::Register8Bit(Register8Bit::L),
-            0x6 => InstParam::Number8Bit(self.get_8bit_from_hl()),
+            0x6 => InstParam::Register16Bit(Register16Bit::HL), //haben Befehle mit [HL] nicht meistens eine andere Byte oder Cycle Anzahl? (z.B. CP A,[HL] und CPA, n8)
             0x7 => InstParam::Register8Bit(Register8Bit::A),
             _ => panic!("Unknown tail: {:X}", tail),
         }
@@ -165,10 +165,7 @@ impl CPU {
                 0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xA => Instructions::LD(
                     InstParam::Register8Bit(Register8Bit::A),
-                    InstParam::Number8Bit(
-                        self.memory
-                            .read_byte(self.get_16bit_register(Register16Bit::BC)),
-                    ),
+                    InstParam::Register16Bit(Register16Bit::BC),
                 ),
                 0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xF => Instructions::RRC(InstParam::Register8Bit(Register8Bit::A)),
@@ -190,10 +187,7 @@ impl CPU {
                 0x9 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xA => Instructions::LD(
                     InstParam::Register8Bit(Register8Bit::A),
-                    InstParam::Number8Bit(
-                        self.memory
-                            .read_byte(self.get_16bit_register(Register16Bit::DE)),
-                    ),
+                    InstParam::Register16Bit(Register16Bit::DE),
                 ),
                 0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
                 0xF => Instructions::RR(InstParam::Register8Bit(Register8Bit::A)),
@@ -262,7 +256,10 @@ impl CPU {
                         0x8 => Instructions::ADC(value),
                         0x9 => Instructions::SBC(value),
                         0xA => Instructions::XOR(value),
-                        0xB => Instructions::CP(value),
+                        0xB => match tail {
+                            0xE => Instructions::CP(InstParam::Register16Bit(Register16Bit::HL)),
+                            _ => Instructions::CP(value),
+                        }
                         _ => self.not_implemented(opcode)?,
                     }
                 } else {
@@ -365,7 +362,7 @@ impl CPU {
                 0x6 => Instructions::AND(InstParam::Number8Bit(self.get_8bit_from_pc())),
                 0x7 => Instructions::RST(InstParam::Number8Bit(0x20)),
                 0x8 => {
-                    Instructions::ADD_SP(InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8))
+                    Instructions::ADD(InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8))
                 }
                 0x9 => Instructions::JP(
                     InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
@@ -395,7 +392,7 @@ impl CPU {
                 0x5 => Instructions::PUSH(InstParam::Register16Bit(Register16Bit::AF)),
                 0x6 => Instructions::OR(InstParam::Number8Bit(self.get_8bit_from_pc())),
                 0x7 => Instructions::RST(InstParam::Number8Bit(0x30)),
-                0x8 => Instructions::LD_HL_SP_SIGNED(InstParam::SignedNumber8Bit(
+                0x8 => Instructions::LD(InstParam::Register16Bit(Register16Bit::HL),InstParam::SignedNumber8Bit(
                     self.get_8bit_from_pc() as i8,
                 )),
                 0x9 => Instructions::LD(

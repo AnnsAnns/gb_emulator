@@ -61,13 +61,17 @@ impl CPU {
                     if *register == Register16Bit::HL {
                         self.add_a_hl()
                     } else {
-                        self.add_hl_r16(*register)
+                        return Err(format!("ADD with {:?} not implemented", param))
                     }
-                } //works unless we need to add hl to hl
+                }
                 InstParam::SignedNumber8Bit(value) => self.add_sp_e8(*value),
                 InstParam::Number8Bit(value) => self.add_a_n8(*value),
                 _ => return Err(format!("ADD with {:?} not implemented", param)),
             },
+            Instructions::ADD_HL(param) => match param { 
+                InstParam::Register16Bit(register) => self.add_hl_r16(*register),
+                _ => return Err(format!("ADD_HL with {:?} not implemented", param)),
+            }
             Instructions::ADC(param) => match param {
                 InstParam::Register8Bit(register) => self.adc_a_r8(register.clone()),
                 InstParam::Register16Bit(register) => self.adc_a_hl(),

@@ -176,6 +176,7 @@ async fn main() {
 
         // Set the VBlank interrupt since we are done with the frame
         cpu.set_vblank_interrupt();
+        
 
         frame_counter += 1;
     }
