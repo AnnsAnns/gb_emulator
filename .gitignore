@@ -5,3 +5,4 @@ decoded_values.txt
 failed_values.txt
 game.gb
 tmp/gb_emulator.log
+tmp/*

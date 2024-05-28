@@ -15,6 +15,7 @@ mod timer;
 /// 4.194304 MHz
 /// This is the frequency of the CPU
 pub const CPU_FREQUENCY: u128 = 4_194_304;
+pub const STEPS_PER_MS: u64 = 1; // Reduced for easier testing
 
 /// The CPU of the Gameboy
 pub struct CPU {

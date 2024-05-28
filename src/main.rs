@@ -6,10 +6,12 @@ pub mod memory;
 pub mod rendering;
 
 use std::{
-    thread::sleep,
+    sync::{Arc, Mutex},
+    thread::{self, sleep},
     time::{self, Duration},
 };
 
+use cpu::CPU;
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{tiles::*, views::*};
 
@@ -18,6 +20,7 @@ extern crate simple_log;
 
 use crate::{
     cpu::registers::{Register16Bit, Register8Bit},
+    memory::raw_memory_operations::test_helper::file_to_memory,
     rendering::utils::draw_scaled_text,
 };
 
@@ -25,12 +28,10 @@ use crate::{
 /// This is the refresh rate of the Gameboy
 const FRAME_TIME: f32 = 30.0;
 
-#[macroquad::main("GB Emulator")]
-async fn main() {
-    simple_log::quick!();
-
-    log::info!("Hello, world!");
-
+/// UI Thread
+/// This thread is responsible for rendering the UI
+async fn ui_thread(cpu: Arc<Mutex<CPU>>) {
+    // Inititalize General Settings
     const PALETTE: [Color; 4] = [
         Color::new(1.00, 1.00, 1.00, 1.00),
         Color::new(0.18, 0.83, 0.18, 1.00),
@@ -39,144 +40,77 @@ async fn main() {
     ];
     const SCALING: f32 = 4.0;
 
+    let final_image = Image::gen_image_color(160, 144, GREEN);
+    let mut gb_display = GbDisplay {
+        offset_x: 5.0,
+        offset_y: 5.0,
+        scaling: SCALING,
+    };
+    let gb_display_size = gb_display.size(&final_image);
+
+    let mut background_viewer = BackgroundViewer {
+        offset_x: gb_display_size.x + 10.0,
+        offset_y: 5.0,
+        scaling: SCALING / 2.0,
+    };
+    let mut background_image = Image::gen_image_color(32 * 8, 32 * 8, PINK);
+    let background_viewer_size = background_viewer.size();
+
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
-    let combined_image = Image::gen_image_color(160, 144, GREEN);
+    let mut tile_viewer = TileViewer {
+        offset_x: gb_display_size.x + background_viewer_size.x + 15.0,
+        offset_y: 5.0,
+        scaling: SCALING,
+    };
+    let tile_viewer_size = tile_viewer.size();
 
-    let mut cpu = cpu::CPU::new(true);
-
-    // Check whether DrMario.gb exists otherwise use the test ROM
-    if std::fs::metadata("./game.gb").is_err() {
-        cpu.load_from_file("./test_data/cpu_instrs/individual/09-op r,r.gb");
-    } else {
-        cpu.load_from_file("./game.gb");
-    }
+    let mut emulation_controls = EmulationControls::new(5.0, gb_display_size.y + 10.0, 1.0);
 
     request_new_screen_size(
-        160.0 * SCALING,
-        144.0 * SCALING,
+        background_viewer_size.x + tile_viewer_size.x + gb_display_size.x + 20.0,
+        tile_viewer_size.y + 10.0,
     );
 
-    let mut frame_counter = 0;
-
-    let final_image = Image::gen_image_color(160, 144, GREEN);
-    let mut gb_display = GbDisplay {offset_x: 0.0, offset_y: 0.0, scaling: SCALING};
-
     loop {
-        let pc = cpu.get_16bit_register(Register16Bit::PC);
-        let sp = cpu.get_16bit_register(Register16Bit::SP);
+        // Create a copy of the memory to avoid locking the mutex for too long
+        let memory = cpu.lock().unwrap().get_memory();
+
+        //update_tile_atlas(9, &test_tile, &mut tile_atlas, &PALETTE);
+        update_atlas_from_memory(&memory, 16 * 24, &mut tile_atlas, &PALETTE);
+        update_background_from_memory(&memory, &tile_atlas, &mut background_image);
+
+        emulation_controls.draw();
+
+        background_viewer.draw(&background_image);
 
         gb_display.draw(&final_image);
 
-        // Get start time
-        let start_time = time::Instant::now();
-
-        let instruction = cpu.prepare_and_decode_next_instruction();
-        root_ui().label(None, format!("Instruction: {:?}", instruction).as_str());
-        let result = cpu.step();
-
-        log::debug!("➡️ Result: {:?}", result);
-
-        match result {
-            Ok(result) => {
-                root_ui().label(
-                    None,
-                    format!(
-                        "Step Result: Cycles: {} | Bytes: {}",
-                        result.cycles, result.bytes
-                    )
-                    .as_str(),
-                );
-            }
-            Err(error) => {
-                root_ui().label(None, format!("Error: {:?}", error).as_str());
-            }
-        }
-
-        root_ui().label(
-            None,
-            format!(
-                "Flags - Zero {:?} Carry {:?} Sub {:?} HalfCarry {:?}",
-                cpu.is_zero_flag_set(),
-                cpu.is_carry_flag_set(),
-                cpu.is_subtraction_flag_set(),
-                cpu.is_half_carry_flag_set()
-            )
-            .as_str(),
-        );
-
-        root_ui().label(
-            None,
-            format!(
-                "A: {:#04X} B: {:#04X} C: {:#04X} D: {:#04X} E: {:#04X} H: {:#04X} L: {:#04X}",
-                cpu.get_8bit_register(Register8Bit::A),
-                cpu.get_8bit_register(Register8Bit::B),
-                cpu.get_8bit_register(Register8Bit::C),
-                cpu.get_8bit_register(Register8Bit::D),
-                cpu.get_8bit_register(Register8Bit::E),
-                cpu.get_8bit_register(Register8Bit::H),
-                cpu.get_8bit_register(Register8Bit::L)
-            )
-            .as_str(),
-        );
-
-        let pc_following_word = cpu.get_memory().read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
-        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
-        root_ui().label(
-            None,
-            format!(
-                "AF: {:#06X} BC: {:#06X} DE: {:#06X} HL: {:#06X} SP: {:#06X} PC: {:#06X} Following Word: {:#06X}",
-                cpu.get_16bit_register(Register16Bit::AF),
-                cpu.get_16bit_register(Register16Bit::BC),
-                cpu.get_16bit_register(Register16Bit::DE),
-                cpu.get_16bit_register(Register16Bit::HL),
-                sp,
-                pc,
-                pc_following_word
-            )
-            .as_str(),
-        );
-
-        cpu.update_key_input();
-        root_ui().label(None, format!("FF00: {:#06b}", cpu.get_mem_reg(0xFF00)).as_str());
-
-        // root_ui().label(
-        //     None,
-        //     format!("Memory: {:#?}", cpu.get_memory().return_full_memory()).as_str(),
-        // );
+        tile_viewer.draw(&tile_atlas);
 
         next_frame().await;
+    }
+}
 
-        // Dump memory for debugging purposes (only every 60 frames)
-        if frame_counter % 60 == 0 {
-            cpu.dump_memory();
-        }
+#[macroquad::main("GB Emulator")]
+async fn main() {
+    simple_log::quick!();
 
-        let elapsed_time = start_time.elapsed();
-        // We run at 60Hz so we need to calculate the time we need to sleep
-        let time_to_sleep =
-            match Duration::from_secs_f32(1.0 / FRAME_TIME).checked_sub(elapsed_time) {
-                Some(time) => time,
-                None => Duration::from_secs_f32(0.0),
-            };
-        log::debug!(
-            "⌛ Time to sleep: {:?} | Total Duration was {:?}",
-            time_to_sleep,
-            elapsed_time
-        );
-        root_ui().label(
-            None,
-            format!(
-                "Free Time: {:.2}ms - Render Time: {:.2?}ms",
-                time_to_sleep.as_micros() as f64 / 1000.0,
-                elapsed_time.as_micros() as f64 / 1000.0
-            )
-            .as_str(),
-        );
-        sleep(time_to_sleep);
+    let mut cpu = Arc::new(Mutex::new(cpu::CPU::new(false)));
+    
+    file_to_memory(&mut cpu.get_memory(), 0x8000, "test_files/Mindy1-VRAM.bin");
 
-        // Set the VBlank interrupt since we are done with the frame
-        cpu.set_vblank_interrupt();
+    // Spawn the UI thread
+    let ui_cpu_ref = cpu.clone();
+    let ui_handle = async move {
+        ui_thread(ui_cpu_ref).await;
+    };
 
-        frame_counter += 1;
+    loop {
+        let mut cpu = cpu.lock().unwrap();
+        let instruction = cpu.prepare_and_decode_next_instruction();
+        let result = cpu.step();
+        cpu.update_key_input();
+
+        sleep(Duration::from_millis(50));
     }
 }

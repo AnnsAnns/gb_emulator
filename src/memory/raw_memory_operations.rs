@@ -52,7 +52,6 @@ impl Memory {
 
 }
 
-#[cfg(test)]
 pub mod test_helper {
 
     use std::fs;
