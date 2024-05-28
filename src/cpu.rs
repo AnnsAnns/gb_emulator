@@ -1,3 +1,5 @@
+use registers::Register16Bit;
+
 use crate::memory::Memory;
 
 use self::instructions::{InstructionResult, Instructions};
@@ -74,6 +76,10 @@ impl CPU {
     /// This is used for testing purposes
     pub fn get_last_step_result(&self) -> InstructionResult {
         self.last_step_result.clone()
+    }
+
+    pub fn is_boot_rom_enabled(&self) -> bool {
+        self.memory.is_boot_rom_enabled().clone()
     }
 
     pub fn get_instruction(&self) -> &Instructions {
