@@ -162,7 +162,6 @@ impl CPU {
         // Halt bug implementieren oder nicht?
         if self.ime_flag {}
         //bug einfügen
-        if self.interrupt_master_enable {}
         if self.interrupt_pentding() {}
         InstructionResult {
             cycles: 0,
