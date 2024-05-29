@@ -13,7 +13,7 @@ impl CPU {
         match tail {
             0x0 => InstParam::Register8Bit(Register8Bit::B),
             0x1 => InstParam::Register8Bit(Register8Bit::C),
-            0x2 => InstParam::Register8Bit(Register8Bit::D),
+            0x2 => InstParam::Register8Bit(Register8Bit::D),    
             0x3 => InstParam::Register8Bit(Register8Bit::E),
             0x4 => InstParam::Register8Bit(Register8Bit::H),
             0x5 => InstParam::Register8Bit(Register8Bit::L),

@@ -133,6 +133,7 @@ impl CPU {
     }
 
     pub fn stop(&mut self) -> InstructionResult {
+        //erstmal auslassen
         todo!();
         InstructionResult {
             cycles: 0,
@@ -159,6 +160,7 @@ impl CPU {
         self.low_power_mode = true;
 
         // Halt bug implementieren oder nicht?
+        //bug einfügen
         if self.interrupt_master_enable {}
         if self.interrupt_pentding() {}
         InstructionResult {
