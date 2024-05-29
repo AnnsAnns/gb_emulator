@@ -1,9 +1,10 @@
 use core::task;
+use std::{thread::sleep, time::Duration};
 
 use super::{
-    instructions::{InstParam, InstructionCondition, InstructionResult, Instructions},
+    instructions::{FlagState, InstParam, InstructionCondition, InstructionResult, Instructions},
     registers::{self, Register16Bit, Register8Bit},
-    CPU,
+    CPU, CPU_FREQUENCY,
 };
 
 impl CPU {
@@ -14,10 +15,14 @@ impl CPU {
     }
 
     pub fn prepare_and_decode_next_instruction(&mut self) -> Result<Instructions, String> {
-        //println!("🖱️ Current PC: {:#06X}", self.get_16bit_register(Register16Bit::PC));
+        log::debug!(
+            "🖱️ Current PC: {:#06X}",
+            self.get_16bit_register(Register16Bit::PC)
+        );
         let opcode = self.get_next_opcode();
-        //println!("🤖 Next opcode: {:#02X}", opcode);
+        log::debug!("🤖 Next opcode: {:#02X}", opcode);
         let instruction = self.decode(opcode)?;
+        log::debug!("📖 Decoded instruction: {:#?}", instruction);
         self.next_instruction = instruction.clone();
         Ok(instruction)
     }
@@ -26,6 +31,29 @@ impl CPU {
     /// ensure to first set the next instruction
     /// by decoding it (see `decode.rs`)
     pub fn step(&mut self) -> Result<&InstructionResult, String> {
+        // Check whether the elapsed time is equal or greater than CPU_FREQUENCY
+        // Otherwise, sleep for the remaining time to ensure we're running at the correct speed
+        if self.last_step_result.cycles == 0 {
+            self.last_step_result.cycles = 1; // Ensure we don't sleep forever
+        }
+        let required_sleep = 1 / (CPU_FREQUENCY * self.last_step_result.cycles as u128) * 1_000_000;
+        log::debug!(
+            "⏱️ Required sleep: {}μs, elapsed: {}μs",
+            required_sleep,
+            self.last_execution_time.elapsed().as_micros()
+        );
+        if self.last_execution_time.elapsed().as_micros() < required_sleep {
+            sleep(Duration::from_micros(
+                (required_sleep - self.last_execution_time.elapsed().as_micros()) as u64,
+            ));
+        }
+
+        if self.check_and_handle_interrupts() {
+            self.last_step_result.cycles = 5;
+            self.last_step_result.bytes = 0;
+            return Ok(&self.last_step_result);
+        }
+
         self.last_step_result = match &self.next_instruction {
             Instructions::ADD(param) => match param {
                 InstParam::Register8Bit(register) => self.add_a_r8(register.clone()),
@@ -33,33 +61,55 @@ impl CPU {
                     if *register == Register16Bit::HL {
                         self.add_a_hl()
                     } else {
-                        self.add_hl_r16(*register)
+                        return Err(format!("ADD with {:?} not implemented", param))
                     }
-                } //works unless we need to add hl to hl
+                }
                 InstParam::SignedNumber8Bit(value) => self.add_sp_e8(*value),
                 InstParam::Number8Bit(value) => self.add_a_n8(*value),
                 _ => return Err(format!("ADD with {:?} not implemented", param)),
             },
+            Instructions::ADD_HL(param) => match param { 
+                InstParam::Register16Bit(register) => self.add_hl_r16(*register),
+                _ => return Err(format!("ADD_HL with {:?} not implemented", param)),
+            }
             Instructions::ADC(param) => match param {
                 InstParam::Register8Bit(register) => self.adc_a_r8(register.clone()),
                 InstParam::Register16Bit(register) => self.adc_a_hl(),
                 InstParam::Number8Bit(value) => self.adc_a_n8(*value),
                 _ => return Err(format!("ADD with {:?} not implemented", param)),
             },
-            Instructions::INC(param) => match param {
+            Instructions::INC(param, hl_memory) => match param {
                 InstParam::Register8Bit(register) => self.inc(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.inc_sp(),
-                    Register16Bit::HL => self.inc_hl(),
+                    Register16Bit::HL => match hl_memory {
+                        InstParam::Boolean(hl_with_memory) => {
+                            if (*hl_with_memory) {
+                                self.inc_hl()
+                            } else {
+                                self.inc_r16(register.clone())
+                            }
+                        }
+                        _ => return Err(format!("INC with {:?} not implemented", param)),
+                    },
                     _ => self.inc_r16(register.clone()),
                 },
                 _ => return Err(format!("INC with {:?} not implemented", param)),
             },
-            Instructions::DEC(param) => match param {
+            Instructions::DEC(param, hl_memory) => match param {
                 InstParam::Register8Bit(register) => self.dec_r8(register.clone()),
                 InstParam::Register16Bit(register) => match register {
                     Register16Bit::SP => self.dec_sp(),
-                    Register16Bit::HL => self.dec_hl(),
+                    Register16Bit::HL => match hl_memory {
+                        InstParam::Boolean(hl_with_memory) => {
+                            if (*hl_with_memory) {
+                                self.dec_hl()
+                            } else {
+                                self.dec_r16(register.clone())
+                            }
+                        }
+                        _ => return Err(format!("INC with {:?} not implemented", param)),
+                    },
                     _ => self.dec_r16(register.clone()),
                 },
                 _ => return Err(format!("INC with {:?} not implemented", param)),
@@ -228,23 +278,25 @@ impl CPU {
                 InstParam::Register8Bit(register) => self.sla_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.sla_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
-            }
+            },
             Instructions::SRA(target) => match target {
                 InstParam::Register8Bit(register) => self.sra_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.sra_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
-            }
+            },
             Instructions::SRL(target) => match target {
                 InstParam::Register8Bit(register) => self.srl_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.srl_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
-            }
+            },
             Instructions::LDH(target, source) => match target {
-                InstParam::Number16Bit(source_number) => self.ldh_n16_a(*source_number),
+                InstParam::Number16Bit(target_number) => self.ldh_n16_a(*target_number),
+                InstParam::Number8Bit(target_number) => self.ldh_a8_a(*target_number),
                 InstParam::Register8Bit(target_register) => {
                     if *target_register == Register8Bit::A {
                         match source {
                             InstParam::Number16Bit(source_number) => self.ldh_a_n16(*source_number),
+                            InstParam::Number8Bit(source_number) => self.ldh_a_a8(*source_number),
                             InstParam::Register8Bit(source_register) => {
                                 if *source_register == Register8Bit::C {
                                     self.ldh_a_c()
@@ -265,93 +317,84 @@ impl CPU {
                 }
                 _ => return Err(format!("Handling of {:?} not implemented", source)),
             },
-            Instructions::LD(target, source) => {
-                match target {
-                    InstParam::Register8Bit(target_register) => {
-                        if *target_register == Register8Bit::A {
-                            match source {
-                                InstParam::Register16Bit(source_register) => {
-                                    self.ld_a_r16(*source_register)
-                                }
-                                InstParam::Number16Bit(source_number) => {
-                                    self.ld_a_n16(*source_number)
-                                }
-                                InstParam::Register8Bit(source_register) => {
-                                    self.ld_r8_r8(*target_register, *source_register)
-                                }
-                                _ => {
-                                    return Err(format!("Handling of {:?} not implemented", source))
-                                }
+            Instructions::LD(target, source) => match target {
+                InstParam::Register8Bit(target_register) => {
+                    if *target_register == Register8Bit::A {
+                        match source {
+                            InstParam::Register16Bit(source_register) => {
+                                self.ld_a_r16(*source_register)
                             }
-                        } else {
-                            match source {
-                                InstParam::Register8Bit(source_register) => {
-                                    self.ld_r8_r8(*target_register, *source_register)
-                                }
-                                InstParam::Number8Bit(source_number) => {
-                                    self.ld_r8_n8(*target_register, *source_number)
-                                }
-                                InstParam::Register16Bit(source_register) => {
-                                    self.ld_r8_hl(*target_register)
-                                }
-                                _ => {
-                                    return Err(format!("Handling of {:?} not implemented", source))
-                                }
+                            InstParam::Number16Bit(source_number) => self.ld_a_n16(*source_number),
+                            InstParam::Register8Bit(source_register) => {
+                                self.ld_r8_r8(*target_register, *source_register)
                             }
+                            InstParam::Number8Bit(source_number) => {
+                                self.ld_r8_n8(*target_register, *source_number)
+                            }
+                            _ => return Err(format!("Handling of {:?} not implemented", source)),
+                        }
+                    } else {
+                        match source {
+                            InstParam::Register8Bit(source_register) => {
+                                self.ld_r8_r8(*target_register, *source_register)
+                            }
+                            InstParam::Number8Bit(source_number) => {
+                                self.ld_r8_n8(*target_register, *source_number)
+                            }
+                            InstParam::Register16Bit(source_register) => {
+                                self.ld_r8_hl(*target_register)
+                            }
+                            _ => return Err(format!("Handling of {:?} not implemented", source)),
                         }
                     }
-                    InstParam::Register16Bit(target_register) => {
-                        if *target_register == Register16Bit::SP {
-                            match source {
-                                InstParam::Register16Bit(source_register) => self.ld_sp_hl(),
-                                InstParam::Number16Bit(source_address) => {
-                                    self.ld_sp_n16(*source_address)
-                                }
-                                _ => return Err(format!("LD with {:?} not implemented", source)),
-                            }
-                        } else if *target_register == Register16Bit::HL {
-                            //TODO what about HLI und HLD?
-                            match source {
-                                InstParam::Register8Bit(source_register) => {
-                                    self.ld_hl_r8(*source_register)
-                                }
-                                InstParam::Number8Bit(source_number) => {
-                                    self.ld_hl_n8(*source_number)
-                                }
-                                InstParam::SignedNumber8Bit(source_number) => {
-                                    self.ld_hl_sp_plus_e8(*source_number)
-                                }
-                                _ => {
-                                    return Err(format!("Handling of {:?} not implemented", source))
-                                }
-                            }
-                        } else {
-                            match source {
-                                InstParam::Number16Bit(source_number) => {
-                                    self.ld_r16_n16(*target_register, *source_number)
-                                }
-                                InstParam::Register8Bit(source_register) => {
-                                    self.ld_r16_a(*target_register)
-                                }
-                                _ => {
-                                    return Err(format!("Handling of {:?} not implemented", source))
-                                }
-                            }
-                        }
-                    }
-                    InstParam::Number16Bit(number) => match source {
-                        InstParam::Register8Bit(source_register) => self.ld_n16_a(*number),
-                        InstParam::Register16Bit(source_register) => self.ld_n16_sp(*number),
-                        _ => {
-                            return Err(format!(
-                                "LD with n16 address of {:?} not implemented",
-                                source
-                            ))
-                        }
-                    },
-                    _ => return Err(format!("Handling of {:?} not implemented", target)),
                 }
-            }
+                InstParam::Register16Bit(target_register) => {
+                    if *target_register == Register16Bit::SP {
+                        match source {
+                            InstParam::Register16Bit(source_register) => self.ld_sp_hl(),
+                            InstParam::Number16Bit(source_address) => {
+                                self.ld_sp_n16(*source_address)
+                            }
+                            _ => return Err(format!("LD with {:?} not implemented", source)),
+                        }
+                    } else if *target_register == Register16Bit::HL {
+                        match source {
+                            InstParam::Register8Bit(source_register) => {
+                                self.ld_hl_r8(*source_register)
+                            }
+                            InstParam::Number8Bit(source_number) => self.ld_hl_n8(*source_number),
+                            InstParam::Number16Bit(source_number) => {
+                                self.ld_r16_n16(Register16Bit::HL, *source_number)
+                            }
+                            InstParam::SignedNumber8Bit(source_number) => {
+                                self.ld_hl_sp_plus_e8(*source_number)
+                            }
+                            _ => return Err(format!("Handling of {:?} not implemented", source)),
+                        }
+                    } else {
+                        match source {
+                            InstParam::Number16Bit(source_number) => {
+                                self.ld_r16_n16(*target_register, *source_number)
+                            }
+                            InstParam::Register8Bit(source_register) => {
+                                self.ld_r16_a(*target_register)
+                            }
+                            _ => return Err(format!("Handling of {:?} not implemented", source)),
+                        }
+                    }
+                }
+                InstParam::Number16Bit(number) => match source {
+                    InstParam::Register8Bit(source_register) => self.ld_n16_a(*number),
+                    InstParam::Register16Bit(source_register) => self.ld_n16_sp(*number),
+                    _ => {
+                        return Err(format!(
+                            "LD with n16 address of {:?} not implemented",
+                            source
+                        ))
+                    }
+                },
+                _ => return Err(format!("Handling of {:?} not implemented", target)),
+            },
             Instructions::RET(condition) => match condition {
                 InstParam::ConditionCodes(cond) => self.ret_cc(self.check_condition(cond)),
                 _ => self.ret(),
@@ -380,9 +423,9 @@ impl CPU {
                     InstParam::Number16Bit(target_addr) => {
                         self.jp_cc_n16(self.check_condition(cond), *target_addr)
                     }
-                    _ => return Err(format!("CALL of {:?} not implemented", optional_target)),
+                    _ => return Err(format!("JP of {:?} not implemented", optional_target)),
                 },
-                _ => return Err(format!("CALL of {:?} not implemented", target_or_condition)),
+                _ => return Err(format!("JP of {:?} not implemented", target_or_condition)),
             },
             Instructions::JR(target_or_condition, optional_target) => match target_or_condition {
                 InstParam::SignedNumber8Bit(target_addr) => self.jr_n16(*target_addr),
@@ -417,22 +460,65 @@ impl CPU {
 
         // Move the program counter to the next instruction
         // Depending on the bytes of the last instruction
-        self.set_16bit_register(
-            Register16Bit::PC,
-            self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
-        );
+        match self.next_instruction {
+            // We need to NOT update the PC for JP, CALL, RST, RET, RETI
+            Instructions::JP(_, _)
+            | Instructions::CALL(_, _)
+            | Instructions::RST(_)
+            | Instructions::RET(_)
+            | Instructions::RETI => {}
+            _ => self.set_16bit_register(
+                Register16Bit::PC,
+                self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
+            ),
+        }
         self.update_ime();
+
+        match self.last_step_result.condition_codes.carry {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_carry_flag(),
+            FlagState::Unset => self.clear_carry_flag(),
+        }
+
+        match self.last_step_result.condition_codes.half_carry {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_half_carry_flag(),
+            FlagState::Unset => self.clear_half_carry_flag(),
+        }
+
+        match self.last_step_result.condition_codes.subtract {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_subtraction_flag(),
+            FlagState::Unset => self.clear_subtraction_flag(),
+        }
+
+        match self.last_step_result.condition_codes.zero {
+            FlagState::NotAffected => {}
+            FlagState::Set => self.set_zero_flag(),
+            FlagState::Unset => self.clear_zero_flag(),
+        }
+
+        // Check whether we need to increase timer
+        let timer_modulo = self.get_timer_modulo();
+        let remaining_cycles = self.cycles / timer_modulo;
+        if remaining_cycles + self.last_step_result.cycles as u64 >= timer_modulo {
+            self.increment_timer();
+        }
+
+        // Update the last execution time
+        self.last_execution_time = std::time::Instant::now();
+        self.cycles += self.last_step_result.cycles as u64;
+
         Ok(&self.last_step_result)
     }
 
-
     fn update_ime(&mut self) {
         if self.enable_ime == 1 {
-            self.interrupt_master_enable = true;
+            self.ime_flag = true;
             self.enable_ime = 0;
         }
         if self.enable_ime == 2 {
-            self.enable_ime =1;
+            self.enable_ime = 1;
         }
     }
     fn check_condition(&self, cond: &InstructionCondition) -> bool {

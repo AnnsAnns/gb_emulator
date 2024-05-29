@@ -5,114 +5,138 @@ pub mod cpu;
 pub mod memory;
 pub mod rendering;
 
-use std::{thread::sleep, time::Duration};
+use std::{
+    f32::consts::E, thread::sleep, time::{self, Duration}
+};
 
 use macroquad::{prelude::*, ui::root_ui};
-use rendering::{render_settings::*, tiles::*, views::*};
+use rendering::{tiles::*, views::*};
+
+#[macro_use]
+extern crate simple_log;
 
 use crate::{
     cpu::registers::{Register16Bit, Register8Bit},
     rendering::utils::draw_scaled_text,
 };
 
+/// 60Hz
+/// This is the refresh rate of the Gameboy
+const TIME_PER_FRAME: f32 = 1.0/60.0*1000.0;
+
 #[macroquad::main("GB Emulator")]
 async fn main() {
-    println!("Hello, world!");
+    simple_log::quick!();
 
-    let gb_settings = GbSettings {
-        ..Default::default()
+    const PALETTE: [Color; 4] = [
+        Color::new(1.00, 1.00, 1.00, 1.00),
+        Color::new(0.18, 0.83, 0.18, 1.00),
+        Color::new(0.12, 0.54, 0.12, 1.00),
+        Color::new(0.06, 0.15, 0.06, 1.00),
+    ];
+    const SCALING: f32 = 4.0;
+
+    let final_image = Image::gen_image_color(160, 144, GREEN);
+    let mut gb_display = GbDisplay {
+        offset_x: 5.0,
+        offset_y: 5.0,
+        scaling: SCALING,
     };
+    let gb_display_size = gb_display.size(&final_image);
+
+    let mut background_viewer = BackgroundViewer {
+        offset_x: gb_display_size.x + 10.0,
+        offset_y: 5.0,
+        scaling: SCALING / 2.0,
+    };
+    let mut background_image = Image::gen_image_color(32 * 8, 32 * 8, PINK);
+    let background_viewer_size = background_viewer.size();
 
     let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
-    let combined_image = Image::gen_image_color(160, 144, GREEN);
-
-    let mut cpu = cpu::CPU::new();
-    cpu.load_from_file("./2048.gb");
-
-    #[rustfmt::skip]
-    let test_tile: [u8; 16] = [
-        0xFF, 0x00, 0x7E, 0xFF, 0x85, 0x81, 0x89, 0x83, 
-        0x93, 0x85, 0xA5, 0x8B, 0xC9, 0x97, 0x7E, 0xFF
-    ];
+    let mut tile_viewer = TileViewer {
+        offset_x: gb_display_size.x + background_viewer_size.x + 15.0,
+        offset_y: 5.0,
+        scaling: SCALING,
+    };
+    let tile_viewer_size = tile_viewer.size();
 
     request_new_screen_size(
-        (160.0 + 8.0 * 16.0) * gb_settings.scaling + 15.0,
-        (10.0 * 24.0) * gb_settings.scaling + 25.0,
+        background_viewer_size.x + tile_viewer_size.x + gb_display_size.x + 20.0,
+        tile_viewer_size.y + 10.0,
     );
 
+    let mut cpu = cpu::CPU::new(true);
+
+    cpu.load_from_file("./game.gb");
+
+    // Get start time
+    let mut ppu_time = time::Instant::now();
+    let mut ppu_h_time = time::Instant::now(); // Horizontal time
+    let mut dump_time = time::Instant::now();
+    let mut frame = 0;
+    let mut h_timeslots = TIME_PER_FRAME / 153.0;
+    let mut y_coordinate: u8 = 0;
+
     loop {
-        let pc = cpu.get_16bit_register(Register16Bit::PC);
-        let sp = cpu.get_16bit_register(Register16Bit::SP);
-
-        update_tile_atlas(1, 1, &test_tile, &mut tile_atlas, &gb_settings.palette);
-
-        draw_gb_display(5.0, 5.0, &combined_image, &gb_settings);
-
-        draw_tile_viewer(
-            combined_image.width() as f32 * gb_settings.scaling + 10.0,
-            5.0,
-            &tile_atlas,
-            &gb_settings,
-        );
-
-        root_ui().label(None, format!("PC: {:#06X}", pc).as_str());
-        root_ui().label(None, format!("SP: {:#06X}", sp).as_str());
         let instruction = cpu.prepare_and_decode_next_instruction();
-        root_ui().label(None, format!("Instruction: {:?}", instruction).as_str());
-        root_ui().label(
-            None,
-            format!("Last Step Result: {:?}", cpu.step()).as_str(),
-        );
+        log::debug!("🔠 Instruction: {:?}", instruction);
+        let is_bootrom_enabled = cpu.is_boot_rom_enabled();
+        let result = cpu.step();
+        log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
 
-        root_ui().label(
-            None,
-            format!(
-                "Flags - Zero {:?} Carry {:?} Sub {:?} HalfCarry {:?}",
-                cpu.is_zero_flag_set(),
-                cpu.is_carry_flag_set(),
-                cpu.is_subtraction_flag_set(),
-                cpu.is_half_carry_flag_set()
-            )
-            .as_str(),
-        );
+        let pc_following_word = cpu.get_memory().read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
-        root_ui().label(
-            None,
-            format!(
-                "A: {:#04X} B: {:#04X} C: {:#04X} D: {:#04X} E: {:#04X} H: {:#04X} L: {:#04X}",
-                cpu.get_8bit_register(Register8Bit::A),
-                cpu.get_8bit_register(Register8Bit::B),
-                cpu.get_8bit_register(Register8Bit::C),
-                cpu.get_8bit_register(Register8Bit::D),
-                cpu.get_8bit_register(Register8Bit::E),
-                cpu.get_8bit_register(Register8Bit::H),
-                cpu.get_8bit_register(Register8Bit::L)
-            )
-            .as_str(),
-        );
+        cpu.update_key_input();
 
-        root_ui().label(
-            None,
-            format!(
-                "AF: {:#06X} BC: {:#06X} DE: {:#06X} HL: {:#06X}",
-                cpu.get_16bit_register(Register16Bit::AF),
-                cpu.get_16bit_register(Register16Bit::BC),
-                cpu.get_16bit_register(Register16Bit::DE),
-                cpu.get_16bit_register(Register16Bit::HL)
-            )
-            .as_str(),
-        );
+        // Set the LCD Y coordinate
+        // This is a hack to get the LCD interrupts to work
+        // Without a proper PPU implementation
+        if (ppu_h_time.elapsed().as_millis() as f32) >= h_timeslots {
+            y_coordinate = if y_coordinate == 153 {
+                0
+            } else {
+                y_coordinate + 1
+            };
 
-        // root_ui().label(
-        //     None,
-        //     format!("Memory: {:#?}", cpu.get_memory().return_full_memory()).as_str(),
-        // );
+            cpu.set_lcd_y_coordinate(y_coordinate);
+            ppu_h_time = time::Instant::now();
 
-        next_frame().await;
+            // Set the PPU mode
+            let mode = if y_coordinate >= 144 {
+                1
+            } else {
+                // Random mode either 2, 3 or 0
+                // Because we don't have a proper PPU implementation
+                (y_coordinate % 4) + 2
+            };
 
-        sleep(Duration::from_millis(50));
+            cpu.set_ppu_mode(mode);
+        }
+
+        // Draw at 60Hz so 60 frames per second
+        if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
+            // Inform about the time it took to render the frame
+            root_ui().label(None, format!("Frame time: {:?} | Target: {:?} | Frame: {:?}", ppu_time.elapsed(), TIME_PER_FRAME, frame).as_str());
+            ppu_time = time::Instant::now();
+            update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
+            update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
+
+            background_viewer.draw(&background_image);
+
+            gb_display.draw(&final_image);
+
+            tile_viewer.draw(&tile_atlas);
+            next_frame().await;
+            // Set the VBlank interrupt since we are done with the frame
+            cpu.set_vblank_interrupt();
+            frame += 1;
+        }
+
+        // Dump memory every 3 seconds
+        if dump_time.elapsed().as_secs() >= 3 {
+            dump_time = time::Instant::now();
+            cpu.dump_memory();
+        }
     }
 }
-
-#[cfg(test)]
-mod test_tile_viewer;

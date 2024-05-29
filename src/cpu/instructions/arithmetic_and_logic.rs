@@ -18,7 +18,7 @@ use crate::test_helpers::{assert_correct_instruction_step};
 
 #[test]
 pub fn arithmetics_8bit_16bit_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut registers;
     //>>---------8bit Arithmetics--------->>
     // 1) ADD A,r8 
@@ -46,18 +46,18 @@ pub fn arithmetics_8bit_16bit_test() {
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
     expected_result.bytes = 1;
-    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::DE),super::InstParam::Boolean(false)), expected_result);
     assert_eq!(cpu.get_16bit_register(Register16Bit::DE), 1);
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
     expected_result.bytes = 1;
-    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::DE),super::InstParam::Boolean(false)), expected_result);
     assert_eq!(cpu.get_16bit_register(Register16Bit::DE), 2);
     //DEC r16
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
     expected_result.bytes = 1;
-    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register16Bit(Register16Bit::DE),super::InstParam::Boolean(false)), expected_result);
     assert_eq!(cpu.get_16bit_register(Register16Bit::DE), 1);
     //ADD HL,r16
     let mut expected_result = InstructionResult::default();
@@ -107,7 +107,7 @@ pub fn arithmetics_8bit_16bit_test() {
     expected_result.cycles = 1;
     expected_result.bytes = 1;
     expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Set,carry:FlagState::NotAffected};
-    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register8Bit(Register8Bit::A)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register8Bit(Register8Bit::A),super::InstParam::Boolean(false)), expected_result);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 16);
     //INC r8
@@ -115,7 +115,7 @@ pub fn arithmetics_8bit_16bit_test() {
     expected_result.cycles = 1;
     expected_result.bytes = 1;
     expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Set,half_carry:FlagState::Set,carry:FlagState::NotAffected};
-    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register8Bit(Register8Bit::A)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::DEC(super::InstParam::Register8Bit(Register8Bit::A),super::InstParam::Boolean(false)), expected_result);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 15);
     //INC [HL]
@@ -123,7 +123,7 @@ pub fn arithmetics_8bit_16bit_test() {
     expected_result.cycles = 3;
     expected_result.bytes = 1;
     expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::NotAffected};
-    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
+    assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::HL),super::InstParam::Boolean(true)), expected_result);
     assert_eq!(cpu.memory.read_byte(cpu.get_16bit_register(Register16Bit::HL)), 4);
 
     // SUB A,r8
@@ -169,7 +169,7 @@ pub fn arithmetics_8bit_16bit_test() {
 
 #[test]
 pub fn logic_8bit_16bit_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut registers;
     //CP
     cpu.set_8bit_register(Register8Bit::A, 15);

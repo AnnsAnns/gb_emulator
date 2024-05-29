@@ -41,7 +41,7 @@ impl CPU {
 
     /// deactivates the IME flag, enabling Interrupts
     pub fn di(&mut self) -> InstructionResult {
-        self.interrupt_master_enable = false;
+        self.ime_flag = false;
         InstructionResult {
             cycles: 1,
             bytes: 1,
@@ -160,6 +160,7 @@ impl CPU {
         self.low_power_mode = true;
 
         // Halt bug implementieren oder nicht?
+        if self.ime_flag {}
         //bug einfügen
         if self.interrupt_master_enable {}
         if self.interrupt_pentding() {}
@@ -178,7 +179,7 @@ impl CPU {
 
 #[test]
 pub fn nop_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 1;
@@ -188,7 +189,7 @@ pub fn nop_test() {
 
 #[test]
 pub fn ccf_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result_1 = InstructionResult::default();
     cpu.set_carry_flag();
     expected_result_1.bytes = 1;
@@ -216,7 +217,7 @@ pub fn ccf_test() {
 
 #[test]
 pub fn cpl_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     let value_start = 0b10101010;
     let value_expected_result = 0b01010101;
@@ -238,7 +239,7 @@ pub fn cpl_test() {
 
 #[test]
 pub fn daa_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     let value_start = 0x9A;
     let value_expected_result = 0x00;
@@ -260,9 +261,9 @@ pub fn daa_test() {
 
 #[test]
 pub fn di_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
-    cpu.interrupt_master_enable = true;
+    cpu.ime_flag = true;
     expected_result.bytes = 1;
     expected_result.cycles = 1;
     expected_result.condition_codes = ConditionCodes {
@@ -272,12 +273,12 @@ pub fn di_test() {
         carry: FlagState::NotAffected,
     };
     assert_correct_instruction_step(&mut cpu, Instructions::DI, expected_result);
-    assert!(!cpu.interrupt_master_enable);
+    assert!(!cpu.ime_flag);
 }
 
 #[test]
 pub fn ei_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 1;
@@ -292,5 +293,5 @@ pub fn ei_test() {
     cpu.next_instruction = Instructions::NOP;
     _ = cpu.step();
     assert_eq!(0, cpu.enable_ime);
-    assert!(cpu.interrupt_master_enable);
+    assert!(cpu.ime_flag);
 }

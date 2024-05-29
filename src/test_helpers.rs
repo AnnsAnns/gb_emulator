@@ -17,6 +17,6 @@ pub fn assert_correct_instruction_decode(cpu: &mut CPU, opcode: u8, expected: In
 }
 
 #[cfg(test)]
-pub fn assert_memory_read(cpu: &CPU, address: u16, expected: u8) {
+pub fn assert_memory_read(cpu: &mut CPU, address: u16, expected: u8) {
     assert_eq!(cpu.get_memory().read_byte(address), expected);
 }

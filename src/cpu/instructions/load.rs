@@ -183,6 +183,25 @@ impl CPU {
             },
         }
     }
+    /// loads(copies) the value in register A into memory at the address $FF00+a8 
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH__C_,A
+    pub fn ldh_a8_a (&mut self, a8:u8)-> InstructionResult {
+        let target = 0xFF00u16 + a8 as u16;
+        let value = self.get_8bit_register(Register8Bit::A);
+        
+        self.memory.write_byte(target, value);
+
+        InstructionResult {
+            cycles: 3,
+            bytes: 2,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
     /// loads(copies) the value from memory at the address in 16bit-register source into register A
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_r16_
     pub fn ld_a_r16 (&mut self, source: Register16Bit)-> InstructionResult {
@@ -237,7 +256,7 @@ impl CPU {
             },
         }
     }
-    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + c into register A. TODO was ist C hier?
+    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + c into register A. 
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
     pub fn ldh_a_c (&mut self)-> InstructionResult {
         let source = 0xFF00u16 + self.get_8bit_register(Register8Bit::C) as u16;
@@ -247,6 +266,24 @@ impl CPU {
         InstructionResult {
             cycles: 2,
             bytes: 1,
+            condition_codes: ConditionCodes {
+                zero: FlagState::NotAffected,
+                subtract: FlagState::NotAffected,
+                half_carry: FlagState::NotAffected,
+                carry: FlagState::NotAffected,
+            },
+        }
+    }
+    /// loads(copies) the value from memory at the 16bit-address 0xFF00 + a8 into register A. 
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
+    pub fn ldh_a_a8 (&mut self, a8:u8)-> InstructionResult {
+        let source = 0xFF00u16 + a8 as u16;
+        let value = self.memory.read_byte(source);
+        self.set_8bit_register(Register8Bit::A, value);
+
+        InstructionResult {
+            cycles: 3,
+            bytes: 2,
             condition_codes: ConditionCodes {
                 zero: FlagState::NotAffected,
                 subtract: FlagState::NotAffected,
@@ -339,7 +376,7 @@ impl CPU {
 
 #[test]
 pub fn load_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
     let mut expected_result = InstructionResult::default();
     let mut registers;
 
@@ -371,16 +408,20 @@ pub fn load_test() {
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 3;
     expected_result.cycles = 3;
-    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Number16Bit(0xFF00u16)), expected_result);
+    
+    assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Number16Bit(0xF000u16)), expected_result);
     //6) LD [r16],A: [DE],A
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 2;
+    registers = cpu.get_registry_dump();
+    assert_eq!(registers[Register8Bit::A as usize], 42);
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::DE), super::InstParam::Register8Bit(Register8Bit::A)), expected_result);
     //7) LD A,[r16]: A,0xFF00u16
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 2;
+    assert_eq!(cpu.memory.read_byte(0xF000u16),42);
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::A), super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 42);
@@ -388,7 +429,7 @@ pub fn load_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0xFF00u16);
+    assert_eq!(result, 0xF000u16);
 
     //8) LD [n16],A
     cpu.ld_r8_n8(Register8Bit::A, 0);
@@ -416,15 +457,15 @@ pub fn load_test() {
     cpu.ld_r8_n8(Register8Bit::A, 111);
     cpu.ldh_n16_a(0xFEFF);
     cpu.ld_r8_n8(Register8Bit::A, 222);
-    cpu.ldh_n16_a(0xFF00);
+    cpu.ldh_n16_a(0xF000);
     cpu.ldh_a_n16(0xFEFF);
     registers = cpu.get_registry_dump();
     assert_ne!(registers[Register8Bit::A as usize], 111);
-    cpu.ldh_a_n16(0xFF00);
+    cpu.ldh_a_n16(0xF000);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 222);
     //12) LDI und LDD
-    cpu.ld_r16_n16(Register16Bit::HL,0xFF04);
+    cpu.ld_r16_n16(Register16Bit::HL,0x00FF);
     cpu.ld_r8_n8(Register8Bit::A, 121);
     cpu.ld_hli_a();
     registers = cpu.get_registry_dump();
@@ -432,7 +473,7 @@ pub fn load_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0xFF05);
+    assert_eq!(result, 256);
 
     cpu.ld_r8_n8(Register8Bit::A, 131);
     cpu.ld_hld_a();
@@ -441,7 +482,7 @@ pub fn load_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0xFF04);
+    assert_eq!(result, 0x00FF);
 
     cpu.ld_a_hli();
     registers = cpu.get_registry_dump();
@@ -455,5 +496,5 @@ pub fn load_test() {
     let high = registers[register_value.clone()] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
-    assert_eq!(result, 0xFF04);
+    assert_eq!(result, 255);
 }

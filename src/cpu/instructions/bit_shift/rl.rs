@@ -23,10 +23,10 @@ impl CPU {
         let result = (value << 1) | shift_into_result;
         (
             ConditionCodes {
-                zero: if result != 0 && set_zero {
-                    FlagState::Unset
-                } else {
+                zero: if set_zero && result == 0  {
                     FlagState::Set
+                } else {
+                    FlagState::Unset
                 },
                 subtract: FlagState::Unset,
                 half_carry: FlagState::Unset,
@@ -127,7 +127,7 @@ impl CPU {
 
 #[test]
 pub fn rl_test() {
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
 
     //Test rl_r8
     cpu.clear_carry_flag();

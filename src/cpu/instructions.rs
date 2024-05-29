@@ -26,10 +26,10 @@ pub enum FlagState {
 /// carry: The carry flag (C)
 #[derive(Debug, PartialEq, Clone)]
 pub struct ConditionCodes {
-    zero: FlagState,
-    subtract: FlagState,
-    half_carry: FlagState,
-    carry: FlagState,
+    pub zero: FlagState,
+    pub subtract: FlagState,
+    pub half_carry: FlagState,
+    pub carry: FlagState,
 }
 
 /// The result of an instruction
@@ -81,6 +81,7 @@ pub enum InstParam {
     Number16Bit(u16),
     Offset,
     Unsigned3Bit(u8),
+    Boolean(bool),
     None,
 }
 
@@ -88,6 +89,7 @@ pub enum InstParam {
 pub enum Instructions {
     ADD(InstParam),
     ADD_HL(InstParam),
+    //ADD_SP(InstParam),
     ADC(InstParam),
     SUB(InstParam),
     SBC(InstParam),
@@ -95,8 +97,8 @@ pub enum Instructions {
     XOR(InstParam),
     OR(InstParam),
     CP(InstParam),
-    INC(InstParam),
-    DEC(InstParam),
+    INC(InstParam, InstParam),
+    DEC(InstParam, InstParam),
 
     LD(InstParam, InstParam),
     LDH(InstParam, InstParam),
@@ -104,6 +106,7 @@ pub enum Instructions {
     LDAHLI, // LD A, (HL+)
     LDHLDA, // LD (HL-), A
     LDAHLD, // LD A, (HL-)
+    //LD_HL_SP_SIGNED(InstParam),
 
     BIT(InstParam,InstParam),
     RES(InstParam,InstParam),
@@ -136,5 +139,7 @@ pub enum Instructions {
     HALT,
     NOP,
     SCF,
-    STOP,
+    STOP, 
+    
+    INVALID, // Invalid instruction
 }
