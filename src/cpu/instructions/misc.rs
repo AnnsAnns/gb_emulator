@@ -157,21 +157,38 @@ impl CPU {
     }
 
     pub fn halt(&mut self) -> InstructionResult {
-        self.low_power_mode = true;
-
-        // Halt bug implementieren oder nicht?
-        if self.ime_flag {}
-        //bug einfügen
-        if self.interrupt_pentding() {}
-        InstructionResult {
-            cycles: 0,
-            bytes: 1,
-            condition_codes: ConditionCodes {
-                zero: FlagState::NotAffected,
-                subtract: FlagState::NotAffected,
-                half_carry: FlagState::NotAffected,
-                carry: FlagState::NotAffected,
-            },
+        // Halt bug ist noch nicht implementiert. Bug tritt nicht und wird auch nicht behoben.
+        if self.ime_flag {
+            if self.check_and_handle_interrupts(){
+                InstructionResult{
+                    bytes: 1,
+                    cycles: 0,
+                    condition_codes: ConditionCodes{
+                        carry: FlagState::NotAffected,
+                        half_carry: FlagState::NotAffected,
+                        subtract: FlagState::NotAffected,
+                        zero: FlagState::NotAffected,
+                    }
+                }
+            }
+            else{
+                InstructionResult::default()
+            }
+        }
+        else if self.interrupt_pentding(){
+            InstructionResult{
+                bytes: 1,
+                cycles: 0,
+                condition_codes: ConditionCodes{
+                    carry: FlagState::NotAffected,
+                    half_carry: FlagState::NotAffected,
+                    subtract: FlagState::NotAffected,
+                    zero: FlagState::NotAffected,
+                }
+            }
+        }
+        else{
+            InstructionResult::default()
         }
     }
 }

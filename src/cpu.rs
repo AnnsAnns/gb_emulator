@@ -32,7 +32,6 @@ pub struct CPU {
     ime_flag: bool, 
     /// 0 if nothing to do, 2 if ime needs to be set after next instruction, 1 if ime needs to be set after this instruction
     enable_ime: i32,
-    low_power_mode: bool,
     last_execution_time: std::time::Instant,
     cycles: u64,
 }
@@ -48,7 +47,6 @@ impl CPU {
             last_step_result: InstructionResult::default(),
             enable_ime: 0,
             ime_flag: false,
-            low_power_mode: false,
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
         }
