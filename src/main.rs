@@ -67,7 +67,7 @@ async fn main() {
 
     let mut cpu = cpu::CPU::new(true);
 
-    cpu.load_from_file("./game.gb");
+    cpu.load_from_file("./game.gb", 0x0000);
 
     // Get start time
     let mut ppu_time = time::Instant::now();

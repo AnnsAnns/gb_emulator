@@ -52,8 +52,8 @@ impl CPU {
         }
     }
 
-    pub fn load_from_file(&mut self, file: &str) {
-        self.memory.load_from_file(file);
+    pub fn load_from_file(&mut self, file: &str, offset: usize) {
+        self.memory.load_from_file(file, offset);
     }
 
     pub fn get_next_opcode(&mut self) -> u8 {
