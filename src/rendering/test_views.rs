@@ -84,7 +84,7 @@ async fn golden_image_layout() {
         Color::new(0.12, 0.54, 0.12, 1.00),
         Color::new(0.06, 0.15, 0.06, 1.00),
     ];
-    const SCALING: f32 = 4.0;
+    const SCALING: f32 = 2.0;
 
     let final_image = Image::gen_image_color(160, 144, GREEN);
     let mut gb_display = GbDisplay {

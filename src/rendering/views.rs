@@ -25,13 +25,13 @@ impl GbDisplay {
         draw_texture_ex(&tex2d, self.offset_x, self.offset_y, WHITE, tex2d_params);
 
         //TODO: Draw actual emulator content
-        draw_text(
-            "Game Display",
-            self.offset_x + 100.0,
-            self.offset_y + 250.0,
-            100.0,
-            BLACK,
-        );
+        //draw_text(
+        //    "Game Display",
+        //    self.offset_x + 100.0,
+        //    self.offset_y + 250.0,
+        //    100.0,
+        //    BLACK,
+        //);
     }
 
     pub fn size(&self, image: &Image) -> Vec2 {
