@@ -6,11 +6,17 @@ pub mod memory;
 pub mod rendering;
 
 use std::{
-    f32::consts::E, thread::sleep, time::{self, Duration}
+    f32::consts::E,
+    thread::sleep,
+    time::{self, Duration},
 };
 
 use macroquad::{prelude::*, ui::root_ui};
-use rendering::{tiles::*, views::*};
+use rendering::{
+    line_rendering::{draw_pixels, oam_scan, PpuMode},
+    tiles::*,
+    views::*,
+};
 
 #[macro_use]
 extern crate simple_log;
@@ -20,13 +26,17 @@ use crate::{
     rendering::utils::draw_scaled_text,
 };
 
-/// 60Hz
-/// This is the refresh rate of the Gameboy
-const TIME_PER_FRAME: f32 = 1.0/60.0*1000.0;
+// Dots are PPU Cycle conters per Frame
+const DOTS_PER_CPU_CYCLE: u32 = 4;
+const DOTS_PER_LINE: u32 = 456;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
     simple_log::quick!();
+
+    // 60Hz
+    // This is the refresh rate of the Gameboy
+    let time_per_frame: Duration = Duration::from_secs_f64(1.0 / 60.0);
 
     const PALETTE: [Color; 4] = [
         Color::new(1.00, 1.00, 1.00, 1.00),
@@ -36,7 +46,7 @@ async fn main() {
     ];
     const SCALING: f32 = 4.0;
 
-    let final_image = Image::gen_image_color(160, 144, GREEN);
+    let mut final_image = Image::gen_image_color(160, 144, GREEN);
     let mut gb_display = GbDisplay {
         offset_x: 5.0,
         offset_y: 5.0,
@@ -70,12 +80,13 @@ async fn main() {
     cpu.load_from_file("./game.gb", 0x0000);
 
     // Get start time
-    let mut ppu_time = time::Instant::now();
-    let mut ppu_h_time = time::Instant::now(); // Horizontal time
+    let mut last_frame_time = time::Instant::now();
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
-    let mut h_timeslots = TIME_PER_FRAME / 153.0;
-    let mut y_coordinate: u8 = 0;
+
+    let mut scanline: u8 = 0;
+    let mut frame_cycles = 0;
+    let mut ppu_mode: PpuMode = PpuMode::OamScan;
 
     loop {
         let instruction = cpu.prepare_and_decode_next_instruction();
@@ -84,59 +95,90 @@ async fn main() {
         let result = cpu.step();
         log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
 
-        let pc_following_word = cpu.get_memory().read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+        let pc_following_word = cpu
+            .get_memory()
+            .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         cpu.update_key_input();
 
-        // Set the LCD Y coordinate
-        // This is a hack to get the LCD interrupts to work
-        // Without a proper PPU implementation
-        if (ppu_h_time.elapsed().as_millis() as f32) >= h_timeslots {
-            y_coordinate = if y_coordinate == 153 {
-                0
-            } else {
-                y_coordinate + 1
-            };
+        let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
+        cpu.set_lcd_y_coordinate(scanline);
 
-            cpu.set_lcd_y_coordinate(y_coordinate);
-            ppu_h_time = time::Instant::now();
-
-            // Set the PPU mode
-            let mode = if y_coordinate >= 144 {
-                1
-            } else {
-                // Random mode either 2, 3 or 0
-                // Because we don't have a proper PPU implementation
-                (y_coordinate % 4) + 2
-            };
-
-            cpu.set_ppu_mode(mode);
+        match ppu_mode {
+            PpuMode::OamScan => {
+                if dot % DOTS_PER_LINE == 80 - 1 {
+                    oam_scan(&cpu);
+                    ppu_mode = PpuMode::Drawing
+                }
+            }
+            PpuMode::Drawing => {
+                if dot % DOTS_PER_LINE == 172 + 80 - 1 {
+                    draw_pixels(&cpu, &mut final_image);
+                    ppu_mode = PpuMode::HorizontalBlank;
+                }
+            }
+            PpuMode::HorizontalBlank => {
+                if dot % DOTS_PER_LINE == 455 {
+                    scanline += 1;
+                    ppu_mode = if scanline <= 143 {
+                        PpuMode::OamScan
+                    } else {
+                        PpuMode::VerticalBlank
+                    }
+                }
+            }
+            PpuMode::VerticalBlank => {
+                if dot % DOTS_PER_LINE == 455 {
+                    scanline += 1;
+                    if scanline >= 154 {
+                        ppu_mode = PpuMode::OamScan;
+                        frame_cycles = 0;
+                    }
+                }
+            }
         }
 
+        cpu.set_ppu_mode(ppu_mode as u8);
+        frame_cycles += 1;
+
         // Draw at 60Hz so 60 frames per second
-        if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
+        if dot >= DOTS_PER_LINE * 155 {
+            while last_frame_time.elapsed() < time_per_frame {
+                // Do nothing
+                // TODO: Remove active wait
+            }
+
             // Inform about the time it took to render the frame
-            root_ui().label(None, format!("Frame time: {:?} | Target: {:?} | Frame: {:?}", ppu_time.elapsed(), TIME_PER_FRAME, frame).as_str());
-            ppu_time = time::Instant::now();
+            root_ui().label(
+                None,
+                format!(
+                    "Frame time: {:?} | Target: {:?} | Frame: {:?}",
+                    last_frame_time.elapsed(),
+                    time_per_frame,
+                    frame
+                )
+                .as_str(),
+            );
+            last_frame_time = time::Instant::now();
+
+            // Update Debugging Views
             update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
             update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
-
             background_viewer.draw(&background_image);
+            tile_viewer.draw(&tile_atlas);
 
             gb_display.draw(&final_image);
-
-            tile_viewer.draw(&tile_atlas);
             next_frame().await;
             // Set the VBlank interrupt since we are done with the frame
             cpu.set_vblank_interrupt();
             frame += 1;
-        }
 
-        // Dump memory every 3 seconds
-        if dump_time.elapsed().as_secs() >= 3 {
-            dump_time = time::Instant::now();
-            cpu.dump_memory();
+            // Dump memory every 3 seconds
+            if dump_time.elapsed().as_secs() >= 3 {
+                dump_time = time::Instant::now();
+                cpu.dump_memory();
+            }
         }
     }
 }
