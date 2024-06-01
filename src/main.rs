@@ -14,6 +14,7 @@ use std::{
 
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{tiles::*, views::*};
+use simple_log::LogConfigBuilder;
 
 #[macro_use]
 extern crate simple_log;
@@ -30,7 +31,14 @@ const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
-    //simple_log::quick!();
+    // Set up logging
+    let config = LogConfigBuilder::builder()
+        .size(1 * 100)
+        .roll_count(10)
+        .level("debug")
+        .output_console()
+        .build();
+    simple_log::new(config).unwrap();
 
     const PALETTE: [Color; 4] = [
         Color::new(1.00, 1.00, 1.00, 1.00),
@@ -113,7 +121,6 @@ async fn main() {
                 .as_bytes(),
             );
         }
-
 
         let instruction = cpu.prepare_and_decode_next_instruction();
         log::debug!("🔠 Instruction: {:?}", instruction);
