@@ -90,6 +90,11 @@ impl CPU {
         pub fn call_cc_n16(&mut self, cc: bool, target: u16) -> InstructionResult {
             if cc {
                 self.call_n16(target);
+            } else {
+                // 3 bytes for the call_n16 instruction
+                // Even if the condition is false, the instruction is still 3 bytes
+                // So we need to increment the PC by 3
+                self.set_16bit_register(Register16Bit::PC, self.get_16bit_register(Register16Bit::PC)+3);
             }
 
             InstructionResult {

@@ -401,10 +401,13 @@ impl CPU {
             },
             Instructions::RETI => self.reti(),
             Instructions::CALL(target_or_condition, optional_target) => match target_or_condition {
-                InstParam::Number16Bit(target_addr) => self.call_n16(*target_addr),
                 InstParam::ConditionCodes(cond) => match optional_target {
                     InstParam::Number16Bit(target_addr) => {
-                        self.call_cc_n16(self.check_condition(cond), *target_addr)
+                        if cond == &InstructionCondition::SkipConditionCodes {
+                            self.call_n16(*target_addr)
+                        } else {
+                            self.call_cc_n16(self.check_condition(cond), *target_addr)
+                        }
                     }
                     _ => return Err(format!("CALL of {:?} not implemented", optional_target)),
                 },

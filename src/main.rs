@@ -35,7 +35,7 @@ async fn main() {
     let config = LogConfigBuilder::builder()
         .size(1 * 100)
         .roll_count(10)
-        .level("debug")
+        .level("info")
         .output_console()
         .build();
     simple_log::new(config).unwrap();
