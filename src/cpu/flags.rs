@@ -77,4 +77,9 @@ impl CPU {
     pub fn is_carry_flag_set(&self) -> bool {
         self.registers[1] & CARRY_FLAG == CARRY_FLAG
     }
+
+    /// Get the flags register as a u8
+    pub fn flags_to_u8(&self) -> u8 {
+        self.registers[1]
+    }
 }

@@ -3,5 +3,6 @@
 memory_dump.bin
 decoded_values.txt
 failed_values.txt
-game.gb
+game.gb*
 tmp/*
+gameboy_doctor_log.txt

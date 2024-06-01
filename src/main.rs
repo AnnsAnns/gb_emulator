@@ -6,7 +6,10 @@ pub mod memory;
 pub mod rendering;
 
 use std::{
-    f32::consts::E, thread::sleep, time::{self, Duration}
+    f32::consts::E,
+    io::Write,
+    thread::sleep,
+    time::{self, Duration},
 };
 
 use macroquad::{prelude::*, ui::root_ui};
@@ -22,11 +25,12 @@ use crate::{
 
 /// 60Hz
 /// This is the refresh rate of the Gameboy
-const TIME_PER_FRAME: f32 = 1.0/60.0*1000.0;
+const TIME_PER_FRAME: f32 = 1.0 / 60.0 * 1000.0;
+const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
-    simple_log::quick!();
+    //simple_log::quick!();
 
     const PALETTE: [Color; 4] = [
         Color::new(1.00, 1.00, 1.00, 1.00),
@@ -77,14 +81,49 @@ async fn main() {
     let mut h_timeslots = TIME_PER_FRAME / 153.0;
     let mut y_coordinate: u8 = 0;
 
+    // Open "registers.txt" file for Gameboy Doctor
+    let mut gb_doctor_file = std::fs::File::create("gameboy_doctor_log.txt").unwrap();
+
+    if DUMP_GAMEBOY_DOCTOR_LOG {
+        cpu.skip_boot_rom();
+    }
+
     loop {
+        if DUMP_GAMEBOY_DOCTOR_LOG {
+            // Dump registers to file for Gameboy Doctor like this
+            // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
+            let _ = gb_doctor_file.write_all(
+                format!(
+                    "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}\n",
+                    cpu.get_8bit_register(Register8Bit::A),
+                    cpu.flags_to_u8(),
+                    cpu.get_8bit_register(Register8Bit::B),
+                    cpu.get_8bit_register(Register8Bit::C),
+                    cpu.get_8bit_register(Register8Bit::D),
+                    cpu.get_8bit_register(Register8Bit::E),
+                    cpu.get_8bit_register(Register8Bit::H),
+                    cpu.get_8bit_register(Register8Bit::L),
+                    cpu.get_16bit_register(Register16Bit::SP),
+                    cpu.get_16bit_register(Register16Bit::PC),
+                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC)),
+                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
+                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
+                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
+                )
+                .as_bytes(),
+            );
+        }
+
+
         let instruction = cpu.prepare_and_decode_next_instruction();
         log::debug!("🔠 Instruction: {:?}", instruction);
         let is_bootrom_enabled = cpu.is_boot_rom_enabled();
         let result = cpu.step();
         log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
 
-        let pc_following_word = cpu.get_memory().read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+        let pc_following_word = cpu
+            .get_memory()
+            .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         cpu.update_key_input();
@@ -117,7 +156,16 @@ async fn main() {
         // Draw at 60Hz so 60 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
             // Inform about the time it took to render the frame
-            root_ui().label(None, format!("Frame time: {:?} | Target: {:?} | Frame: {:?}", ppu_time.elapsed(), TIME_PER_FRAME, frame).as_str());
+            root_ui().label(
+                None,
+                format!(
+                    "Frame time: {:?} | Target: {:?} | Frame: {:?}",
+                    ppu_time.elapsed(),
+                    TIME_PER_FRAME,
+                    frame
+                )
+                .as_str(),
+            );
             ppu_time = time::Instant::now();
             update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
             update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);

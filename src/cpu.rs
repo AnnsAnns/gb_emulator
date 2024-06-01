@@ -1,4 +1,4 @@
-use registers::Register16Bit;
+use registers::{Register16Bit, Register8Bit};
 
 use crate::memory::Memory;
 
@@ -50,6 +50,25 @@ impl CPU {
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
         }
+    }
+
+    /// Skip the bootrom
+    /// Set the registers to the correct values
+    /// Used for: https://robertheaton.com/gameboy-doctor/
+    pub fn skip_boot_rom(&mut self) {
+        self.set_8bit_register(Register8Bit::A, 0x01);
+        self.set_zero_flag();
+        self.set_half_carry_flag();
+        self.set_carry_flag();
+        self.set_8bit_register(Register8Bit::B, 0x00);
+        self.set_8bit_register(Register8Bit::C, 0x13);
+        self.set_8bit_register(Register8Bit::D, 0x00);
+        self.set_8bit_register(Register8Bit::E, 0xD8);
+        self.set_8bit_register(Register8Bit::H, 0x01);
+        self.set_8bit_register(Register8Bit::L, 0x4D);
+        self.set_16bit_register(Register16Bit::SP, 0xFFFE);
+        self.set_16bit_register(Register16Bit::PC, 0x0100);
+        self.memory.boot_rom_enabled = false;
     }
 
     pub fn load_from_file(&mut self, file: &str) {

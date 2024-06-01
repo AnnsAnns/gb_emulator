@@ -30,7 +30,7 @@ pub struct Memory {
     /// 0xFF80 - 0xFFFE: High RAM (HRAM)
     /// 0xFFFF: Interrupt Enable Register
     memory: [u8; MEMORY_SIZE],
-    boot_rom_enabled: bool,
+    pub boot_rom_enabled: bool,
     boot_rom: [u8; ROM_SIZE],
 }
 
