@@ -7,12 +7,7 @@ impl Memory {
         if self.boot_rom_enabled && address < 0xFF {
             self.boot_rom[address as usize]
         } else {
-            if address == 0xFF44 {
-                log::debug!("Faking LY read, for https://robertheaton.com/gameboy-doctor/");
-                0x90
-            } else {
-                self.memory[address as usize]
-            }
+            self.memory[address as usize]
         }
     }
 
