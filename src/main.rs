@@ -163,8 +163,8 @@ async fn main() {
             last_frame_time = time::Instant::now();
 
             // Update Debugging Views
-            update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
-            update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
+            update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+            update_background_from_memory(&cpu, &mut background_image, &PALETTE, true, false);
             background_viewer.draw(&background_image);
             tile_viewer.draw(&tile_atlas);
 

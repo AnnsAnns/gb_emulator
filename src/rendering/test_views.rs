@@ -30,7 +30,7 @@ async fn golden_image_tile_viewer() {
 
     request_new_screen_size(window_size.x, window_size.y);
 
-    update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut atlas, &PALETTE);
+    update_atlas_from_memory(&cpu, 16 * 24, &mut atlas, &PALETTE);
 
     loop {
         tile_viewer.draw(&atlas);
@@ -68,8 +68,8 @@ async fn golden_image_background_viewer() {
     request_new_screen_size(window_size.x, window_size.y);
 
     loop {
-        update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
-        update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
+        update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+        update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
         background_viewer.draw(&background_image);
         next_frame().await;
     }
@@ -84,7 +84,7 @@ async fn golden_image_layout() {
         Color::new(0.12, 0.54, 0.12, 1.00),
         Color::new(0.06, 0.15, 0.06, 1.00),
     ];
-    const SCALING: f32 = 2.0;
+    const SCALING: f32 = 4.0;
 
     let final_image = Image::gen_image_color(160, 144, GREEN);
     let mut gb_display = GbDisplay {
@@ -121,10 +121,8 @@ async fn golden_image_layout() {
 
     cpu.load_from_file("test_files/Mindy1-VRAM.bin", 0x8000);
 
-    println!("vram-Val: {}", cpu.get_memory().read_byte(0x8010));
-
-    update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
-    update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
+    update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+    update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
 
     loop {
         //update_tile_atlas(9, &test_tile, &mut tile_atlas, &PALETTE);
