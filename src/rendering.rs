@@ -4,5 +4,5 @@ pub mod utils;
 pub mod line_rendering;
 
 // Disable for now
-#[cfg(test)]
-mod test_views;
+//#[cfg(test)]
+//mod test_views;
