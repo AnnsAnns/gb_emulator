@@ -18,8 +18,10 @@ impl CPU {
         } else {
             0
         };
-        let (result, overflow) = target_value.overflowing_add(value + carry);
-
+        let (partial, overflow) = value.overflowing_add(carry);
+        let (result, overflow2) = target_value.overflowing_add(partial);
+        let overflow = overflow || overflow2;
+        
         self.set_8bit_register(target, result);
 
         ConditionCodes {
