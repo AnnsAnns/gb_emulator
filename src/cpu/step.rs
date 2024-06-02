@@ -436,7 +436,7 @@ impl CPU {
                     InstParam::SignedNumber8Bit(target_addr) => {
                         self.jr_cc_n16(self.check_condition(cond), *target_addr)
                     }
-                    _ => return Err(format!("CALL of {:?} not implemented", optional_target)),
+                    _ => return Err(format!("JR of {:?} not implemented", optional_target)),
                 },
                 _ => return Err(format!("CALL of {:?} not implemented", target_or_condition)),
             },

@@ -44,6 +44,11 @@ impl CPU {
     pub fn jp_cc_n16(&mut self, cc:bool, target: u16) -> InstructionResult {
         if cc {
             self.set_16bit_register(Register16Bit::PC, target);
+        } else {
+            // 3 bytes for the jp instruction
+            // Even if the condition is false, the instruction is still 3 bytes
+            // So we need to increment the PC by 3
+            self.set_16bit_register(Register16Bit::PC, self.get_16bit_register(Register16Bit::PC)+3);
         }
         
 
@@ -127,6 +132,11 @@ impl CPU {
         pub fn ret_cc(&mut self, cc: bool) -> InstructionResult {
             if cc {
                 self.pop_r16(Register16Bit::PC);
+            } else {
+                // 1 bytes for the ret instruction
+                // Even if the condition is false, the instruction is still 1 bytes
+                // So we need to increment the PC by 1
+                self.set_16bit_register(Register16Bit::PC, self.get_16bit_register(Register16Bit::PC)+1);
             }
 
             InstructionResult {

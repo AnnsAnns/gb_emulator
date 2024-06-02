@@ -215,7 +215,7 @@ impl CPU {
             0x3 => match tail {
                 0x0 => Instructions::JR(
                     InstParam::ConditionCodes(InstructionCondition::NotCarry),
-                    InstParam::Number8Bit(self.get_8bit_from_pc()),
+                    InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8),
                 ),
                 0x1 => self.decode_0x0_to_0x3_commons(opcode)?,
                 0x2 => Instructions::LDHLDA,
@@ -442,7 +442,11 @@ impl CPU {
             0x0 => Instructions::RLC(register),
             0x1 => Instructions::RL(register),
             0x2 => Instructions::SLA(register),
-            0x3 => Instructions::SWAP(register),
+            0x3 => match tail {
+                0x0..=0x7 => Instructions::SWAP(register),
+                0x8..=0xF => Instructions::SRL(register),
+                _ => return self.not_implemented(opcode),
+            }
             0x4 => Instructions::BIT(InstParam::Unsigned3Bit(0 + offset), register),
             0x5 => Instructions::BIT(InstParam::Unsigned3Bit(2 + offset), register),
             0x6 => Instructions::BIT(InstParam::Unsigned3Bit(4 + offset), register),

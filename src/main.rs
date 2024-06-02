@@ -31,10 +31,11 @@ const DOTS_PER_LINE: u32 = 456;
 const TIME_PER_FRAME: f32 = 1.0 / 60.0 * 1000.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
+const WINDOWS: bool = true;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
-    // Set up logging
+    //Set up logging
     let config = LogConfigBuilder::builder()
     .size(1 * 100)
     .roll_count(10)
@@ -218,7 +219,7 @@ async fn main() {
                 frame += 1;
 
                 // Dump memory every 3 seconds
-                if dump_time.elapsed().as_secs() >= 3 {
+                if !WINDOWS && dump_time.elapsed().as_secs() >= 3 {
                     dump_time = time::Instant::now();
                     cpu.dump_memory();
                 }
