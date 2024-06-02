@@ -79,8 +79,8 @@ impl TileViewer {
             let tile_addr = 0x8000 + tile_index * 16;
 
             let pos_text = format!(
-                "Tile Index: {}, Tile X: {}, Tile Y: {}, ADR: {:#X}",
-                tile_index, x_tile, y_tile, tile_addr
+                "Tile Index: {}, ADR: {:#X}",
+                tile_index, tile_addr
             );
 
             draw_text(
