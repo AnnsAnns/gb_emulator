@@ -56,21 +56,3 @@ impl Memory {
     }
 
 }
-
-#[cfg(test)]
-pub mod test_helper {
-
-    use std::fs;
-
-    use crate::memory::Memory;
-
-    pub fn file_to_memory(memory: &mut Memory, offset: u16, file_path: &str) {
-        let data: Vec<u8> = fs::read(file_path).expect("Could not read file");
-
-        for (pos, byte) in data.iter().enumerate() {
-            memory.write_byte(offset + pos as u16, *byte);
-            //let wrote = memory.read_byte(offset + pos as u16);
-            //println!("{:#X}", wrote);
-        }
-    }
-}

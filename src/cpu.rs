@@ -1,4 +1,4 @@
-use registers::{Register16Bit, Register8Bit};
+use registers::Register16Bit;
 
 use crate::memory::Memory;
 
@@ -9,10 +9,12 @@ pub mod decode;
 mod flags;
 pub mod instructions;
 pub mod registers;
+pub mod render_operations;
 mod step;
 mod interrupts;
 mod joypad;
 mod timer;
+
 
 /// 4.194304 MHz
 /// This is the frequency of the CPU
@@ -73,8 +75,8 @@ impl CPU {
         self.memory.write_byte(0xFF00, 0b1111_1111);
     }
 
-    pub fn load_from_file(&mut self, file: &str) {
-        self.memory.load_from_file(file);
+    pub fn load_from_file(&mut self, file: &str, offset: usize) {
+        self.memory.load_from_file(file, offset);
     }
 
     pub fn get_next_opcode(&mut self) -> u8 {
