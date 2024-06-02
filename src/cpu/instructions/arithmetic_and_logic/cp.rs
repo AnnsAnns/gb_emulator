@@ -13,7 +13,7 @@ impl CPU {
             condition_codes: ConditionCodes {
                 zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::Unset},
+                half_carry: if ((a_value ^ r8_value) & 0x10) != (value & 0x10) {FlagState::Set} else {FlagState::Unset},
                 carry: if overflow { FlagState::Set } else { FlagState::Unset},
             },
         }
@@ -21,7 +21,6 @@ impl CPU {
     ///subtract u8 r8_value from A without storing and set flags accordingly
     pub fn cp_a_n8(&mut self, r8_value: u8) -> InstructionResult {
         let a_value = self.get_8bit_register(Register8Bit::A);
-        let tail = a_value & 0xF;
         let (value,overflow) = a_value.overflowing_sub(r8_value);
 
         InstructionResult {
@@ -30,7 +29,7 @@ impl CPU {
             condition_codes: ConditionCodes {
                 zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::Unset},
+                half_carry: if ((a_value ^ r8_value) & 0x10) != (value & 0x10) {FlagState::Set} else {FlagState::Unset},
                 carry: if overflow { FlagState::Set } else { FlagState::Unset},
             },
         }
@@ -49,7 +48,7 @@ impl CPU {
             condition_codes: ConditionCodes {
                 zero: if value == 0 {FlagState::Set} else {FlagState::Unset},
                 subtract: FlagState::Set,
-                half_carry: if tail < r8_value && (value & 0xF) != 0 {FlagState::Set} else {FlagState::Unset},
+                half_carry: if ((a_value ^ r8_value) & 0x10) != (value & 0x10) {FlagState::Set} else {FlagState::Unset},
                 carry: if overflow { FlagState::Set } else { FlagState::Unset},
             },
         }

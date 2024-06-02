@@ -5,7 +5,6 @@ impl CPU {
         let a = self.get_8bit_register(Register8Bit::A);
         let carry = if add_carry && self.is_carry_flag_set() { 1 } else { 0 };
         let result = a.wrapping_sub(value).wrapping_sub(carry);
-        let tail = a & 0xF;
         
         self.set_8bit_register(Register8Bit::A, result);
 
@@ -21,7 +20,7 @@ impl CPU {
                     }
                 },
                 subtract: FlagState::Set,
-                half_carry: if value > tail {FlagState::Set} else {FlagState::Unset},
+                half_carry: if ((a ^ value) & 0x10) != (result & 0x10) {FlagState::Set} else {FlagState::Unset},
                 carry: if value > a {FlagState::Set} else {FlagState::Unset},
             },
         }
