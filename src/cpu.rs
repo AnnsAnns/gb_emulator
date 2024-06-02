@@ -1,4 +1,4 @@
-use registers::Register16Bit;
+use registers::{Register16Bit, Register8Bit};
 
 use crate::memory::Memory;
 
@@ -54,6 +54,27 @@ impl CPU {
         }
     }
 
+    /// Skip the bootrom
+    /// Set the registers to the correct values
+    /// Used for: https://robertheaton.com/gameboy-doctor/
+    pub fn skip_boot_rom(&mut self) {
+        self.set_8bit_register(Register8Bit::A, 0x01);
+        self.set_zero_flag();
+        self.set_half_carry_flag();
+        self.set_carry_flag();
+        self.set_8bit_register(Register8Bit::B, 0x00);
+        self.set_8bit_register(Register8Bit::C, 0x13);
+        self.set_8bit_register(Register8Bit::D, 0x00);
+        self.set_8bit_register(Register8Bit::E, 0xD8);
+        self.set_8bit_register(Register8Bit::H, 0x01);
+        self.set_8bit_register(Register8Bit::L, 0x4D);
+        self.set_16bit_register(Register16Bit::SP, 0xFFFE);
+        self.set_16bit_register(Register16Bit::PC, 0x0100);
+        self.memory.boot_rom_enabled = false;
+        // Set Joypad register
+        self.memory.write_byte(0xFF00, 0b1111_1111);
+    }
+
     pub fn load_from_file(&mut self, file: &str, offset: usize) {
         self.memory.load_from_file(file, offset);
     }
@@ -61,6 +82,10 @@ impl CPU {
     pub fn get_next_opcode(&mut self) -> u8 {
         self.memory
             .read_byte(self.get_16bit_register(registers::Register16Bit::PC))
+    }
+
+    pub fn write_memory(&mut self, address: u16, value: u8) {
+        self.memory.write_byte(address, value);
     }
 
     /// Set the next instruction to be executed

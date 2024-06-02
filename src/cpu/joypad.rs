@@ -2,54 +2,58 @@ use macroquad::prelude::*;
 
 use super::{interrupts::InterruptTypes, CPU};
 
+const JOYPAD_REGISTER: u16 = 0xFF00;
+
 impl CPU {
     pub fn update_key_input(&mut self) {
         let keys_down = get_keys_down();
 
-        let mut output = 0xFF;
+        let previous_data = self.memory.read_byte(JOYPAD_REGISTER);
 
-        let joypad_selects = self.memory.read_byte(0xFF00);
+        // Get the relevant bits of the joypad register (Inverted because the buttons are active low)
+        let selected_buttons = (!previous_data & 0x20) != 0;
+        let selected_directions = (!previous_data & 0x10) != 0;
 
-        //is button flag on
-        if (joypad_selects & 0x20) == 0 {
-            output &= !(1 << 5);
-            if keys_down.contains(&KeyCode::Enter) {
-                //start key
-                output &= !(1 << 3);
-            } else if keys_down.contains(&KeyCode::Tab) {
-                //select key
-                output &= !(1 << 2);
-            } else if keys_down.contains(&KeyCode::A) {
-                output &= !(1 << 0);
-            } else if keys_down.contains(&KeyCode::B) {
-                output &= !(1 << 1);
-            }
-        }
+        let mut output = previous_data;
 
-        //is direction flag on
-        if (joypad_selects & 0x10) == 0 {
-            output &= !(1 << 4);
-            if keys_down.contains(&KeyCode::Left) {
-                output &= !(1 << 1);
-            } else if keys_down.contains(&KeyCode::Right) {
-                output &= !(1 << 0);
-            } else if keys_down.contains(&KeyCode::Up) {
-                output &= !(1 << 2);
-            } else if keys_down.contains(&KeyCode::Down) {
-                output &= !(1 << 3);
+        let key_map = if selected_buttons {
+            [
+                (KeyCode::Right, 0),
+                (KeyCode::Left, 1),
+                (KeyCode::Up, 2),
+                (KeyCode::Down, 3),
+            ]
+        } else if selected_directions {
+            [
+                (KeyCode::A, 0),
+                (KeyCode::B, 1),
+                (KeyCode::Tab, 2),
+                (KeyCode::Enter, 3),
+            ]
+        } else {
+            return;
+        };
+
+        for (key, bit) in key_map.iter() {
+            if keys_down.contains(key) {
+                output &= !(1 << bit);
+            } else {
+                output |= 1 << bit;
             }
         }
 
         // If the joypad selects have changed, we need to set the joypad interrupt flag
-        if joypad_selects != output {
+        if previous_data != output {
             self.set_interrupt_flag(InterruptTypes::Joypad);
         }
-        
+
         self.memory.write_controller_byte(output);
     }
 
-    pub fn get_mem_reg(& self, address: u16) -> u8 {
-        self.memory.read_byte(address)
+    pub fn enable_buttons_debug(&mut self) {
+        let mut joypad = self.memory.read_byte(JOYPAD_REGISTER);
+        // Enable button by setting the 5th bit to 0
+        joypad &= 0b1101_1111;
+        self.memory.write_controller_byte(joypad);
     }
-    
 }
