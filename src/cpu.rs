@@ -9,10 +9,12 @@ pub mod decode;
 mod flags;
 pub mod instructions;
 pub mod registers;
+pub mod render_operations;
 mod step;
 mod interrupts;
 mod joypad;
 mod timer;
+
 
 /// 4.194304 MHz
 /// This is the frequency of the CPU
