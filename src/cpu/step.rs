@@ -414,15 +414,15 @@ impl CPU {
                 _ => return Err(format!("CALL of {:?} not implemented", target_or_condition)),
             },
             Instructions::JP(target_or_condition, optional_target) => match target_or_condition {
-                InstParam::Register16Bit(target_reg) => {
-                    if *target_reg == Register16Bit::HL {
-                        self.jp_hl()
-                    } else {
-                        return Err(format!("JP to {:?} not implemented", target_reg));
-                    }
-                }
                 InstParam::Number16Bit(target_addr) => self.jp_n16(*target_addr),
                 InstParam::ConditionCodes(cond) => match optional_target {
+                    InstParam::Register16Bit(target_reg) => {
+                        if *target_reg == Register16Bit::HL && *cond == InstructionCondition::SkipConditionCodes {
+                            self.jp_hl()
+                        } else {
+                            return Err(format!("JP to {:?} not implemented", target_reg));
+                        }
+                    }
                     InstParam::Number16Bit(target_addr) => {
                         self.jp_cc_n16(self.check_condition(cond), *target_addr)
                     }
