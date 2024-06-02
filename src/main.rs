@@ -33,7 +33,7 @@ const DOTS_PER_LINE: u32 = 456;
 #[macroquad::main("GB Emulator")]
 async fn main() {
     simple_log::quick!();
-
+    
     // 60Hz
     // This is the refresh rate of the Gameboy
     let time_per_frame: Duration = Duration::from_secs_f64(1.0 / 60.0);
@@ -107,29 +107,29 @@ async fn main() {
 
         match ppu_mode {
             PpuMode::OamScan => {
-                if dot % DOTS_PER_LINE == 80 - 1 {
+                if dot % DOTS_PER_LINE >= 80 {
                     oam_scan(&cpu);
-                    ppu_mode = PpuMode::Drawing
+                    ppu_mode = PpuMode::Drawing;
                 }
             }
             PpuMode::Drawing => {
-                if dot % DOTS_PER_LINE == 172 + 80 - 1 {
-                    draw_pixels(&cpu, &mut final_image);
+                if dot % DOTS_PER_LINE >= 172 + 80 {
+                    draw_pixels(&mut cpu, &mut final_image, &PALETTE);
                     ppu_mode = PpuMode::HorizontalBlank;
                 }
             }
             PpuMode::HorizontalBlank => {
-                if dot % DOTS_PER_LINE == 455 {
+                if dot % DOTS_PER_LINE == 0 {
                     scanline += 1;
                     ppu_mode = if scanline <= 143 {
                         PpuMode::OamScan
                     } else {
                         PpuMode::VerticalBlank
-                    }
+                    };
                 }
             }
             PpuMode::VerticalBlank => {
-                if dot % DOTS_PER_LINE == 455 {
+                if dot % DOTS_PER_LINE >= 455 {
                     scanline += 1;
                     if scanline >= 154 {
                         ppu_mode = PpuMode::OamScan;
@@ -164,7 +164,7 @@ async fn main() {
 
             // Update Debugging Views
             update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
-            update_background_from_memory(&cpu, &mut background_image, &PALETTE, true, false);
+            update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, false);
             background_viewer.draw(&background_image);
             tile_viewer.draw(&tile_atlas);
 

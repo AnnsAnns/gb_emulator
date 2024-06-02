@@ -1,5 +1,9 @@
 use super::CPU;
 
+const LCDY_ADDRESS: u16 = 0xFF44;
+const SCY_ADDRESS: u16 = 0xFF42;
+const SCX_ADDRESS: u16 = 0xFF43;
+
 impl CPU {
     // LCD Control getters
     pub fn get_lcdc_ppu_enabled(&self) -> bool {
@@ -34,10 +38,23 @@ impl CPU {
         self.memory.read_byte(0xFF40) & 1 == 1
     }
 
+    // LCD Status getters
+    pub fn get_lcd_y_coordinate(&mut self) -> u8 {
+        self.memory.read_byte(LCDY_ADDRESS)
+    }
+
+    pub fn get_lcd_scy(&mut self) -> u8 {
+        self.memory.read_byte(SCY_ADDRESS)
+    }
+
+    pub fn get_lcd_scx(&mut self) -> u8 {
+        self.memory.read_byte(SCX_ADDRESS)
+    }
+
     // VRAM getters
     pub fn get_vram_tile_line(
         &self,
-        high_adressing: bool,
+        high_addressing: bool,
         tile_index: u16,
         tile_line: u8,
     ) -> [u8; 8] {
@@ -45,7 +62,7 @@ impl CPU {
 
         let mut line_addr: u16 = 0x8000 + (tile_line * 2) as u16 + 16 * tile_index as u16;
 
-        if high_adressing && tile_index < 0x80 {
+        if high_addressing && tile_index < 0x80 {
             line_addr += 0x1000;
         }
 
