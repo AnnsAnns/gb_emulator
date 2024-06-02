@@ -63,7 +63,7 @@ impl Memory {
         self.memory.clone()
     }
 
-    pub fn load_from_file(&mut self, file_path: &str) {
+    pub fn load_from_file(&mut self, file_path: &str, offset: usize) {
         let rom = std::fs::read(file_path).expect("Unable to read file");
 
         for (i, byte) in rom.iter().enumerate() {
@@ -72,7 +72,7 @@ impl Memory {
                 break;
             }
 
-            self.memory[i] = *byte;
+            self.memory[i + offset] = *byte;
         }
     }
 

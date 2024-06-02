@@ -1,5 +1,4 @@
 use crate::cpu;
-use crate::memory::raw_memory_operations::test_helper::*;
 use crate::rendering::tiles::*;
 use crate::rendering::views::*;
 use macroquad::prelude::*;
@@ -19,7 +18,7 @@ async fn golden_image_tile_viewer() {
 
     let mut cpu = cpu::CPU::new(false);
 
-    file_to_memory(&mut cpu.get_memory(), 0x8000, "test_files/cgbBCE1-VRAM.bin");
+    cpu.load_from_file("test_files/Mindy1-VRAM.bin", 0x8000);
 
     let mut tile_viewer = TileViewer {
         offset_x: 0.0,
@@ -31,7 +30,7 @@ async fn golden_image_tile_viewer() {
 
     request_new_screen_size(window_size.x, window_size.y);
 
-    update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut atlas, &PALETTE);
+    update_atlas_from_memory(&cpu, 16 * 24, &mut atlas, &PALETTE);
 
     loop {
         tile_viewer.draw(&atlas);
@@ -62,15 +61,15 @@ async fn golden_image_background_viewer() {
         scaling: SCALING,
     };
 
-    file_to_memory(&mut cpu.get_memory(), 0x8000, "test_files/Mindy1-VRAM.bin");
+    cpu.load_from_file("test_files/Mindy1-VRAM.bin", 0x8000);
 
     let window_size = background_viewer.size();
 
     request_new_screen_size(window_size.x, window_size.y);
 
     loop {
-        update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
-        update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
+        update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+        update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
         background_viewer.draw(&background_image);
         next_frame().await;
     }
@@ -120,10 +119,10 @@ async fn golden_image_layout() {
 
     let mut cpu = cpu::CPU::new(false);
 
-    file_to_memory(&mut cpu.get_memory(), 0x8000, "test_files/Mindy1-VRAM.bin");
+    cpu.load_from_file("test_files/Mindy1-VRAM.bin", 0x8000);
 
-    update_atlas_from_memory(&cpu.get_memory(), 16 * 24, &mut tile_atlas, &PALETTE);
-    update_background_from_memory(&cpu.get_memory(), &tile_atlas, &mut background_image);
+    update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+    update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
 
     loop {
         //update_tile_atlas(9, &test_tile, &mut tile_atlas, &PALETTE);
