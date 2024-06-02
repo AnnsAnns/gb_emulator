@@ -439,9 +439,21 @@ impl CPU {
         let offset: u8 = if tail >= 0x8 { 1 } else { 0 };
 
         Ok(match head {
-            0x0 => Instructions::RLC(register),
-            0x1 => Instructions::RL(register),
-            0x2 => Instructions::SLA(register),
+            0x0 => match tail {
+                0x0..=0x7 => Instructions::RLC(register),
+                0x8..=0xF => Instructions::RRC(register),
+                _ => return self.not_implemented(opcode),
+            }
+            0x1 => match tail {
+                0x0..=0x7 => Instructions::RL(register),
+                0x8..=0xF => Instructions::RR(register),
+                _ => return self.not_implemented(opcode),
+            }
+            0x2 => match tail {
+                0x0..=0x7 => Instructions::SLA(register),
+                0x8..=0xF => Instructions::SRA(register),
+                _ => return self.not_implemented(opcode),
+            }
             0x3 => match tail {
                 0x0..=0x7 => Instructions::SWAP(register),
                 0x8..=0xF => Instructions::SRL(register),
