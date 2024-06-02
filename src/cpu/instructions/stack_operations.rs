@@ -14,7 +14,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
     /// decrements sp
     pub fn dec_sp(&mut self) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
-        let value = sp-1;
+        let value = sp.wrapping_sub(1);
 
         self.set_16bit_register(Register16Bit::SP, value);
         InstructionResult {
@@ -31,7 +31,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
     /// increments sp
     pub fn inc_sp(&mut self) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
-        let value = sp+1;
+        let value = sp.wrapping_add(1);
 
         self.set_16bit_register(Register16Bit::SP, value);
         InstructionResult {

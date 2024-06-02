@@ -144,7 +144,7 @@ impl CPU {
     }
 
     /// Add a signed 8-bit value to the SP register
-    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADD_SP,r8
+    /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADD_SP,e8
     pub fn add_sp_e8(&mut self, value: i8) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
         let (result, overflow) = sp.overflowing_add(value as u16);
@@ -162,7 +162,7 @@ impl CPU {
                 } else {
                     FlagState::Unset
                 },
-                carry: if overflow {
+                carry: if (sp & 0xFF) + (value as u16 & 0xFF) > 0xFF {
                     FlagState::Set
                 } else {
                     FlagState::Unset
