@@ -110,22 +110,6 @@ async fn main() {
     }
 
     loop {
-        let instruction = cpu.prepare_and_decode_next_instruction();
-        log::debug!("🔠 Instruction: {:?}", instruction);
-        let is_bootrom_enabled = cpu.is_boot_rom_enabled();
-        let result = cpu.step();
-        log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
-
-        let pc_following_word = cpu
-            .get_memory()
-            .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
-        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
-
-        cpu.update_key_input();
-
-        let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
-        cpu.set_lcd_y_coordinate(scanline);
-
         if DUMP_GAMEBOY_DOCTOR_LOG {
             // Dump registers to file for Gameboy Doctor like this
             // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
@@ -150,6 +134,22 @@ async fn main() {
                 .as_bytes(),
             );
         }
+        
+        let instruction = cpu.prepare_and_decode_next_instruction();
+        log::debug!("🔠 Instruction: {:?}", instruction);
+        let is_bootrom_enabled = cpu.is_boot_rom_enabled();
+        let result = cpu.step();
+        log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
+
+        let pc_following_word = cpu
+            .get_memory()
+            .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
+
+        cpu.update_key_input();
+
+        let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
+        cpu.set_lcd_y_coordinate(scanline);
 
         match ppu_mode {
             PpuMode::OamScan => {
