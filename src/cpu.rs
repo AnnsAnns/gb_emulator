@@ -1,4 +1,4 @@
-use registers::Register16Bit;
+use registers::{Register16Bit, Register8Bit};
 
 use crate::memory::Memory;
 

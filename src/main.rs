@@ -30,6 +30,8 @@ use crate::{
 const DOTS_PER_CPU_CYCLE: u32 = 4;
 const DOTS_PER_LINE: u32 = 456;
 
+const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
+
 #[macroquad::main("GB Emulator")]
 async fn main() {
     simple_log::quick!();
