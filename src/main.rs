@@ -95,7 +95,7 @@ async fn main() {
     if DUMP_GAMEBOY_DOCTOR_LOG {
         cpu.skip_boot_rom();
     }
-
+    
     loop {
         if DUMP_GAMEBOY_DOCTOR_LOG {
             // Dump registers to file for Gameboy Doctor like this

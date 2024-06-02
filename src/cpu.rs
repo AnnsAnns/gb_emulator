@@ -69,6 +69,8 @@ impl CPU {
         self.set_16bit_register(Register16Bit::SP, 0xFFFE);
         self.set_16bit_register(Register16Bit::PC, 0x0100);
         self.memory.boot_rom_enabled = false;
+        // Set Joypad register
+        self.memory.write_byte(0xFF00, 0b1111_1111);
     }
 
     pub fn load_from_file(&mut self, file: &str) {
@@ -78,6 +80,10 @@ impl CPU {
     pub fn get_next_opcode(&mut self) -> u8 {
         self.memory
             .read_byte(self.get_16bit_register(registers::Register16Bit::PC))
+    }
+
+    pub fn write_memory(&mut self, address: u16, value: u8) {
+        self.memory.write_byte(address, value);
     }
 
     /// Set the next instruction to be executed
