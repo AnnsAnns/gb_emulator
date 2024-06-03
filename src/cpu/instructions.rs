@@ -124,9 +124,13 @@ pub enum Instructions {
     RST(InstParam),
 
     RL(InstParam),
+    RLA(),
     RLC(InstParam),
+    RLCA(),
     RR(InstParam),
+    RRA(),
     RRC(InstParam),
+    RRCA(),
     SLA(InstParam),
     SRL(InstParam),
     SRA(InstParam),

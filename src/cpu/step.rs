@@ -242,35 +242,28 @@ impl CPU {
                 }
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
+            Instructions::RLA() =>self.rl_a(),
             Instructions::RL(target) => match target {
-                InstParam::Register8Bit(register) => match register {
-                    Register8Bit::A => self.rl_a(),
-                    _ => self.rl_r8(*register),
-                },
+                InstParam::Register8Bit(register) => self.rl_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rl_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
+
+            Instructions::RLCA() => self.rl_c_a(),//RLCA and RLC A are two different instructions
             Instructions::RLC(target) => match target {
-                InstParam::Register8Bit(register) => match register {
-                    Register8Bit::A => self.rl_c_a(),
-                    _ => self.rl_c_r8(*register),
-                },
+                InstParam::Register8Bit(register) => self.rl_c_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rl_c_hl(),
                 _ => return Err(format!("RLC with {:?} not implemented", target)),
             },
+            Instructions::RRA() => self.rr_a(),
             Instructions::RR(target) => match target {
-                InstParam::Register8Bit(register) => match register {
-                    Register8Bit::A => self.rr_a(),
-                    _ => self.rr_r8(*register),
-                },
+                InstParam::Register8Bit(register) => self.rr_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rr_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
+            Instructions::RRCA() => self.rr_c_a(),//RRCA and RRC A are two different instructions
             Instructions::RRC(target) => match target {
-                InstParam::Register8Bit(register) => match register {
-                    Register8Bit::A => self.rr_c_a(),
-                    _ => self.rr_c_r8(*register),
-                },
+                InstParam::Register8Bit(register) => self.rr_c_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rr_c_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },

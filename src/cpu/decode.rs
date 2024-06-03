@@ -157,7 +157,7 @@ impl CPU {
                     InstParam::Register8Bit(Register8Bit::A),
                 ),
                 0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
-                0x7 => Instructions::RLC(InstParam::Register8Bit(Register8Bit::A)),
+                0x7 => Instructions::RLCA(),
                 0x8 => Instructions::LD(
                     InstParam::Number16Bit(self.get_16bit_from_pc()),
                     InstParam::Register16Bit(Register16Bit::SP),
@@ -168,7 +168,7 @@ impl CPU {
                     InstParam::Register16Bit(Register16Bit::BC),
                 ),
                 0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
-                0xF => Instructions::RRC(InstParam::Register8Bit(Register8Bit::A)),
+                0xF => Instructions::RRCA(),
                 _ => self.not_implemented(opcode)?,
             },
             0x1 => match tail {
@@ -179,7 +179,7 @@ impl CPU {
                     InstParam::Register8Bit(Register8Bit::A),
                 ),
                 0x3..=0x6 => self.decode_0x0_to_0x3_commons(opcode)?,
-                0x7 => Instructions::RL(InstParam::Register8Bit(Register8Bit::A)),
+                0x7 => Instructions::RLA(),
                 0x8 => Instructions::JR(
                     InstParam::ConditionCodes(InstructionCondition::SkipConditionCodes),
                     InstParam::SignedNumber8Bit(self.get_8bit_from_pc() as i8),
@@ -190,7 +190,7 @@ impl CPU {
                     InstParam::Register16Bit(Register16Bit::DE),
                 ),
                 0xB..=0xE => self.decode_0x0_to_0x3_commons(opcode)?,
-                0xF => Instructions::RR(InstParam::Register8Bit(Register8Bit::A)),
+                0xF => Instructions::RRA(),
                 _ => self.not_implemented(opcode)?,
             },
             0x2 => match tail {

@@ -91,13 +91,28 @@ impl CPU {
 
     pub fn daa(&mut self) -> InstructionResult {
         let mut value = self.get_8bit_register(Register8Bit::A);
-        let mut carry = false;
-        if (value & 0x0F) > 9 {
-            value = value.wrapping_add(6); //caused overflow on testrom 1, daa doesn't seem to work correctly yet
+        let mut daa_correction = 0;
+        let mut set_carry = false;
+        //currently set flags
+        let half_carry = self.is_half_carry_flag_set();
+        let carry = self.is_carry_flag_set();
+        let subtraction = self.is_subtraction_flag_set();
+        
+        if half_carry || (!subtraction && (value & 0xf) > 9) {
+            daa_correction |= 0x6;
         }
-        if (value & 0xF0) > 0x90 || (self.is_carry_flag_set() && (value & 0x0F) > 9) {
-            (value, carry) = value.overflowing_add(0x60);
+        if carry || (!subtraction && value > 0x99) {
+            daa_correction |= 0x60;
+            set_carry = true;
         }
+        if subtraction {
+            (value,_) = value.overflowing_sub(daa_correction);
+        }else {
+            (value,_) = value.overflowing_add(daa_correction);
+        }
+        
+        
+
         self.set_8bit_register(Register8Bit::A, value);
         InstructionResult {
             cycles: 1,
@@ -110,7 +125,7 @@ impl CPU {
                 },
                 subtract: FlagState::NotAffected,
                 half_carry: FlagState::Unset,
-                carry: if carry {
+                carry: if set_carry {
                     FlagState::Set
                 } else {
                     FlagState::Unset
@@ -124,7 +139,7 @@ impl CPU {
             cycles: 1,
             bytes: 1,
             condition_codes: ConditionCodes {
-                zero: FlagState::Unset,
+                zero: FlagState::NotAffected,
                 subtract: FlagState::Unset,
                 half_carry: FlagState::Unset,
                 carry: FlagState::Set,
