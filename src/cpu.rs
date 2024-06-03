@@ -36,6 +36,7 @@ pub struct CPU {
     enable_ime: i32,
     last_execution_time: std::time::Instant,
     cycles: u64,
+    stop_mode: bool,
 }
 
 /// Note, please look at the relevant modules for the actual implementations
@@ -51,6 +52,7 @@ impl CPU {
             ime_flag: false,
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
+            stop_mode: false,
         }
     }
 
@@ -73,6 +75,32 @@ impl CPU {
         self.memory.boot_rom_enabled = false;
         // Set Joypad register
         self.memory.write_byte(0xFF00, 0b1111_1111);
+    }
+
+    /// Polls the inputs
+    /// Warning, this will loop till input is received when self.stop_mode is true
+    pub fn poll_inputs(&mut self) {
+        loop { 
+            self.update_key_input();
+
+            if !self.is_in_stop_mode() {
+                break;
+            }
+        }
+    }
+
+    pub fn is_in_stop_mode(&self) -> bool {
+        self.stop_mode
+    }
+
+    // Print blarg serial output
+    pub fn blarg_print(&mut self) {
+        let serial_data = self.memory.read_byte(0xFF02);
+        if serial_data == 0x81 {
+            let data = self.memory.read_byte(0xFF01);
+            print!("{}", data as char);
+            self.memory.write_byte(0xFF02, 0x0);
+        }
     }
 
     pub fn load_from_file(&mut self, file: &str, offset: usize) {
