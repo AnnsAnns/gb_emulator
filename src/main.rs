@@ -94,10 +94,6 @@ async fn main() {
     let mut ppu_time = time::Instant::now();
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
-
-    if DUMP_GAMEBOY_DOCTOR_LOG {
-        cpu.skip_boot_rom();
-    }
     
     let mut scanline: u8 = 0;
     let mut frame_cycles = 0;
@@ -146,7 +142,8 @@ async fn main() {
             .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
-        cpu.update_key_input();
+        cpu.poll_inputs();
+        cpu.blarg_print();
 
         let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
         cpu.set_lcd_y_coordinate(scanline);
