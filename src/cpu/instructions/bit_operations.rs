@@ -21,7 +21,7 @@ impl CPU {
                 zero: if !is_set {
                     FlagState::Set
                 }else {
-                    FlagState::NotAffected
+                    FlagState::Unset
                 },
                 subtract: FlagState::Unset,
                 half_carry: FlagState::Set,

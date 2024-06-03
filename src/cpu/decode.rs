@@ -114,7 +114,7 @@ impl CPU {
             }, if head == 0x3 {InstParam::Boolean(true)}else{InstParam::Boolean(false)}),
             0x6 => Instructions::LD(
                 if head == 0x3 {
-                    InstParam::Number16Bit(self.get_16bit_from_pc()) // Special case for (HL)
+                    InstParam::Register16Bit(Register16Bit::HL) // Special case for (HL)
                 } else {
                     InstParam::Register8Bit(register_8bit)
                 },

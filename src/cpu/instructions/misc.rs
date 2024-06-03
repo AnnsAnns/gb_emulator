@@ -93,7 +93,7 @@ impl CPU {
         let mut value = self.get_8bit_register(Register8Bit::A);
         let mut carry = false;
         if (value & 0x0F) > 9 {
-            value += 6;
+            value = value.wrapping_add(6); //caused overflow on testrom 1, daa doesn't seem to work correctly yet
         }
         if (value & 0xF0) > 0x90 || (self.is_carry_flag_set() && (value & 0x0F) > 9) {
             (value, carry) = value.overflowing_add(0x60);

@@ -119,7 +119,7 @@ impl CPU { //maybe move ld, dec and inc to their files?
     /// Pops 16bit-register AF from the stack, incrementing the stack pointer twice during this.
     pub fn pop_af (&mut self) -> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::SP);
-        let low_value = self.memory.read_byte(memory_address);
+        let low_value = self.memory.read_byte(memory_address)&0xf0;
         self.inc_sp();
         let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 8;
         self.inc_sp();
