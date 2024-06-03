@@ -80,16 +80,13 @@ impl CPU {
     pub fn check_and_handle_interrupts(&mut self) -> bool {
         let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
         let interrupt_enable = self.memory.read_byte(INTERRUPT_ENABLE_ADDRESS);
-
-        if interrupt_flag == 0 || interrupt_enable == 0 || !self.ime_flag {
-            return false;
-        }
+        let mut was_interrupt_called: bool = false;
 
         for i in 0..=4 {
             // Check if the interrupt flag is set and the interrupt is enabled
-            if interrupt_flag & (1 << i) != 0 && interrupt_enable & (1 << i) != 0 {
+            if interrupt_flag & (1 << i) != 0 && interrupt_enable & (1 << i) != 0 && self.ime_flag {
                 // Disable all interrupts
-                self.memory.write_byte(INTERRUPT_ENABLE_ADDRESS, 0);
+                self.ime_flag = false;
 
                 // Clear the interrupt flag
                 let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
@@ -100,11 +97,9 @@ impl CPU {
                 // https://gbdev.io/pandocs/Interrupt_Sources.html
                 self.call_n16(INTERRUPT_CALL_ADDRESS + (i as u16 * 8));
 
-                // We return early, interrupts are based on a priority system
-                // and if one interrupt is handled, we don't want to handle another
-                return true;
+                was_interrupt_called = true;
             }
         }
-        return false;
+        was_interrupt_called
     }
 }
