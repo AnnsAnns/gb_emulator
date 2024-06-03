@@ -256,7 +256,7 @@ impl CPU {
                     _ => self.rl_c_r8(*register),
                 },
                 InstParam::Register16Bit(Register16Bit::HL) => self.rl_c_hl(),
-                _ => return Err(format!("SWAP with {:?} not implemented", target)),
+                _ => return Err(format!("RLC with {:?} not implemented", target)),
             },
             Instructions::RR(target) => match target {
                 InstParam::Register8Bit(register) => match register {

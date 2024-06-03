@@ -430,7 +430,7 @@ impl CPU {
             0x3 => InstParam::Register8Bit(Register8Bit::E),
             0x4 => InstParam::Register8Bit(Register8Bit::H),
             0x5 => InstParam::Register8Bit(Register8Bit::L),
-            0x6 => InstParam::Number16Bit(self.get_16bit_register(Register16Bit::HL)),
+            0x6 => InstParam::Register16Bit(Register16Bit::HL),
             0x7 => InstParam::Register8Bit(Register8Bit::A),
             _ => return Err(format!("Unknown tail: {:#02X}", tail)),
         };

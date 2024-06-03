@@ -43,7 +43,7 @@ impl CPU {
                 zero: if !is_set {
                     FlagState::Set
                 }else {
-                    FlagState::NotAffected
+                    FlagState::Unset
                 },
                 subtract: FlagState::Unset,
                 half_carry: FlagState::Set,
@@ -141,9 +141,9 @@ impl CPU {
             bytes: 2,
             condition_codes: ConditionCodes {
                 zero: if value == 0 {
-                    FlagState::Unset
+                    FlagState::Set
                 }else {
-                    FlagState::NotAffected
+                    FlagState::Unset
                 },
                 subtract: FlagState::Unset,
                 half_carry: FlagState::Unset,
@@ -163,9 +163,9 @@ impl CPU {
             bytes: 2,
             condition_codes: ConditionCodes {
                 zero: if value == 0 {
-                    FlagState::Unset
+                    FlagState::Set
                 }else {
-                    FlagState::NotAffected
+                    FlagState::Unset
                 },
                 subtract: FlagState::Unset,
                 half_carry: FlagState::Unset,
