@@ -8,6 +8,7 @@ impl CPU {
         
         self.set_8bit_register(Register8Bit::A, result);
 
+        let (is_carry,overflow) = value.overflowing_add(carry);
         InstructionResult {
             cycles,
             bytes,
@@ -22,7 +23,7 @@ impl CPU {
                 subtract: FlagState::Set,
                 half_carry: if ((a ^ value) & 0x10) != (result & 0x10) {FlagState::Set} else {FlagState::Unset},
                 carry: if add_carry {
-                    if value.wrapping_add(carry) > a {FlagState::Set} else {FlagState::Unset}
+                    if is_carry > a || overflow {FlagState::Set} else {FlagState::Unset}
                 }else {
                     if value > a {FlagState::Set} else {FlagState::Unset}},
             },
