@@ -16,6 +16,7 @@ use rendering::{
     views::*,
 };
 use simple_log::LogConfigBuilder;
+use rfd::FileDialog;
 
 #[macro_use]
 extern crate simple_log;
@@ -87,7 +88,17 @@ async fn main() {
 
     let mut cpu = cpu::CPU::new(true);
 
-    cpu.load_from_file("./game.gb", 0x0000);
+    let filedialog = FileDialog::new()
+    .add_filter("gb", &["gb"])
+    .set_title("Select a Gameboy ROM")
+    // Set directory to the current directory
+    .set_directory(std::env::current_dir().unwrap())
+    .pick_file()
+    .unwrap();
+
+    let filepath = filedialog.as_path().to_str();
+
+    cpu.load_from_file(filepath.unwrap(), 0x0000);
 
     // Get start time
     let mut last_frame_time = time::Instant::now();

@@ -63,3 +63,4 @@ The last operation executed (in between lines 16519 and 16520) was:
 - [Simple Text Print ROM](https://github.com/ISSOtm/gb-vwf?tab=readme-ov-file)
 - [Hello World ROM](https://gbdev.io/rgbds-live/)
 - [Gameboy Doctor for debugging](https://github.com/robert/gameboy-doctor)
+- [GBMicrotest](https://github.com/aappleby/GBMicrotest)
