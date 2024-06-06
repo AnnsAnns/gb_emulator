@@ -6,7 +6,8 @@ pub mod memory;
 pub mod rendering;
 
 use std::{
-    f32::consts::E, io::Write, thread::sleep, time::{self, Duration}
+    io::Write,
+    time::{self},
 };
 
 use macroquad::{prelude::*, ui::root_ui};
@@ -15,16 +16,13 @@ use rendering::{
     tiles::*,
     views::*,
 };
-use simple_log::LogConfigBuilder;
 use rfd::FileDialog;
+use simple_log::LogConfigBuilder;
 
 #[macro_use]
 extern crate simple_log;
 
-use crate::{
-    cpu::registers::{Register16Bit, Register8Bit},
-    rendering::utils::draw_scaled_text,
-};
+use crate::cpu::registers::{Register16Bit, Register8Bit};
 
 // Dots are PPU Cycle conters per Frame
 const DOTS_PER_CPU_CYCLE: u32 = 4;
@@ -38,16 +36,12 @@ const WINDOWS: bool = true;
 async fn main() {
     //Set up logging
     let config = LogConfigBuilder::builder()
-    .size(1 * 100)
-    .roll_count(10)
-    .level("info")
-    .output_console()
-    .build();
+        .size(1 * 100)
+        .roll_count(10)
+        .level("info")
+        .output_console()
+        .build();
     simple_log::new(config).unwrap();
-    
-    // 60Hz
-    // This is the refresh rate of the Gameboy
-    let time_per_frame: Duration = Duration::from_secs_f64(1.0 / 60.0);
 
     const PALETTE: [Color; 4] = [
         Color::new(1.00, 1.00, 1.00, 1.00),
@@ -89,12 +83,12 @@ async fn main() {
     let mut cpu = cpu::CPU::new(true);
 
     let filedialog = FileDialog::new()
-    .add_filter("gb", &["gb"])
-    .set_title("Select a Gameboy ROM")
-    // Set directory to the current directory
-    .set_directory(std::env::current_dir().unwrap())
-    .pick_file()
-    .unwrap();
+        .add_filter("gb", &["gb"])
+        .set_title("Select a Gameboy ROM")
+        // Set directory to the current directory
+        .set_directory(std::env::current_dir().unwrap())
+        .pick_file()
+        .unwrap();
 
     let filepath = filedialog.as_path().to_str();
 
@@ -105,7 +99,7 @@ async fn main() {
     let mut ppu_time = time::Instant::now();
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
-    
+
     let mut scanline: u8 = 0;
     let mut frame_cycles = 0;
     let mut ppu_mode: PpuMode = PpuMode::OamScan;
@@ -141,7 +135,7 @@ async fn main() {
                 .as_bytes(),
             );
         }
-        
+
         let instruction = cpu.prepare_and_decode_next_instruction();
         log::debug!("🔠 Instruction: {:?}", instruction);
         let is_bootrom_enabled = cpu.is_boot_rom_enabled();
@@ -196,41 +190,39 @@ async fn main() {
         cpu.set_ppu_mode(ppu_mode as u8);
         frame_cycles += 1;
 
+        // Draw at 60Hz so 60 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
             ppu_time = time::Instant::now();
 
-            // Draw at 60Hz so 60 frames per second
-            if dot >= DOTS_PER_LINE * 155 {
-                // Inform about the time it took to render the frame
-                root_ui().label(
-                    None,
-                    format!(
-                        "Frame time: {:?} | Target: {:?} | Frame: {:?}",
-                        last_frame_time.elapsed(),
-                        time_per_frame,
-                        frame
-                    )
-                    .as_str(),
-                );
-                last_frame_time = time::Instant::now();
+            // Inform about the time it took to render the frame
+            root_ui().label(
+                None,
+                format!(
+                    "Frame time: {:?} | Target: {:?} | Frame: {:?}",
+                    last_frame_time.elapsed(),
+                    TIME_PER_FRAME,
+                    frame
+                )
+                .as_str(),
+            );
+            last_frame_time = time::Instant::now();
 
-                // Update Debugging Views
-                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
-                update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, false);
-                background_viewer.draw(&background_image);
-                tile_viewer.draw(&tile_atlas);
+            // Update Debugging Views
+            update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+            update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
+            background_viewer.draw(&background_image);
+            tile_viewer.draw(&tile_atlas);
 
-                gb_display.draw(&final_image);
-                next_frame().await;
-                // Set the VBlank interrupt since we are done with the frame
-                cpu.set_vblank_interrupt();
-                frame += 1;
+            gb_display.draw(&final_image);
+            next_frame().await;
+            // Set the VBlank interrupt since we are done with the frame
+            cpu.set_vblank_interrupt();
+            frame += 1;
 
-                // Dump memory every 3 seconds
-                if !WINDOWS && dump_time.elapsed().as_secs() >= 3 {
-                    dump_time = time::Instant::now();
-                    cpu.dump_memory();
-                }
+            // Dump memory every 3 seconds
+            if !WINDOWS && dump_time.elapsed().as_secs() >= 3 {
+                dump_time = time::Instant::now();
+                cpu.dump_memory();
             }
         }
     }
