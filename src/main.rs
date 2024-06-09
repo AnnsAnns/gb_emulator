@@ -30,7 +30,7 @@ const DOTS_PER_LINE: u32 = 456;
 const TIME_PER_FRAME: f32 = 1.0 / 60.0 * 1000.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
-const WINDOWS: bool = true;
+const WINDOWS: bool = false;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
@@ -152,7 +152,7 @@ async fn main() {
 
         let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
         //log::info!("Dot calculation was: {}", dot);
-        log::info!("Scanline: {}", scanline);
+        //log::info!("Scanline: {}", scanline);
         cpu.set_lcd_y_coordinate(scanline);
 
         match ppu_mode {
@@ -182,14 +182,15 @@ async fn main() {
                 //log::info!("Dot: {}", dot % DOTS_PER_LINE);
                 if dot % DOTS_PER_LINE >= 450 {
                     //log::info!("Scanline: {}", scanline);
-                    scanline += 1;
-                    if scanline >= 144 {
+                    if scanline >= 153 {
                         //log::info!("End of frame");
                         ppu_mode = PpuMode::OamScan;
                         scanline = 0;
                         //log::info!("Frame: {} - Resetting", frame_cycles);
                         frame_cycles = 0;
                     }
+                    
+                    scanline += 1;
                 }
             }
         }
