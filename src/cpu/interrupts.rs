@@ -36,6 +36,7 @@ impl CPU {
     }
 
     pub fn set_lcd_y_coordinate(&mut self, value: u8) {
+        //log::info!("Setting LCD Y coordinate: {}", value);
         self.memory.write_byte(LCDY_ADDRESS, value);
 
         if self.is_lyc_equal_ly() {
@@ -47,7 +48,10 @@ impl CPU {
         } 
     }
 
+    /// Set the PPU mode and check if an interrupt should be triggered
     pub fn set_ppu_mode(&mut self, mode: u8) {
+        //log::info!("Setting PPU mode: {}", mode);
+
         let stat = self.memory.read_byte(STAT_ADDRESS);
         self.memory.write_byte(STAT_ADDRESS, stat | mode);
 

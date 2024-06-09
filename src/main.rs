@@ -151,6 +151,8 @@ async fn main() {
         cpu.blarg_print();
 
         let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
+        //log::info!("Dot calculation was: {}", dot);
+        log::info!("Scanline: {}", scanline);
         cpu.set_lcd_y_coordinate(scanline);
 
         match ppu_mode {
@@ -177,10 +179,15 @@ async fn main() {
                 }
             }
             PpuMode::VerticalBlank => {
-                if dot % DOTS_PER_LINE >= 455 {
+                //log::info!("Dot: {}", dot % DOTS_PER_LINE);
+                if dot % DOTS_PER_LINE >= 450 {
+                    //log::info!("Scanline: {}", scanline);
                     scanline += 1;
-                    if scanline >= 154 {
+                    if scanline >= 144 {
+                        //log::info!("End of frame");
                         ppu_mode = PpuMode::OamScan;
+                        scanline = 0;
+                        //log::info!("Frame: {} - Resetting", frame_cycles);
                         frame_cycles = 0;
                     }
                 }

@@ -7,3 +7,4 @@ game.gb*
 tmp/*
 gameboy_doctor_log.txt
 test_data/gbmicrotests
+*.gb

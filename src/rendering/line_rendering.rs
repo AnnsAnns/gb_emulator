@@ -30,9 +30,21 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
             let line_data = cpu.get_vram_tile_line(high_addressing, tile_index as u16, (line % 8) as u8);
 
             for x_pixel in 0..8 {
+                //log::info!("Drawing pixel at x: {}, y: {}, xtile: {}, line: {}, color: {}", xtile as u32 * 8 + x_pixel, line as u32, xtile, line, line_data[x_pixel as usize]);
+
+                let width = game_diplay.width();
+                let x = xtile as u32 * 8 + x_pixel;
+                let y = line as u32;
+                let image_len = game_diplay.get_image_data().len();
+                
+                if (y * width as u32 + x) as usize >= image_len {
+                    log::warn!("Pixel out of bounds: x: {}, y: {}", x, y);
+                    continue;
+                } 
+
                 game_diplay.set_pixel(
-                    xtile as u32 * 8 + x_pixel,
-                    line as u32,
+                    x,
+                    y,
                     palette[line_data[x_pixel as usize] as usize],
                 );
             }
