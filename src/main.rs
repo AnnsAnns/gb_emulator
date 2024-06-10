@@ -30,7 +30,7 @@ const DOTS_PER_LINE: u32 = 456;
 const TIME_PER_FRAME: f32 = 1.0 / 60.0 * 1000.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
-const WINDOWS: bool = false;
+const WINDOWS: bool = true;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
@@ -111,6 +111,11 @@ async fn main() {
     }
 
     loop {
+        cpu.instruction += 1;
+        if cpu.instruction == 31415{
+            cpu.instruction += 1;
+            cpu.instruction -= 1;
+        }
         if DUMP_GAMEBOY_DOCTOR_LOG {
             // Dump registers to file for Gameboy Doctor like this
             // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD

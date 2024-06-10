@@ -1,6 +1,8 @@
 use core::task;
 use std::{thread::sleep, time::Duration};
 
+use crate::cpu::instructions::ConditionCodes;
+
 use super::{
     instructions::{FlagState, InstParam, InstructionCondition, InstructionResult, Instructions},
     registers::{self, Register16Bit, Register8Bit},
@@ -389,7 +391,10 @@ impl CPU {
                 _ => return Err(format!("Handling of {:?} not implemented", target)),
             },
             Instructions::RET(condition) => match condition {
-                InstParam::ConditionCodes(cond) => self.ret_cc(self.check_condition(cond)),
+                InstParam::ConditionCodes(cond) => match cond{
+                    InstructionCondition::SkipConditionCodes => self.ret(),
+                    _ => self.ret_cc(self.check_condition(cond)),
+                }
                 _ => self.ret(),
             },
             Instructions::RETI => self.reti(),
