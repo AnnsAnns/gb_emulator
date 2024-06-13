@@ -135,6 +135,10 @@ impl CPU {
         self.last_step_result.clone()
     }
 
+    pub fn get_cycles(&self) -> u64 {
+        self.cycles
+    }
+
     pub fn is_boot_rom_enabled(&self) -> bool {
         self.memory.is_boot_rom_enabled().clone()
     }

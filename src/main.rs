@@ -27,7 +27,7 @@ use crate::cpu::registers::{Register16Bit, Register8Bit};
 // Dots are PPU Cycle conters per Frame
 const DOTS_PER_CPU_CYCLE: u32 = 4;
 const DOTS_PER_LINE: u32 = 456;
-const TIME_PER_FRAME: f32 = 1.0 / 60.0 * 1000.0;
+const TIME_PER_FRAME: f32 = 1000.0 / 30.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
 const WINDOWS: bool = true;
@@ -211,7 +211,7 @@ async fn main() {
             frame_cycles += 1;
         }
 
-        // Draw at 60Hz so 60 frames per second
+        // Redraw UI at 30 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
             ppu_time = time::Instant::now();
 
@@ -219,10 +219,12 @@ async fn main() {
             root_ui().label(
                 None,
                 format!(
-                    "Frame time: {:?} | Target: {:?} | Frame: {:?}",
+                    "Dots: {:?} | Frame time: {:?} | CPU Cycle: {:?} | Frame: {:?} | Frame Cycle: {:?}",
+                    dot,
                     last_frame_time.elapsed(),
-                    TIME_PER_FRAME,
-                    frame
+                    cpu.get_cycles(),
+                    frame,
+                    frame_cycles
                 )
                 .as_str(),
             );
@@ -245,6 +247,8 @@ async fn main() {
             }
         }
 
-        used_cpu_cycles -= 1;
+        if used_cpu_cycles > 0 {
+            used_cpu_cycles -= 1;
+        }
     }
 }
