@@ -1,5 +1,7 @@
 use num_enum::IntoPrimitive;
 
+use crate::cpu::registers::Register16Bit;
+
 use super::{instructions::InstructionResult, CPU};
 
 #[derive(Debug, IntoPrimitive, Clone, Copy)]
@@ -89,6 +91,8 @@ impl CPU {
         for i in 0..=4 {
             // Check if the interrupt flag is set and the interrupt is enabled
             if interrupt_flag & (1 << i) != 0 && interrupt_enable & (1 << i) != 0 && self.ime_flag {
+                log::debug!("Interrupt {:?} called", i);
+
                 // Disable all interrupts
                 self.ime_flag = false;
 

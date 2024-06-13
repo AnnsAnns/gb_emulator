@@ -103,6 +103,7 @@ async fn main() {
     let mut scanline: u8 = 0;
     let mut frame_cycles = 0;
     let mut ppu_mode: PpuMode = PpuMode::OamScan;
+    let mut used_cpu_cycles = 0;
 
     // Open "registers.txt" file for Gameboy Doctor
     let mut gb_doctor_file = std::fs::File::create("gameboy_doctor_log.txt").unwrap();
@@ -111,41 +112,44 @@ async fn main() {
     }
 
     loop {
-        if DUMP_GAMEBOY_DOCTOR_LOG {
-            // Dump registers to file for Gameboy Doctor like this
-            // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
-            let _ = gb_doctor_file.write_all(
-                format!(
-                    "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}\n",
-                    cpu.get_8bit_register(Register8Bit::A),
-                    cpu.flags_to_u8(),
-                    cpu.get_8bit_register(Register8Bit::B),
-                    cpu.get_8bit_register(Register8Bit::C),
-                    cpu.get_8bit_register(Register8Bit::D),
-                    cpu.get_8bit_register(Register8Bit::E),
-                    cpu.get_8bit_register(Register8Bit::H),
-                    cpu.get_8bit_register(Register8Bit::L),
-                    cpu.get_16bit_register(Register16Bit::SP),
-                    cpu.get_16bit_register(Register16Bit::PC),
-                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC)),
-                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
-                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
-                    cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
-                )
-                .as_bytes(),
-            );
+        if used_cpu_cycles == 0 {
+            if DUMP_GAMEBOY_DOCTOR_LOG {
+                // Dump registers to file for Gameboy Doctor like this
+                // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
+                let _ = gb_doctor_file.write_all(
+                    format!(
+                        "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}\n",
+                        cpu.get_8bit_register(Register8Bit::A),
+                        cpu.flags_to_u8(),
+                        cpu.get_8bit_register(Register8Bit::B),
+                        cpu.get_8bit_register(Register8Bit::C),
+                        cpu.get_8bit_register(Register8Bit::D),
+                        cpu.get_8bit_register(Register8Bit::E),
+                        cpu.get_8bit_register(Register8Bit::H),
+                        cpu.get_8bit_register(Register8Bit::L),
+                        cpu.get_16bit_register(Register16Bit::SP),
+                        cpu.get_16bit_register(Register16Bit::PC),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC)),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
+                    )
+                    .as_bytes(),
+                );
+            }
+
+            let instruction = cpu.prepare_and_decode_next_instruction();
+            log::debug!("🔠 Instruction: {:?}", instruction);
+            let is_bootrom_enabled = cpu.is_boot_rom_enabled();
+            let result = cpu.step();
+            log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
+            used_cpu_cycles = result.unwrap().cycles;
+
+            let pc_following_word = cpu
+                .get_memory()
+                .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+            log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
         }
-
-        let instruction = cpu.prepare_and_decode_next_instruction();
-        log::debug!("🔠 Instruction: {:?}", instruction);
-        let is_bootrom_enabled = cpu.is_boot_rom_enabled();
-        let result = cpu.step();
-        log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
-
-        let pc_following_word = cpu
-            .get_memory()
-            .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
-        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         cpu.poll_inputs();
         cpu.blarg_print();
@@ -154,6 +158,8 @@ async fn main() {
         //log::info!("Dot calculation was: {}", dot);
         //log::info!("Scanline: {}", scanline);
         cpu.set_lcd_y_coordinate(scanline);
+
+        let mut do_frame_cycle = true;
 
         match ppu_mode {
             PpuMode::OamScan => {
@@ -174,6 +180,8 @@ async fn main() {
                     ppu_mode = if scanline <= 143 {
                         PpuMode::OamScan
                     } else {
+                        // Set the VBlank interrupt since we are done with the frame
+                        cpu.set_vblank_interrupt();
                         PpuMode::VerticalBlank
                     };
                 }
@@ -188,15 +196,20 @@ async fn main() {
                         scanline = 0;
                         //log::info!("Frame: {} - Resetting", frame_cycles);
                         frame_cycles = 0;
+                        do_frame_cycle = false;
                     }
                     
-                    scanline += 1;
+                    if !do_frame_cycle {
+                        scanline += 1;
+                    }
                 }
             }
         }
 
         cpu.set_ppu_mode(ppu_mode as u8);
-        frame_cycles += 1;
+        if do_frame_cycle {
+            frame_cycles += 1;
+        }
 
         // Draw at 60Hz so 60 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
@@ -223,8 +236,6 @@ async fn main() {
 
             gb_display.draw(&final_image);
             next_frame().await;
-            // Set the VBlank interrupt since we are done with the frame
-            cpu.set_vblank_interrupt();
             frame += 1;
 
             // Dump memory every 3 seconds
@@ -233,5 +244,7 @@ async fn main() {
                 cpu.dump_memory();
             }
         }
+
+        used_cpu_cycles -= 1;
     }
 }
