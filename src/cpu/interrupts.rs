@@ -1,6 +1,6 @@
-use num_enum::IntoPrimitive;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::cpu::registers::Register16Bit;
+use crate::{cpu::registers::Register16Bit, rendering::line_rendering::Ppu};
 
 use super::{instructions::InstructionResult, CPU};
 
@@ -20,6 +20,15 @@ const INTERRUPT_CALL_ADDRESS: u16 = 0x0040;
 const LCDY_ADDRESS: u16 = 0xFF44;
 const LYC_ADDRESS: u16 = 0xFF45;
 const STAT_ADDRESS: u16 = 0xFF41;
+
+#[repr(u8)]
+#[derive(Copy, Clone, TryFromPrimitive)]
+pub enum PpuMode {
+    HorizontalBlank = 0,
+    VerticalBlank = 1,
+    OamScan = 2,
+    Drawing = 3,
+}
 
 impl CPU {
     pub fn set_vblank_interrupt(&mut self) {
@@ -51,24 +60,24 @@ impl CPU {
     }
 
     /// Set the PPU mode and check if an interrupt should be triggered
-    pub fn set_ppu_mode(&mut self, mode: u8) {
+    pub fn set_ppu_mode(&mut self, mode: PpuMode) {
         //log::info!("Setting PPU mode: {}", mode);
 
-        let stat = self.memory.read_byte(STAT_ADDRESS);
-        self.memory.write_byte(STAT_ADDRESS, stat | mode);
+        let stat = self.memory.read_byte(STAT_ADDRESS) & 0b1111_1100;
+        self.memory.write_byte(STAT_ADDRESS, stat | mode as u8);
 
         // Check if the mode 0 interrupt is enabled
-        if mode == 0 && (stat & 0b1000) != 0 {
+        if mode as u8 == 0 && (stat & 0b1000) != 0 {
             self.set_interrupt_flag(InterruptTypes::LCDC);
         }
 
         // Check if the mode 1 interrupt is enabled
-        if mode == 1 && (stat & 0b10000) != 0 {
+        if mode as u8 == 1 && (stat & 0b10000) != 0 {
             self.set_interrupt_flag(InterruptTypes::LCDC);
         }
 
         // Check if the mode 2 interrupt is enabled
-        if mode == 2 && (stat & 0b100000) != 0 {
+        if mode as u8 == 2 && (stat & 0b100000) != 0 {
             self.set_interrupt_flag(InterruptTypes::LCDC);
         }
     }

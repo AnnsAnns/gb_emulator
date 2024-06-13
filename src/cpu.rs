@@ -11,7 +11,7 @@ pub mod instructions;
 pub mod registers;
 pub mod render_operations;
 mod step;
-mod interrupts;
+pub mod interrupts;
 mod joypad;
 mod timer;
 
