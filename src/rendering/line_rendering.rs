@@ -9,7 +9,8 @@ const SCAN_DOTS: u32 = 80;
 const MIN_DRAW_DOTS: u32 = 172;
 const MIN_HBLANK_DOTS: u32 = 87;
 
-const SCANLINE_NUM: u8 = 154;
+const SCANLINES_ACTUAL: u8 = 144;
+const SCANLINES_EXTRA: u8 = 10;
 
 // Mode 2
 pub fn oam_scan(cpu: &CPU) {}
@@ -99,7 +100,9 @@ impl Ppu {
                 PpuMode::HorizontalBlank => {
                     if dot % DOTS_PER_LINE == DOTS_PER_LINE - DOTS_PER_CYCLE {
                         cpu.set_lcd_y_coordinate(scanline + 1);
-                        if scanline <= 143 {
+
+                        // Check if in extra scanlines area
+                        if scanline + 1 < SCANLINES_ACTUAL {
                             cpu.set_ppu_mode(PpuMode::OamScan);
                         } else {
                             // Set the VBlank interrupt since we are done with the frame
@@ -111,7 +114,9 @@ impl Ppu {
                 PpuMode::VerticalBlank => {
                     //log::info!("Dot: {}", dot % DOTS_PER_LINE);
                     if dot % DOTS_PER_LINE == DOTS_PER_LINE - DOTS_PER_CYCLE {
-                        if scanline == SCANLINE_NUM - 1 {
+                        cpu.set_lcd_y_coordinate(scanline + 1);
+
+                        if scanline + 1 == SCANLINES_ACTUAL + SCANLINES_EXTRA - 1 {
                             self.frame_cycles = 0;
                             cpu.set_lcd_y_coordinate(0);
                             cpu.set_ppu_mode(PpuMode::OamScan)
