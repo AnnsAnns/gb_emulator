@@ -124,14 +124,15 @@ async fn main() {
         cpu.poll_inputs();
         cpu.blarg_print();
 
-        ppu.step(cpu_cycles_taken, &mut cpu, &mut final_image, &PALETTE);
+        for _ in 0..cpu_cycles_taken {
+            ppu.step(&mut cpu, &mut final_image, &PALETTE);
 
-        // Redraw UI at 30 frames per second
-        if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
-            ppu_time = time::Instant::now();
+            // Redraw UI at 30 frames per second
+            if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
+                ppu_time = time::Instant::now();
 
-            // Inform about the time it took to render the frame
-            root_ui().label(
+                // Inform about the time it took to render the frame
+                root_ui().label(
                 None,
                 format!(
                     "Dots: {:?} | Frame time: {:?} | CPU Cycle: {:?} | Frame: {:?} | Frame Cycle: {:?}",
@@ -142,23 +143,24 @@ async fn main() {
                     ppu.get_frame_cycles()
                 )
                 .as_str(),
-            );
-            last_frame_time = time::Instant::now();
+                );
+                last_frame_time = time::Instant::now();
 
-            // Update Debugging Views
-            update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
-            update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
-            background_viewer.draw(&background_image);
-            tile_viewer.draw(&tile_atlas);
+                // Update Debugging Views
+                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
+                update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
+                background_viewer.draw(&background_image);
+                tile_viewer.draw(&tile_atlas);
 
-            gb_display.draw(&final_image);
-            next_frame().await;
-            frame += 1;
+                gb_display.draw(&final_image);
+                next_frame().await;
+                frame += 1;
 
-            // Dump memory every 3 seconds
-            if !WINDOWS && dump_time.elapsed().as_secs() >= 3 {
-                dump_time = time::Instant::now();
-                cpu.dump_memory();
+                // Dump memory every 3 seconds
+                if !WINDOWS && dump_time.elapsed().as_secs() >= 3 {
+                    dump_time = time::Instant::now();
+                    cpu.dump_memory();
+                }
             }
         }
     }
