@@ -6,10 +6,10 @@ pub mod memory;
 pub mod rendering;
 
 use std::{
-    io::Write,
-    time::{self},
+    fs::File, io::Write, time
 };
 
+use cpu::CPU;
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{
     line_rendering::{draw_pixels, oam_scan, PpuMode},
@@ -114,28 +114,7 @@ async fn main() {
     loop {
         if used_cpu_cycles == 0 {
             if DUMP_GAMEBOY_DOCTOR_LOG {
-                // Dump registers to file for Gameboy Doctor like this
-                // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
-                let _ = gb_doctor_file.write_all(
-                    format!(
-                        "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}\n",
-                        cpu.get_8bit_register(Register8Bit::A),
-                        cpu.flags_to_u8(),
-                        cpu.get_8bit_register(Register8Bit::B),
-                        cpu.get_8bit_register(Register8Bit::C),
-                        cpu.get_8bit_register(Register8Bit::D),
-                        cpu.get_8bit_register(Register8Bit::E),
-                        cpu.get_8bit_register(Register8Bit::H),
-                        cpu.get_8bit_register(Register8Bit::L),
-                        cpu.get_16bit_register(Register16Bit::SP),
-                        cpu.get_16bit_register(Register16Bit::PC),
-                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC)),
-                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
-                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
-                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
-                    )
-                    .as_bytes(),
-                );
+                dump_cpu_info(&cpu, &mut gb_doctor_file);
             }
 
             let instruction = cpu.prepare_and_decode_next_instruction();
@@ -198,7 +177,7 @@ async fn main() {
                         frame_cycles = 0;
                         do_frame_cycle = false;
                     }
-                    
+
                     if do_frame_cycle {
                         scanline += 1;
                     }
@@ -251,4 +230,29 @@ async fn main() {
             used_cpu_cycles -= 1;
         }
     }
+}
+
+fn dump_cpu_info(cpu: &CPU, destination: &mut File) {
+    // Dump registers to file for Gameboy Doctor like this
+    // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
+    let _ = destination.write_all(
+                    format!(
+                        "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}\n",
+                        cpu.get_8bit_register(Register8Bit::A),
+                        cpu.flags_to_u8(),
+                        cpu.get_8bit_register(Register8Bit::B),
+                        cpu.get_8bit_register(Register8Bit::C),
+                        cpu.get_8bit_register(Register8Bit::D),
+                        cpu.get_8bit_register(Register8Bit::E),
+                        cpu.get_8bit_register(Register8Bit::H),
+                        cpu.get_8bit_register(Register8Bit::L),
+                        cpu.get_16bit_register(Register16Bit::SP),
+                        cpu.get_16bit_register(Register16Bit::PC),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC)),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
+                        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
+                    )
+                    .as_bytes(),
+                );
 }
