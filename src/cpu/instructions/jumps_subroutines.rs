@@ -152,7 +152,10 @@ impl CPU {
         }
         /// Enables interrupts and pops PC from the stack, returning to the last pushed instruction
         pub fn reti(&mut self) -> InstructionResult {
-            self.ei();
+            // self.ei(); Der Ei aufruf funktioniert hier nicht, da unser superloop nicht durhclaufen wird und
+            // somit die Cycels nicht aktualisiert werden. D.H. EI aktualsiert das IME flag zu spät. ==> 
+            // direkt IME Flag setzen oder enable ime flag = 1 d.h. nach dieser Instruction
+            self.ime_flag = true;
             self.pop_r16(Register16Bit::PC);
 
             InstructionResult {

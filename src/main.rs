@@ -30,7 +30,7 @@ const DOTS_PER_LINE: u32 = 456;
 const TIME_PER_FRAME: f32 = 1.0 / 60.0 * 1000.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
-const WINDOWS: bool = false;
+const WINDOWS: bool = true;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {

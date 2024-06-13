@@ -42,6 +42,7 @@ impl CPU {
     /// deactivates the IME flag, enabling Interrupts
     pub fn di(&mut self) -> InstructionResult {
         self.ime_flag = false;
+        self.enable_ime = 0;
         InstructionResult {
             cycles: 1,
             bytes: 1,

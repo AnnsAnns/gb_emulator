@@ -37,6 +37,8 @@ pub struct CPU {
     last_execution_time: std::time::Instant,
     cycles: u64,
     stop_mode: bool,
+    pub instruction: i32,
+
 }
 
 /// Note, please look at the relevant modules for the actual implementations
@@ -53,6 +55,7 @@ impl CPU {
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
             stop_mode: false,
+            instruction: 0,
         }
     }
 
