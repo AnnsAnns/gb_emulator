@@ -5,14 +5,12 @@ pub mod cpu;
 pub mod memory;
 pub mod rendering;
 
-use std::{
-    fs::File, io::Write, time
-};
+use std::{fs::File, io::Write, time};
 
 use cpu::CPU;
 use macroquad::{prelude::*, ui::root_ui};
 use rendering::{
-    line_rendering::{draw_pixels, oam_scan, PpuMode},
+    line_rendering::{self},
     tiles::*,
     views::*,
 };
@@ -24,9 +22,6 @@ extern crate simple_log;
 
 use crate::cpu::registers::{Register16Bit, Register8Bit};
 
-// Dots are PPU Cycle conters per Frame
-const DOTS_PER_CPU_CYCLE: u32 = 4;
-const DOTS_PER_LINE: u32 = 456;
 const TIME_PER_FRAME: f32 = 1000.0 / 30.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
@@ -81,6 +76,7 @@ async fn main() {
     );
 
     let mut cpu = cpu::CPU::new(true);
+    let mut ppu = line_rendering::Ppu::new();
 
     let filedialog = FileDialog::new()
         .add_filter("gb", &["gb"])
@@ -100,9 +96,6 @@ async fn main() {
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
 
-    let mut scanline: u8 = 0;
-    let mut frame_cycles = 0;
-    let mut ppu_mode: PpuMode = PpuMode::OamScan;
     let mut used_cpu_cycles = 0;
 
     // Open "registers.txt" file for Gameboy Doctor
@@ -133,62 +126,7 @@ async fn main() {
         cpu.poll_inputs();
         cpu.blarg_print();
 
-        let dot = (frame_cycles) * DOTS_PER_CPU_CYCLE;
-        //log::info!("Dot calculation was: {}", dot);
-        //log::info!("Scanline: {}", scanline);
-        cpu.set_lcd_y_coordinate(scanline);
-
-        let mut do_frame_cycle = true;
-
-        match ppu_mode {
-            PpuMode::OamScan => {
-                if dot % DOTS_PER_LINE >= 80 {
-                    oam_scan(&cpu);
-                    ppu_mode = PpuMode::Drawing;
-                }
-            }
-            PpuMode::Drawing => {
-                if dot % DOTS_PER_LINE >= 172 + 80 {
-                    draw_pixels(&mut cpu, &mut final_image, &PALETTE);
-                    ppu_mode = PpuMode::HorizontalBlank;
-                }
-            }
-            PpuMode::HorizontalBlank => {
-                if dot % DOTS_PER_LINE == 0 {
-                    scanline += 1;
-                    ppu_mode = if scanline <= 143 {
-                        PpuMode::OamScan
-                    } else {
-                        // Set the VBlank interrupt since we are done with the frame
-                        cpu.set_vblank_interrupt();
-                        PpuMode::VerticalBlank
-                    };
-                }
-            }
-            PpuMode::VerticalBlank => {
-                //log::info!("Dot: {}", dot % DOTS_PER_LINE);
-                if dot % DOTS_PER_LINE >= 450 {
-                    //log::info!("Scanline: {}", scanline);
-                    if scanline >= 153 {
-                        //log::info!("End of frame");
-                        ppu_mode = PpuMode::OamScan;
-                        scanline = 0;
-                        //log::info!("Frame: {} - Resetting", frame_cycles);
-                        frame_cycles = 0;
-                        do_frame_cycle = false;
-                    }
-
-                    if do_frame_cycle {
-                        scanline += 1;
-                    }
-                }
-            }
-        }
-
-        cpu.set_ppu_mode(ppu_mode as u8);
-        if do_frame_cycle {
-            frame_cycles += 1;
-        }
+        ppu.step(&mut cpu, &mut final_image, &PALETTE);
 
         // Redraw UI at 30 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
@@ -199,11 +137,11 @@ async fn main() {
                 None,
                 format!(
                     "Dots: {:?} | Frame time: {:?} | CPU Cycle: {:?} | Frame: {:?} | Frame Cycle: {:?}",
-                    dot,
+                    ppu.get_dot(),
                     last_frame_time.elapsed(),
                     cpu.get_cycles(),
                     frame,
-                    frame_cycles
+                    ppu.get_frame_cycles()
                 )
                 .as_str(),
             );
