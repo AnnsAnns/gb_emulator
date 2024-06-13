@@ -81,33 +81,69 @@ impl CPU {
         self.memory.read_byte(LYC_ADDRESS) == self.memory.read_byte(LCDY_ADDRESS)
     }
 
+    // Checks for interrupts and returns the interrupt type
+    pub fn check_interrupts(&mut self, check_for_ime: bool) -> Option<i32> {
+        let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
+        let interrupt_enable = self.memory.read_byte(INTERRUPT_ENABLE_ADDRESS);
+        let mut interrupt_type : Option<i32> = None;
+
+        for i in 0..=4 {
+            // Check if the interrupt is enabled and the IME flag is set
+            let handle_interrupt = interrupt_enable & (1 << i) != 0;
+
+            // Check if the interrupt flag is set and the interrupt is enabled
+            // Also check whether we should check for the IME flag (for example, when we are in a HALT state)
+            if interrupt_flag & (1 << i) != 0 && handle_interrupt && (!check_for_ime || self.ime_flag) {
+                log::debug!("Interrupt Flag {:?} found", i);
+                interrupt_type = Some(i);
+                break;
+            }
+        }
+
+        interrupt_type
+    }
+
+    pub fn handle_interrupt(&mut self, interrupt: i32) {
+        // Disable all interrupts
+        self.ime_flag = false;
+
+        // Clear the interrupt flag
+        let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
+        self.memory
+            .write_byte(INTERRUPT_FLAG_ADDRESS, interrupt_flag & !(1 << interrupt));
+
+        // Call the interrupt handler at the appropriate address
+        // https://gbdev.io/pandocs/Interrupt_Sources.html
+        let interrupt_address = INTERRUPT_CALL_ADDRESS + (interrupt as u16 * 8);
+
+        // Get current PC
+        let current_pc = self.get_16bit_register(Register16Bit::PC);
+
+        // Push PC to Stack
+        self.dec_sp();
+        let memory_address = self.get_16bit_register(Register16Bit::SP);
+        let value1 = (current_pc >> 8) as u8;
+        let value2 = current_pc as u8;
+        self.memory.write_byte(memory_address, value1);
+        self.dec_sp();
+        self.memory.write_byte(memory_address-1, value2);
+
+        // Jump to interrupt address
+        self.set_16bit_register(Register16Bit::PC, interrupt_address);
+
+        // Since the PC was changed, we need to decode the next instruction
+        self.prepare_and_decode_next_instruction().unwrap();
+    }
+
     /// Check for interrupts and handle them
     /// Returns true if an interrupt was handled
     pub fn check_and_handle_interrupts(&mut self) -> bool {
-        let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
-        let interrupt_enable = self.memory.read_byte(INTERRUPT_ENABLE_ADDRESS);
-        let mut was_interrupt_called: bool = false;
-
-        for i in 0..=4 {
-            // Check if the interrupt flag is set and the interrupt is enabled
-            if interrupt_flag & (1 << i) != 0 && interrupt_enable & (1 << i) != 0 && self.ime_flag {
-                log::debug!("Interrupt {:?} called", i);
-
-                // Disable all interrupts
-                self.ime_flag = false;
-
-                // Clear the interrupt flag
-                let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
-                self.memory
-                    .write_byte(INTERRUPT_FLAG_ADDRESS, interrupt_flag & !(1 << i));
-
-                // Call the interrupt handler at the appropriate address
-                // https://gbdev.io/pandocs/Interrupt_Sources.html
-                self.call_n16(INTERRUPT_CALL_ADDRESS + (i as u16 * 8));
-
-                was_interrupt_called = true;
+        match self.check_interrupts(true) {
+            Some(interrupt) => {
+                self.handle_interrupt(interrupt);
+                true
             }
+            None => false,
         }
-        was_interrupt_called
     }
 }
