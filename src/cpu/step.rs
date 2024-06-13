@@ -38,23 +38,8 @@ impl CPU {
         if self.last_step_result.cycles == 0 {
             self.last_step_result.cycles = 1; // Ensure we don't sleep forever
         }
-        let required_sleep = 1 / (CPU_FREQUENCY * self.last_step_result.cycles as u128) * 1_000_000;
-        log::debug!(
-            "⏱️ Required sleep: {}μs, elapsed: {}μs",
-            required_sleep,
-            self.last_execution_time.elapsed().as_micros()
-        );
-        if self.last_execution_time.elapsed().as_micros() < required_sleep {
-            sleep(Duration::from_micros(
-                (required_sleep - self.last_execution_time.elapsed().as_micros()) as u64,
-            ));
-        }
 
-        if self.check_and_handle_interrupts() {
-            self.last_step_result.cycles = 5;
-            self.last_step_result.bytes = 0;
-            return Ok(&self.last_step_result);
-        }
+        let interrupt_called = self.check_and_handle_interrupts();
 
         self.last_step_result = match &self.next_instruction {
             Instructions::ADD(param) => match param {
@@ -63,17 +48,17 @@ impl CPU {
                     if *register == Register16Bit::HL {
                         self.add_a_hl()
                     } else {
-                        return Err(format!("ADD with {:?} not implemented", param))
+                        return Err(format!("ADD with {:?} not implemented", param));
                     }
                 }
                 InstParam::SignedNumber8Bit(value) => self.add_sp_e8(*value),
                 InstParam::Number8Bit(value) => self.add_a_n8(*value),
                 _ => return Err(format!("ADD with {:?} not implemented", param)),
             },
-            Instructions::ADD_HL(param) => match param { 
+            Instructions::ADD_HL(param) => match param {
                 InstParam::Register16Bit(register) => self.add_hl_r16(*register),
                 _ => return Err(format!("ADD_HL with {:?} not implemented", param)),
-            }
+            },
             Instructions::ADC(param) => match param {
                 InstParam::Register8Bit(register) => self.adc_a_r8(register.clone()),
                 InstParam::Register16Bit(register) => self.adc_a_hl(),
@@ -244,14 +229,14 @@ impl CPU {
                 }
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
-            Instructions::RLA() =>self.rl_a(),
+            Instructions::RLA() => self.rl_a(),
             Instructions::RL(target) => match target {
                 InstParam::Register8Bit(register) => self.rl_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rl_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
 
-            Instructions::RLCA() => self.rl_c_a(),//RLCA and RLC A are two different instructions
+            Instructions::RLCA() => self.rl_c_a(), //RLCA and RLC A are two different instructions
             Instructions::RLC(target) => match target {
                 InstParam::Register8Bit(register) => self.rl_c_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rl_c_hl(),
@@ -263,7 +248,7 @@ impl CPU {
                 InstParam::Register16Bit(Register16Bit::HL) => self.rr_hl(),
                 _ => return Err(format!("SWAP with {:?} not implemented", target)),
             },
-            Instructions::RRCA() => self.rr_c_a(),//RRCA and RRC A are two different instructions
+            Instructions::RRCA() => self.rr_c_a(), //RRCA and RRC A are two different instructions
             Instructions::RRC(target) => match target {
                 InstParam::Register8Bit(register) => self.rr_c_r8(*register),
                 InstParam::Register16Bit(Register16Bit::HL) => self.rr_c_hl(),
@@ -391,10 +376,10 @@ impl CPU {
                 _ => return Err(format!("Handling of {:?} not implemented", target)),
             },
             Instructions::RET(condition) => match condition {
-                InstParam::ConditionCodes(cond) => match cond{
+                InstParam::ConditionCodes(cond) => match cond {
                     InstructionCondition::SkipConditionCodes => self.ret(),
                     _ => self.ret_cc(self.check_condition(cond)),
-                }
+                },
                 _ => self.ret(),
             },
             Instructions::RETI => self.reti(),
@@ -415,7 +400,9 @@ impl CPU {
                 InstParam::Number16Bit(target_addr) => self.jp_n16(*target_addr),
                 InstParam::ConditionCodes(cond) => match optional_target {
                     InstParam::Register16Bit(target_reg) => {
-                        if *target_reg == Register16Bit::HL && *cond == InstructionCondition::SkipConditionCodes {
+                        if *target_reg == Register16Bit::HL
+                            && *cond == InstructionCondition::SkipConditionCodes
+                        {
                             self.jp_hl()
                         } else {
                             return Err(format!("JP to {:?} not implemented", target_reg));
@@ -462,6 +449,15 @@ impl CPU {
         // Move the program counter to the next instruction
         // Depending on the bytes of the last instruction
         match self.next_instruction {
+            Instructions::HALT => {
+                // Only increase the PC if we're not in HALT mode
+                if interrupt_called {
+                    self.set_16bit_register(
+                        Register16Bit::PC,
+                        self.get_16bit_register(Register16Bit::PC) + 1,
+                    );
+                }
+            }
             // We need to NOT update the PC for JP, CALL, RST, RET, RETI
             Instructions::JP(_, _)
             | Instructions::CALL(_, _)
@@ -504,6 +500,11 @@ impl CPU {
         let remaining_cycles = self.cycles / timer_modulo;
         if remaining_cycles + self.last_step_result.cycles as u64 >= timer_modulo {
             self.increment_timer();
+        }
+
+        // In the case an interrupt was called we need to increase the cycles used
+        if interrupt_called {
+            self.last_step_result.cycles += 5;
         }
 
         // Update the last execution time

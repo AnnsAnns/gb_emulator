@@ -37,6 +37,7 @@ pub struct CPU {
     last_execution_time: std::time::Instant,
     cycles: u64,
     stop_mode: bool,
+    halt_mode: bool,
     pub instruction: i32,
 
 }
@@ -55,6 +56,7 @@ impl CPU {
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
             stop_mode: false,
+            halt_mode: false,
             instruction: 0,
         }
     }
@@ -78,6 +80,10 @@ impl CPU {
         self.memory.boot_rom_enabled = false;
         // Set Joypad register
         self.memory.write_byte(0xFF00, 0b1111_1111);
+    }
+
+    pub fn is_halted(&self) -> bool {
+        self.halt_mode
     }
 
     /// Polls the inputs
