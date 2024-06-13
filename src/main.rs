@@ -199,7 +199,7 @@ async fn main() {
                         do_frame_cycle = false;
                     }
                     
-                    if !do_frame_cycle {
+                    if do_frame_cycle {
                         scanline += 1;
                     }
                 }
