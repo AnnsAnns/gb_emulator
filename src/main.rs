@@ -96,37 +96,35 @@ async fn main() {
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
 
-    let mut used_cpu_cycles = 0;
-
     // Open "registers.txt" file for Gameboy Doctor
     let mut gb_doctor_file = std::fs::File::create("gameboy_doctor_log.txt").unwrap();
     if DUMP_GAMEBOY_DOCTOR_LOG {
         cpu.skip_boot_rom();
     }
 
+    cpu.set_ppu_mode(cpu::interrupts::PpuMode::OamScan);
+
     loop {
-        if used_cpu_cycles == 0 {
-            if DUMP_GAMEBOY_DOCTOR_LOG {
-                dump_cpu_info(&cpu, &mut gb_doctor_file);
-            }
-
-            let instruction = cpu.prepare_and_decode_next_instruction();
-            log::debug!("🔠 Instruction: {:?}", instruction);
-            let is_bootrom_enabled = cpu.is_boot_rom_enabled();
-            let result = cpu.step();
-            log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
-            used_cpu_cycles = result.unwrap().cycles;
-
-            let pc_following_word = cpu
-                .get_memory()
-                .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
-            log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
+        if DUMP_GAMEBOY_DOCTOR_LOG {
+            dump_cpu_info(&cpu, &mut gb_doctor_file);
         }
+
+        let instruction = cpu.prepare_and_decode_next_instruction();
+        log::debug!("🔠 Instruction: {:?}", instruction);
+        let is_bootrom_enabled = cpu.is_boot_rom_enabled();
+        let result = cpu.step();
+        log::debug!("➡️ Result: {:?} | Bootrom: {:?}", result, is_bootrom_enabled);
+        let cpu_cycles_taken = result.unwrap().cycles;
+
+        let pc_following_word = cpu
+            .get_memory()
+            .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
+        log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         cpu.poll_inputs();
         cpu.blarg_print();
 
-        ppu.step(&mut cpu, &mut final_image, &PALETTE);
+        ppu.step(cpu_cycles_taken, &mut cpu, &mut final_image, &PALETTE);
 
         // Redraw UI at 30 frames per second
         if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
@@ -162,10 +160,6 @@ async fn main() {
                 dump_time = time::Instant::now();
                 cpu.dump_memory();
             }
-        }
-
-        if used_cpu_cycles > 0 {
-            used_cpu_cycles -= 1;
         }
     }
 }

@@ -1,18 +1,15 @@
+use crate::cpu::{interrupts::PpuMode, CPU};
 use macroquad::{color::Color, texture::Image};
 
-use crate::cpu::CPU;
-
 // Dots are PPU Cycle conters per Frame
-const DOTS_PER_CPU_CYCLE: u32 = 4;
+const DOTS_PER_CYCLE: u32 = 4;
 const DOTS_PER_LINE: u32 = 456;
 
-#[derive(Copy, Clone)]
-pub enum PpuMode {
-    HorizontalBlank = 0,
-    VerticalBlank = 1,
-    OamScan = 2,
-    Drawing = 3,
-}
+const SCAN_DOTS: u32 = 80;
+const MIN_DRAW_DOTS: u32 = 172;
+const MIN_HBLANK_DOTS: u32 = 87;
+
+const SCANLINE_NUM: u8 = 154;
 
 // Mode 2
 pub fn oam_scan(cpu: &CPU) {}
@@ -50,81 +47,83 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
 }
 
 pub struct Ppu {
-    ppu_mode: PpuMode,
-    scanline: u8,
-    frame_cycles: u32
+    frame_cycles: u32,
+    enabled: bool,
 }
 
 impl Ppu {
     pub fn new() -> Self {
         Ppu {
-            ppu_mode: PpuMode::OamScan,
-            scanline: 0,
-            frame_cycles: 0
+            frame_cycles: 0,
+            enabled: false,
         }
     }
 
-    pub fn step(&mut self, cpu: &mut CPU, final_image: &mut Image, palette: &[Color; 4]) {
-        let dot = (self.frame_cycles) * DOTS_PER_CPU_CYCLE;
-        //log::info!("Dot calculation was: {}", dot);
-        //log::info!("Scanline: {}", scanline);
-        cpu.set_lcd_y_coordinate(self.scanline);
-
-        let mut do_frame_cycle = true;
-
-        match self.ppu_mode {
-            PpuMode::OamScan => {
-                if dot % DOTS_PER_LINE >= 80 {
-                    oam_scan(&cpu);
-                    self.ppu_mode = PpuMode::Drawing;
-                }
-            }
-            PpuMode::Drawing => {
-                if dot % DOTS_PER_LINE >= 172 + 80 {
-                    draw_pixels(cpu, final_image, &palette);
-                    self.ppu_mode = PpuMode::HorizontalBlank;
-                }
-            }
-            PpuMode::HorizontalBlank => {
-                if dot % DOTS_PER_LINE == 0 {
-                    self.scanline += 1;
-                    self.ppu_mode = if self.scanline <= 143 {
-                        PpuMode::OamScan
-                    } else {
-                        // Set the VBlank interrupt since we are done with the frame
-                        cpu.set_vblank_interrupt();
-                        PpuMode::VerticalBlank
-                    };
-                }
-            }
-            PpuMode::VerticalBlank => {
-                //log::info!("Dot: {}", dot % DOTS_PER_LINE);
-                if dot % DOTS_PER_LINE >= 450 {
-                    //log::info!("Scanline: {}", scanline);
-                    if self.scanline >= 153 {
-                        //log::info!("End of frame");
-                        self.ppu_mode = PpuMode::OamScan;
-                        self.scanline = 0;
-                        //log::info!("Frame: {} - Resetting", frame_cycles);
-                        self.frame_cycles = 0;
-                        do_frame_cycle = false;
-                    }
-
-                    if do_frame_cycle {
-                        self.scanline += 1;
-                    }
-                }
-            }
+    pub fn step(
+        &mut self,
+        cpu_cycles_taken: u8,
+        cpu: &mut CPU,
+        final_image: &mut Image,
+        palette: &[Color; 4],
+    ) {
+        if cpu.get_lcdc_ppu_enabled() && !self.enabled {
+            self.frame_cycles = 0;
+            self.enabled = true;
         }
 
-        cpu.set_ppu_mode(self.ppu_mode as u8);
-        if do_frame_cycle {
+        for _ in 0..cpu_cycles_taken {
+            let dot = self.frame_cycles * DOTS_PER_CYCLE;
             self.frame_cycles += 1;
+
+            let ppu_mode = PpuMode::try_from(cpu.get_ppu_mode()).expect("Invalid PPU Mode");
+            let scanline = cpu.get_lcd_y_coordinate();
+
+            match ppu_mode {
+                PpuMode::OamScan => {
+                    if dot % DOTS_PER_LINE == SCAN_DOTS - DOTS_PER_CYCLE {
+                        oam_scan(&cpu);
+                        cpu.set_ppu_mode(PpuMode::Drawing);
+                    } else if dot % DOTS_PER_LINE >= SCAN_DOTS {
+                        panic!("dot must be < 80 in OAM Scan Mode");
+                    }
+                }
+                PpuMode::Drawing => {
+                    // TODO Implement Variable Drawing Mode duration
+                    if dot % DOTS_PER_LINE == SCAN_DOTS + MIN_DRAW_DOTS - DOTS_PER_CYCLE {
+                        draw_pixels(cpu, final_image, &palette);
+                        cpu.set_ppu_mode(PpuMode::HorizontalBlank);
+                    } else if dot % DOTS_PER_LINE >= SCAN_DOTS + MIN_DRAW_DOTS {
+                        panic!("dot has an invalid value");
+                    }
+                }
+                PpuMode::HorizontalBlank => {
+                    if dot % DOTS_PER_LINE == DOTS_PER_LINE - DOTS_PER_CYCLE {
+                        cpu.set_lcd_y_coordinate(scanline + 1);
+                        if scanline <= 143 {
+                            cpu.set_ppu_mode(PpuMode::OamScan);
+                        } else {
+                            // Set the VBlank interrupt since we are done with the frame
+                            cpu.set_vblank_interrupt();
+                            cpu.set_ppu_mode(PpuMode::VerticalBlank);
+                        };
+                    }
+                }
+                PpuMode::VerticalBlank => {
+                    //log::info!("Dot: {}", dot % DOTS_PER_LINE);
+                    if dot % DOTS_PER_LINE == DOTS_PER_LINE - DOTS_PER_CYCLE {
+                        if scanline == SCANLINE_NUM - 1 {
+                            self.frame_cycles = 0;
+                            cpu.set_lcd_y_coordinate(0);
+                            cpu.set_ppu_mode(PpuMode::OamScan)
+                        }
+                    }
+                }
+            }
         }
     }
 
     pub fn get_dot(&self) -> u32 {
-        self.frame_cycles * DOTS_PER_CPU_CYCLE
+        self.frame_cycles * DOTS_PER_CYCLE
     }
 
     pub fn get_frame_cycles(&self) -> u32 {
