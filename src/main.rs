@@ -33,7 +33,7 @@ async fn main() {
     let config = LogConfigBuilder::builder()
         .size(1 * 100)
         .roll_count(10)
-        .level("info")
+        .level("debug")
         .output_console()
         .build();
     simple_log::new(config).unwrap();
@@ -105,6 +105,8 @@ async fn main() {
     cpu.set_ppu_mode(cpu::interrupts::PpuMode::OamScan);
 
     loop {
+        cpu.increment_div();
+
         if DUMP_GAMEBOY_DOCTOR_LOG {
             dump_cpu_info(&cpu, &mut gb_doctor_file);
         }

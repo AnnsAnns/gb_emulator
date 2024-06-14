@@ -8,3 +8,4 @@ tmp/*
 gameboy_doctor_log.txt
 test_data/gbmicrotests
 *.gb
+test_data/mooneye/*
