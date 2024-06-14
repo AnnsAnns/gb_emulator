@@ -21,14 +21,17 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
     let high_map: bool = false;
     let high_addressing: bool = !cpu.get_lcdc_bg_window_tile_data();
 
-    let _scx = cpu.get_lcd_scx();
-    let _scy = cpu.get_lcd_scy();
+    let scx = cpu.get_lcd_scx();
+    let scy = cpu.get_lcd_scy();
     let line: u8 = cpu.get_lcd_y_coordinate();
 
     for xtile in 0..20 {
-        let tile_index = cpu.get_vram_tile_map(high_map, (line as u16 / 8) * 32 + xtile);
+        let tile_index = cpu.get_vram_tile_map(
+            high_map,
+            (((line + scy) / 8) as u16 % 0x100) * 32 + (xtile + (scx as u16 / 8)) % 32,
+        );
         let line_data =
-            cpu.get_vram_tile_line(high_addressing, tile_index as u16, line % 8);
+            cpu.get_vram_tile_line(high_addressing, tile_index as u16, (line + scy) % 8);
 
         for x_pixel in 0..8 {
             //log::info!("Drawing pixel at x: {}, y: {}, xtile: {}, line: {}, color: {}", xtile as u32 * 8 + x_pixel, line as u32, xtile, line, line_data[x_pixel as usize]);
