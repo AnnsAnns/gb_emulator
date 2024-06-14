@@ -13,21 +13,21 @@ const SCANLINES_ACTUAL: u8 = 144;
 const SCANLINES_EXTRA: u8 = 10;
 
 // Mode 2
-pub fn oam_scan(cpu: &CPU) {}
+pub fn oam_scan(_cpu: &CPU) {}
 
 // Mode 3
 pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
     let high_map: bool = false;
     let high_addressing: bool = !cpu.get_lcdc_bg_window_tile_data();
 
-    let scx = cpu.get_lcd_scx();
-    let scy = cpu.get_lcd_scy();
+    let _scx = cpu.get_lcd_scx();
+    let _scy = cpu.get_lcd_scy();
     let line: u8 = cpu.get_lcd_y_coordinate();
 
     for xtile in 0..20 {
         let tile_index = cpu.get_vram_tile_map(high_map, (line as u16 / 8) * 32 + xtile);
         let line_data =
-            cpu.get_vram_tile_line(high_addressing, tile_index as u16, (line % 8) as u8);
+            cpu.get_vram_tile_line(high_addressing, tile_index as u16, line % 8);
 
         for x_pixel in 0..8 {
             //log::info!("Drawing pixel at x: {}, y: {}, xtile: {}, line: {}, color: {}", xtile as u32 * 8 + x_pixel, line as u32, xtile, line, line_data[x_pixel as usize]);
@@ -50,6 +50,12 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
 pub struct Ppu {
     frame_cycles: u32,
     enabled: bool,
+}
+
+impl Default for Ppu {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Ppu {
@@ -75,7 +81,7 @@ impl Ppu {
         match ppu_mode {
             PpuMode::OamScan => {
                 if dot % DOTS_PER_LINE == SCAN_DOTS - DOTS_PER_CYCLE {
-                    oam_scan(&cpu);
+                    oam_scan(cpu);
                     cpu.set_ppu_mode(PpuMode::Drawing);
                 } else if dot % DOTS_PER_LINE >= SCAN_DOTS {
                     panic!("dot must be < 80 in OAM Scan Mode");
@@ -84,7 +90,7 @@ impl Ppu {
             PpuMode::Drawing => {
                 // TODO Implement Variable Drawing Mode duration
                 if dot % DOTS_PER_LINE == SCAN_DOTS + MIN_DRAW_DOTS - DOTS_PER_CYCLE {
-                    draw_pixels(cpu, final_image, &palette);
+                    draw_pixels(cpu, final_image, palette);
                     cpu.set_ppu_mode(PpuMode::HorizontalBlank);
                 } else if dot % DOTS_PER_LINE >= SCAN_DOTS + MIN_DRAW_DOTS {
                     panic!("dot has an invalid value");

@@ -86,7 +86,7 @@ impl CPU {
     }
 
     pub fn is_boot_rom_enabled(&self) -> bool {
-        self.memory.is_boot_rom_enabled().clone()
+        self.memory.is_boot_rom_enabled()
     }
 
     pub fn get_instruction(&self) -> &Instructions {
@@ -95,7 +95,7 @@ impl CPU {
 
     #[cfg(test)]
     pub fn get_registry_dump(&self) -> [u8; 12] {
-        self.registers.clone()
+        self.registers
     }
 
     /// Gets the full memory of the CPU

@@ -35,7 +35,7 @@ impl CPU {
     /// Get a 16-bit register (e.g. AF)
     pub fn get_16bit_register(&self, register: Register16Bit) -> u16 {
         let register_value = register as usize;
-        let high = self.registers[register_value.clone()] as u16;
+        let high = self.registers[register_value] as u16;
         let low = self.registers[register_value + 1] as u16;
         (high << 8) | low
     }

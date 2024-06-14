@@ -1,5 +1,5 @@
 use crate::cpu::{
-    instructions::{ConditionCodes, FlagState, InstructionResult,Instructions},
+    instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
 };
@@ -426,7 +426,7 @@ pub fn load_test() {
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 42);
     let register_value = Register16Bit::DE as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xF000u16);
@@ -470,7 +470,7 @@ pub fn load_test() {
     cpu.ld_hli_a();
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::HL as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 256);
@@ -479,7 +479,7 @@ pub fn load_test() {
     cpu.ld_hld_a();
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::HL as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0x00FF);
@@ -493,7 +493,7 @@ pub fn load_test() {
     assert_eq!(registers[Register8Bit::A as usize], 131);
 
     let register_value = Register16Bit::HL as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 255);

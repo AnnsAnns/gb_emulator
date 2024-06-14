@@ -31,7 +31,7 @@ impl CPU {
     /// Increment the divider register
     pub fn increment_div(&mut self) {
         let previous_val = self.memory.read_byte(0xFF04);
-        let (new_val, overflow) = previous_val.overflowing_add(1);
+        let (new_val, _overflow) = previous_val.overflowing_add(1);
         // Set to 0 if overflow
         self.memory.write_div_register(new_val);
     }

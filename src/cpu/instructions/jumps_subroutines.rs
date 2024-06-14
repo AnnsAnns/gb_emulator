@@ -1,6 +1,6 @@
 use crate::cpu::{
-    instructions::{ConditionCodes, FlagState, InstParam, InstructionResult, Instructions},
-    registers::{Register16Bit, Register8Bit},
+    instructions::{ConditionCodes, FlagState, InstructionResult},
+    registers::{Register16Bit},
     CPU,
 };
 
@@ -247,7 +247,7 @@ pub fn jumps_subroutines_test() {
 
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::PC as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0x00A0);
@@ -259,7 +259,7 @@ pub fn jumps_subroutines_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::JP(super::InstParam::Register16Bit(Register16Bit::HL), super::InstParam::Number16Bit(0x000A)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::PC as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0x0A00);
@@ -270,7 +270,7 @@ pub fn jumps_subroutines_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::RET(super::InstParam::Offset), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::PC as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0x000D);
@@ -290,7 +290,7 @@ pub fn jumps_subroutines_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::RST(super::InstParam::Number8Bit(0x18)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::PC as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0x18);

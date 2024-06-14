@@ -2,7 +2,7 @@ use crate::cpu::{instructions::{ConditionCodes, FlagState, InstructionResult}, r
 impl CPU {
     /// decrements the 16bit_register register, wraps on overflow
     pub fn dec_r16(&mut self, register: Register16Bit) -> InstructionResult {
-        let (value,overflow) = self.get_16bit_register(register).overflowing_sub(1);
+        let (value,_overflow) = self.get_16bit_register(register).overflowing_sub(1);
         self.set_16bit_register(register, value);
 
         InstructionResult {

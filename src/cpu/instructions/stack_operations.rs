@@ -256,7 +256,7 @@ pub fn stack_ops_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::ADD(super::InstParam::Register16Bit(Register16Bit::SP)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xFEF0u16);
@@ -268,7 +268,7 @@ pub fn stack_ops_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::SP),super::InstParam::Boolean(false)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xFEF1u16);
@@ -280,7 +280,7 @@ pub fn stack_ops_test() {
     
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xFEF0u16);
@@ -292,7 +292,7 @@ pub fn stack_ops_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::SP), super::InstParam::Number16Bit(0xFF00)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xFF00u16);
@@ -309,7 +309,7 @@ pub fn stack_ops_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::HL), super::InstParam::SignedNumber8Bit(0xF0u8 as i8)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::HL as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xFEF0u16);
@@ -320,7 +320,7 @@ pub fn stack_ops_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register16Bit(Register16Bit::SP), super::InstParam::Register16Bit(Register16Bit::HL)), expected_result);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::SP as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xFEF0u16);
@@ -359,13 +359,13 @@ pub fn stack_ops_test() {
     assert_eq!(mem, 0xA0);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::AF as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xAAA0);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::DE as usize;
-    let high = registers[register_value.clone()] as u16;
+    let high = registers[register_value] as u16;
     let low = registers[register_value + 1] as u16;
     let result = (high << 8) | low;
     assert_eq!(result, 0xA1A0);

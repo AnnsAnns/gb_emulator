@@ -1,13 +1,13 @@
-use std::{f32::consts::E, ops::Add};
 
-use macroquad::telemetry::capture_frame;
+
+
 
 use crate::cpu::CPU;
 
 #[cfg(test)]
 use crate::test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step};
 
-use super::{ConditionCodes, FlagState, InstructionResult, Instructions, Register8Bit};
+use super::{ConditionCodes, FlagState, InstructionResult, Register8Bit};
 
 impl CPU {
     /// NOP instruction

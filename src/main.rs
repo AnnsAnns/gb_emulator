@@ -34,7 +34,7 @@ const WINDOWS: bool = true;
 async fn main() {
     //Set up logging
     let config = LogConfigBuilder::builder()
-        .size(1 * 1000)
+        .size(1000)
         .roll_count(10)
         .level("info")
         .output_console()
@@ -203,7 +203,7 @@ fn dump_cpu_info(cpu: &CPU, destination: &mut File) {
     // Dump registers to file for Gameboy Doctor like this
     // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
     let _ = destination.write_all(
-                    info_to_string(&cpu)
+                    info_to_string(cpu)
                     .as_bytes(),
                 );
 }

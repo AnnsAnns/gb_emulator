@@ -16,7 +16,7 @@ pub fn test_decode() {
     for i in 0..=0xFF {
         // Write the opcode for 0xCB to memory
         cpu.memory
-            .write_byte(cpu.get_16bit_register(Register16Bit::SP) + 1, i.clone());
+            .write_byte(cpu.get_16bit_register(Register16Bit::SP) + 1, i);
 
         for opcode in [i, 0xCB] {
             let decoded_value = cpu.decode(opcode);

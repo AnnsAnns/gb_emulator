@@ -24,8 +24,7 @@ impl CPU {
                 half_carry: if ((a ^ value) & 0x10) != (result & 0x10) {FlagState::Set} else {FlagState::Unset},
                 carry: if add_carry {
                     if is_carry > a || overflow {FlagState::Set} else {FlagState::Unset}
-                }else {
-                    if value > a {FlagState::Set} else {FlagState::Unset}},
+                }else if value > a {FlagState::Set} else {FlagState::Unset},
             },
         }
     } 

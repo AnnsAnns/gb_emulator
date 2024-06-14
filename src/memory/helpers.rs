@@ -11,7 +11,7 @@ impl Memory {
     /// This is used for testing purposes
     /// @warning This is really expensive and should only be used for testing
     pub fn return_full_memory(&self) -> [u8; MEMORY_SIZE] {
-        self.memory.clone()
+        self.memory
     }
 
     pub fn load_from_file(&mut self, file_path: &str, offset: usize) {
