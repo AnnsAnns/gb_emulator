@@ -7,7 +7,7 @@ pub fn draw_scaled_text(
     scaling: f32,
 ) {
     draw_text(
-        &text,
+        text,
         offset_x + 4.0,
         offset_y + 24.0 * 8.0 * scaling + 16.0,
         16.0,

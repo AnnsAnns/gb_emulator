@@ -3,7 +3,7 @@ use crate::cpu::{instructions::{ConditionCodes, FlagState, InstructionResult}, r
 impl CPU {
     pub fn inc(&mut self, register: Register8Bit) -> InstructionResult {
         let r8_value = self.get_8bit_register(register);
-        let (result, overflow) = r8_value.overflowing_add(1);
+        let (result, _overflow) = r8_value.overflowing_add(1);
         self.set_8bit_register(register, result);
         let tail = r8_value & 0xF;
 
@@ -22,7 +22,7 @@ impl CPU {
     pub fn inc_hl(&mut self) -> InstructionResult {
         let addr = self.get_16bit_register(Register16Bit::HL);
         let r8_value = self.memory.read_byte(addr);
-        let (value,overflow) = r8_value.overflowing_add(1);
+        let (value,_overflow) = r8_value.overflowing_add(1);
         self.memory.write_byte(addr, value);
         let tail = r8_value & 0xF;
 
@@ -39,7 +39,7 @@ impl CPU {
     }
     /// increments the 16bit_register register, wraps on overflow
     pub fn inc_r16(&mut self, register: Register16Bit) -> InstructionResult {
-        let (value,overflow) = self.get_16bit_register(register).overflowing_add(1);
+        let (value,_overflow) = self.get_16bit_register(register).overflowing_add(1);
         self.set_16bit_register(register, value);
 
         InstructionResult {

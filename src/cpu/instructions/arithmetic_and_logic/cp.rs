@@ -3,7 +3,7 @@ impl CPU {
     /// subtract r8 from A without storing and set flags accordingly
     pub fn cp_a_r8(&mut self, register: Register8Bit) -> InstructionResult {
         let a_value = self.get_8bit_register(Register8Bit::A);
-        let tail = a_value & 0xF;
+        let _tail = a_value & 0xF;
         let r8_value = self.get_8bit_register(register);
         let (value,overflow) = a_value.overflowing_sub(r8_value);
 
@@ -38,7 +38,7 @@ impl CPU {
     pub fn cp_a_hl(&mut self) -> InstructionResult {
         let addr = self.get_16bit_register(Register16Bit::HL);
         let a_value = self.get_8bit_register(Register8Bit::A);
-        let tail = a_value & 0xF;
+        let _tail = a_value & 0xF;
         let r8_value = self.memory.read_byte(addr);
         let (value,overflow) = a_value.overflowing_sub(r8_value);
 

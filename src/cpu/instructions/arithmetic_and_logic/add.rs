@@ -147,7 +147,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#ADD_SP,e8
     pub fn add_sp_e8(&mut self, value: i8) -> InstructionResult {
         let sp = self.get_16bit_register(Register16Bit::SP);
-        let (result, overflow) = sp.overflowing_add(value as u16);
+        let (result, _overflow) = sp.overflowing_add(value as u16);
 
         self.set_16bit_register(Register16Bit::SP, result);
 

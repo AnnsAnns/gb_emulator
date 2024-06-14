@@ -1,5 +1,5 @@
 use crate::cpu::{
-    instructions::{ConditionCodes, FlagState, InstParam, InstructionResult, Instructions},
+    instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
 };

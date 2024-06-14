@@ -148,10 +148,10 @@ pub struct EmulationControls {
 
 impl EmulationControls {
     pub fn new(offset_x: f32, offset_y: f32, scaling: f32) -> EmulationControls {
-        let mut ec = EmulationControls {
-            offset_x: offset_x,
-            offset_y: offset_y,
-            scaling: scaling,
+        let ec = EmulationControls {
+            offset_x,
+            offset_y,
+            scaling,
             play_active: Texture2D::from_image(
                 &Image::from_file_with_format(
                     include_bytes!("../../assets/buttons/play-active.png"),

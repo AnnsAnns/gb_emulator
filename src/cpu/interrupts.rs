@@ -1,8 +1,8 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::{cpu::registers::Register16Bit, rendering::line_rendering::Ppu};
+use crate::{cpu::registers::Register16Bit};
 
-use super::{instructions::InstructionResult, CPU};
+use super::{CPU};
 
 #[derive(Debug, IntoPrimitive, Clone, Copy)]
 #[repr(u8)]

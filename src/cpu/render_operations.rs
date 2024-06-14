@@ -60,7 +60,7 @@ impl CPU {
     ) -> [u8; 8] {
         let mut line_data: [u8; 8] = [0; 8];
 
-        let mut line_addr: u16 = 0x8000 + (tile_line * 2) as u16 + 16 * tile_index as u16;
+        let mut line_addr: u16 = 0x8000 + (tile_line * 2) as u16 + 16 * tile_index;
 
         if high_addressing && tile_index < 0x80 {
             line_addr += 0x1000;

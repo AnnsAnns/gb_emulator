@@ -43,8 +43,8 @@ pub struct InstructionResult {
     pub condition_codes: ConditionCodes,
 }
 
-impl InstructionResult {
-    pub fn default() -> InstructionResult {
+impl Default for InstructionResult {
+    fn default() -> InstructionResult {
         InstructionResult {
             cycles: 0,
             bytes: 0,
@@ -88,6 +88,7 @@ pub enum InstParam {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instructions {
     ADD(InstParam),
+    #[allow(non_camel_case_types)]
     ADD_HL(InstParam),
     //ADD_SP(InstParam),
     ADC(InstParam),
