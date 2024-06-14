@@ -25,6 +25,9 @@ use crate::cpu::registers::{Register16Bit, Register8Bit};
 const TIME_PER_FRAME: f32 = 1000.0 / 30.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
+#[cfg(target_os = "linux")]
+const WINDOWS: bool = false;
+#[cfg(target_os = "windows")]
 const WINDOWS: bool = true;
 
 #[macroquad::main("GB Emulator")]
@@ -126,7 +129,7 @@ async fn main() {
         cpu.poll_inputs();
         cpu.blarg_print();
 
-        for _ in 0..cpu_cycles_taken {
+        for _ in 0..=cpu_cycles_taken {
             ppu.step(&mut cpu, &mut final_image, &PALETTE);
 
             // Redraw UI at 30 frames per second
