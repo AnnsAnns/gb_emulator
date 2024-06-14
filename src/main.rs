@@ -22,7 +22,7 @@ extern crate simple_log;
 
 use crate::cpu::registers::{Register16Bit, Register8Bit};
 
-const TIME_PER_FRAME: f32 = 1000.0 / 60.0;
+const TIME_PER_FRAME: f32 = 1000.0 / 30.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
 #[cfg(target_os = "linux")]
@@ -34,7 +34,7 @@ const WINDOWS: bool = true;
 async fn main() {
     //Set up logging
     let config = LogConfigBuilder::builder()
-        .size(1 * 100)
+        .size(1 * 1000)
         .roll_count(10)
         .level("info")
         .output_console()
@@ -133,14 +133,15 @@ async fn main() {
             .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
-        cpu.poll_inputs();
-        cpu.blarg_print();
-
         for _ in 0..=cpu_cycles_taken {
             ppu.step(&mut cpu, &mut final_image, &PALETTE);
 
             // Redraw UI at 30 frames per second
             if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
+                // Also only poll inputs at that interval
+                cpu.poll_inputs();
+                cpu.blarg_print();
+        
                 ppu_time = time::Instant::now();
 
                 // Inform about the time it took to render the frame

@@ -5,25 +5,29 @@ use super::{interrupts::InterruptTypes, CPU};
 const JOYPAD_REGISTER: u16 = 0xFF00;
 
 impl CPU {
+    fn check_bit(&self, byte: u8, bit: u8) -> bool {
+        (byte & (1 << bit)) != 0
+    }
+
     /// Joypad Key I/O Call
     /// stop_mode: If true, the CPU is in a STOP state and we should not set the interrupt flag
     pub fn update_key_input(&mut self) -> bool {
         let previous_data = self.memory.read_byte(JOYPAD_REGISTER);
 
         // Get the relevant bits of the joypad register (Inverted because the buttons are active low)
-        let selected_buttons = (!previous_data & 0x20) != 0 || self.stop_mode;
-        let selected_directions = (!previous_data & 0x10) != 0 || self.stop_mode;
+        let selected_buttons = self.check_bit(previous_data, 5) || self.stop_mode;
+        let selected_directions = self.check_bit(previous_data, 4) || self.stop_mode;
 
         let mut output = previous_data;
 
-        let key_map = if selected_buttons {
+        let key_map = if selected_directions {
             [
                 (KeyCode::Right, 0),
                 (KeyCode::Left, 1),
                 (KeyCode::Up, 2),
                 (KeyCode::Down, 3),
             ]
-        } else if selected_directions {
+        } else if selected_buttons {
             [
                 (KeyCode::A, 0),
                 (KeyCode::B, 1),
@@ -35,7 +39,8 @@ impl CPU {
         };
 
         for (key, bit) in key_map.iter() {
-            if is_key_pressed(*key) {
+            if is_key_down(*key) {
+                log::info!("Key pressed: {:?}", key);
                 output &= !(1 << bit);
             } else {
                 output |= 1 << bit;

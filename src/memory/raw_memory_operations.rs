@@ -11,6 +11,10 @@ impl Memory {
         }
     }
 
+    pub fn write_div_register(&mut self, value: u8) {
+        self.memory[0xFF04] = value;
+    }
+
     /// Write a byte to memory
     /// Usage: memory.write_byte(0xFF00, 0x3F);
     /// This will write the value 0x3F to the I/O register at 0xFF00 (JOYP)

@@ -44,6 +44,8 @@ impl CPU {
             INTERRUPT_FLAG_ADDRESS,
             interrupt_flag | (1 << interrupt as u8),
         );
+
+        log::debug!("Interrupt Flag set: {:#X}", self.memory.read_byte(INTERRUPT_FLAG_ADDRESS));
     }
 
     pub fn set_lcd_y_coordinate(&mut self, value: u8) {
@@ -120,6 +122,7 @@ impl CPU {
         let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
         self.memory
             .write_byte(INTERRUPT_FLAG_ADDRESS, interrupt_flag & !(1 << interrupt));
+        log::debug!("Previous flags: {:#X}, New flags: {:#X}, interrupt type: {:?}", interrupt_flag, self.memory.read_byte(INTERRUPT_FLAG_ADDRESS), interrupt);
 
         // Call the interrupt handler at the appropriate address
         // https://gbdev.io/pandocs/Interrupt_Sources.html
@@ -129,7 +132,7 @@ impl CPU {
         let mut current_pc = self.get_16bit_register(Register16Bit::PC);
 
         if self.is_halted {
-            log::info!("Interrupted while in HALT state, type: {:?}", interrupt);
+            //log::info!("Interrupted while in HALT state, type: {:?}", interrupt);
             current_pc += 1;
             self.is_halted = false;
         }

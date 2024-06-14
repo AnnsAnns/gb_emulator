@@ -87,7 +87,7 @@ impl Ppu {
                     draw_pixels(cpu, final_image, &palette);
                     cpu.set_ppu_mode(PpuMode::HorizontalBlank);
                 } else if dot % DOTS_PER_LINE >= SCAN_DOTS + MIN_DRAW_DOTS {
-                    panic!("dot has an invalid value");
+                    log::warn!("dot has an invalid value");
                 }
             }
             PpuMode::HorizontalBlank => {
