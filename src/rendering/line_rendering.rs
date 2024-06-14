@@ -18,7 +18,7 @@ pub fn oam_scan(cpu: &CPU) {}
 // Mode 3
 pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
     let high_map: bool = false;
-    let high_addressing: bool = false;
+    let high_addressing: bool = !cpu.get_lcdc_bg_window_tile_data();
 
     let scx = cpu.get_lcd_scx();
     let scy = cpu.get_lcd_scy();
@@ -87,7 +87,7 @@ impl Ppu {
                     draw_pixels(cpu, final_image, &palette);
                     cpu.set_ppu_mode(PpuMode::HorizontalBlank);
                 } else if dot % DOTS_PER_LINE >= SCAN_DOTS + MIN_DRAW_DOTS {
-                    log::warn!("dot has an invalid value");
+                    panic!("dot has an invalid value");
                 }
             }
             PpuMode::HorizontalBlank => {
