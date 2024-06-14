@@ -176,38 +176,30 @@ impl CPU {
     }
 
     pub fn halt(&mut self) -> InstructionResult {
-        // Halt bug ist noch nicht implementiert. Bug tritt nicht und wird auch nicht behoben.
-        if self.ime_flag {
-            if self.check_and_handle_interrupts(){
-                InstructionResult{
-                    bytes: 1,
-                    cycles: 0,
-                    condition_codes: ConditionCodes{
-                        carry: FlagState::NotAffected,
-                        half_carry: FlagState::NotAffected,
-                        subtract: FlagState::NotAffected,
-                        zero: FlagState::NotAffected,
-                    }
-                }
-            }
-            else{
-                InstructionResult::default()
-            }
-        }
-        else if self.interrupt_pentding(){
-            InstructionResult{
+        self.is_halted = true;
+
+        if !self.ime_flag && self.check_interrupts(false).is_some() {
+            InstructionResult {
+                cycles: 1,
                 bytes: 1,
-                cycles: 0,
-                condition_codes: ConditionCodes{
-                    carry: FlagState::NotAffected,
-                    half_carry: FlagState::NotAffected,
-                    subtract: FlagState::NotAffected,
+                condition_codes: ConditionCodes {
                     zero: FlagState::NotAffected,
-                }
+                    subtract: FlagState::NotAffected,
+                    half_carry: FlagState::NotAffected,
+                    carry: FlagState::NotAffected,
+                },
             }
-        }
-        else{
-            InstructionResult::default()
+        } else {
+            InstructionResult {
+                cycles: 0,
+                bytes: 0,
+                condition_codes: ConditionCodes {
+                    zero: FlagState::NotAffected,
+                    subtract: FlagState::NotAffected,
+                    half_carry: FlagState::NotAffected,
+                    carry: FlagState::NotAffected,
+                },
+            }
         }
     }
 }

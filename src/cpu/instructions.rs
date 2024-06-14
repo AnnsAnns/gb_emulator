@@ -145,5 +145,5 @@ pub enum Instructions {
     SCF,
     STOP, 
     
-    INVALID, // Invalid instruction
+    INVALID(u8), // Invalid instruction
 }

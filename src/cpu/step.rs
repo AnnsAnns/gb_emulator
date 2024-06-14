@@ -33,23 +33,6 @@ impl CPU {
     /// ensure to first set the next instruction
     /// by decoding it (see `decode.rs`)
     pub fn step(&mut self) -> Result<&InstructionResult, String> {
-        // Check whether the elapsed time is equal or greater than CPU_FREQUENCY
-        // Otherwise, sleep for the remaining time to ensure we're running at the correct speed
-        if self.last_step_result.cycles == 0 {
-            self.last_step_result.cycles = 1; // Ensure we don't sleep forever
-        }
-        let required_sleep = 1 / (CPU_FREQUENCY * self.last_step_result.cycles as u128) * 1_000_000;
-        log::debug!(
-            "⏱️ Required sleep: {}μs, elapsed: {}μs",
-            required_sleep,
-            self.last_execution_time.elapsed().as_micros()
-        );
-        if self.last_execution_time.elapsed().as_micros() < required_sleep {
-            sleep(Duration::from_micros(
-                (required_sleep - self.last_execution_time.elapsed().as_micros()) as u64,
-            ));
-        }
-
         if self.check_and_handle_interrupts() {
             self.last_step_result.cycles = 5;
             self.last_step_result.bytes = 0;

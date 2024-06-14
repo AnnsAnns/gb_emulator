@@ -126,7 +126,13 @@ impl CPU {
         let interrupt_address = INTERRUPT_CALL_ADDRESS + (interrupt as u16 * 8);
 
         // Get current PC
-        let current_pc = self.get_16bit_register(Register16Bit::PC);
+        let mut current_pc = self.get_16bit_register(Register16Bit::PC);
+
+        if self.is_halted {
+            log::info!("Interrupted while in HALT state, type: {:?}", interrupt);
+            current_pc += 1;
+            self.is_halted = false;
+        }
 
         // Push PC to Stack
         self.dec_sp();

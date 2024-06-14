@@ -8,8 +8,6 @@ impl CPU {
     /// Joypad Key I/O Call
     /// stop_mode: If true, the CPU is in a STOP state and we should not set the interrupt flag
     pub fn update_key_input(&mut self) -> bool {
-        let keys_down = get_keys_down();
-
         let previous_data = self.memory.read_byte(JOYPAD_REGISTER);
 
         // Get the relevant bits of the joypad register (Inverted because the buttons are active low)
@@ -37,7 +35,7 @@ impl CPU {
         };
 
         for (key, bit) in key_map.iter() {
-            if keys_down.contains(key) {
+            if is_key_pressed(*key) {
                 output &= !(1 << bit);
             } else {
                 output |= 1 << bit;

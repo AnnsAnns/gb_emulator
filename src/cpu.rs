@@ -36,6 +36,7 @@ pub struct CPU {
     enable_ime: i32,
     last_execution_time: std::time::Instant,
     cycles: u64,
+    is_halted: bool,
     stop_mode: bool,
     pub instruction: i32,
 
@@ -54,6 +55,7 @@ impl CPU {
             ime_flag: false,
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
+            is_halted: false,
             stop_mode: false,
             instruction: 0,
         }
