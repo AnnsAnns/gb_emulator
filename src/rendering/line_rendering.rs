@@ -7,6 +7,7 @@ const DOTS_PER_LINE: u32 = 456;
 
 const SCAN_DOTS: u32 = 80;
 const MIN_DRAW_DOTS: u32 = 172;
+#[allow(dead_code)]
 const MIN_HBLANK_DOTS: u32 = 87;
 
 const SCANLINES_ACTUAL: u8 = 144;

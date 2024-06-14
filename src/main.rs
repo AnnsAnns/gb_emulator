@@ -17,7 +17,6 @@ use rendering::{
 use rfd::FileDialog;
 use simple_log::LogConfigBuilder;
 
-#[macro_use]
 extern crate simple_log;
 
 use crate::cpu::registers::{Register16Bit, Register8Bit};
