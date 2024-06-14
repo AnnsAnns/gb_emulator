@@ -16,7 +16,7 @@ impl CPU {
         let (new_val, overflow) = previous_val.overflowing_add(1);
 
         if overflow {
-            log::info!("Timer overflow at Speed: {:#?} - resetting to modulo & setting interrupt flag",
+            log::debug!("Timer overflow at Speed: {:#?} - resetting to modulo & setting interrupt flag",
                 self.get_timer_modulo());
             self.memory.write_byte(
                 TIMER_COUNTER_ADDRESS,

@@ -451,10 +451,16 @@ impl CPU {
             | Instructions::RST(_)
             | Instructions::RET(_)
             | Instructions::RETI => {}
-            _ => self.set_16bit_register(
+            _ => {
+                let (new_val, overflow) = self.get_16bit_register(Register16Bit::PC).overflowing_add(self.last_step_result.bytes as u16);
+                if overflow {
+                    log::warn!("Overflow when adding {:?} to PC", self.last_step_result.bytes);
+                }
+                self.set_16bit_register(
                 Register16Bit::PC,
-                self.get_16bit_register(Register16Bit::PC) + self.last_step_result.bytes as u16,
-            ),
+                new_val
+                )
+        }
         }
         self.update_ime();
 

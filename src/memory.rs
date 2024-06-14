@@ -1,15 +1,10 @@
 use std::{io::Write, mem};
 use std::sync::{Arc, Mutex};
 
-    /// Module for memory abstraction
-
-// These following modules do most of the abstraction work
 pub mod raw_memory_operations;
-pub mod io_abstraction;
 
 const MEMORY_SIZE: usize = 65537;
 const ROM_SIZE: usize = 256;
-
 
 /// Abstraction over the raw memory of the Gameboy
 #[derive(Debug, Clone)]
@@ -67,11 +62,6 @@ impl Memory {
         let rom = std::fs::read(file_path).expect("Unable to read file");
 
         for (i, byte) in rom.iter().enumerate() {
-            if i >= 0xFFFF {
-                log::error!("ROM is too large for memory: size: {}", rom.len());
-                break;
-            }
-
             self.memory[i + offset] = *byte;
         }
     }
