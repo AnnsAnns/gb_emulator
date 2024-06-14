@@ -7,7 +7,7 @@ use super::cpu::instructions::Instructions;
 #[cfg(test)]
 pub fn assert_correct_instruction_step(cpu: &mut CPU, instruction: Instructions, expected_result: InstructionResult) {
     cpu.set_instruction(instruction);
-    cpu.step();
+    let _ = cpu.step();
     assert_eq!(cpu.get_last_step_result(), expected_result);
 }
 
