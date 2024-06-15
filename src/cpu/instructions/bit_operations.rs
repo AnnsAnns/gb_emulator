@@ -5,7 +5,10 @@ use crate::cpu::{
 };
 
 #[cfg(test)]
-use crate::test_helpers::{assert_correct_instruction_step};
+use crate::test_helpers::assert_correct_instruction_step;
+
+#[cfg(test)]
+use crate::cpu::Instructions;
 
 impl CPU {
     /// check if bit 'bit' in 8bit-register target is set and set zero flag if not

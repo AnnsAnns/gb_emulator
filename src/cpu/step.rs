@@ -499,6 +499,18 @@ impl CPU {
         self.last_execution_time = std::time::Instant::now();
         self.cycles += self.last_step_result.cycles as u64;
 
+        // Check whether a DMA routine has been requested
+        if self.memory.is_dma_requested() {
+            self.dma_active = true;
+            self.dma_current_offset = 0;
+            self.memory.reset_dma_request();
+        }
+
+        // Do DMA for cycles used
+        for _ in 0..self.last_step_result.cycles {
+            self.dma_routine();
+        }
+
         Ok(&self.last_step_result)
     }
 

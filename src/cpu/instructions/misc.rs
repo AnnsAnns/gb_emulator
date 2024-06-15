@@ -7,6 +7,9 @@ use crate::cpu::CPU;
 #[cfg(test)]
 use crate::test_helpers::{assert_correct_instruction_decode, assert_correct_instruction_step};
 
+#[cfg(test)]
+use crate::cpu::Instructions;
+
 use super::{ConditionCodes, FlagState, InstructionResult, Register8Bit};
 
 impl CPU {

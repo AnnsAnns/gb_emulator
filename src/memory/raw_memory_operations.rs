@@ -34,6 +34,11 @@ impl Memory {
                 let prev = self.read_byte(address);
                 self.memory[address as usize] = (value & 0xF0) | (prev & 0xF);
             },
+            // OAM DMA Register
+            0xFF46 => {
+                self.dma_requested = true;
+                self.memory[address as usize] = value
+            }
             _ => self.memory[address as usize] = value,
         }
     }

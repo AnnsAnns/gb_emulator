@@ -5,7 +5,10 @@ use crate::cpu::{
 };
 
 #[cfg(test)]
-use crate::test_helpers::{assert_correct_instruction_step};
+use crate::test_helpers::assert_correct_instruction_step;
+
+#[cfg(test)]
+use crate::cpu::Instructions;
 
 impl CPU {
     /// loads(copies) the value of the source 8bit-register into the target 8bit-register

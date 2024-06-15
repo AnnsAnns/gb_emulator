@@ -25,6 +25,7 @@ pub struct Memory {
     memory: [u8; MEMORY_SIZE],
     pub boot_rom_enabled: bool,
     boot_rom: [u8; ROM_SIZE],
+    dma_requested: bool,
 }
 
 /// Implementation of the Memory
@@ -43,6 +44,7 @@ impl Memory {
             memory: [0; MEMORY_SIZE],
             boot_rom_enabled: enable_bootrom,
             boot_rom,
+            dma_requested: false
         }
     }
 }

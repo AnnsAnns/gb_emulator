@@ -11,6 +11,7 @@ mod step;
 pub mod interrupts;
 mod joypad;
 mod timer;
+mod dma;
 mod helpers;
 
 /// 4.194304 MHz
@@ -36,7 +37,8 @@ pub struct CPU {
     is_halted: bool,
     stop_mode: bool,
     pub instruction: i32,
-
+    dma_active: bool, // Whether a DMA has been requested
+    dma_current_offset: u8, // The current line offset based on the DMA register being copied
 }
 
 /// Note, please look at the relevant modules for the actual implementations
@@ -55,6 +57,8 @@ impl CPU {
             is_halted: false,
             stop_mode: false,
             instruction: 0,
+            dma_active: false,
+            dma_current_offset: 0,
         }
     }
 }

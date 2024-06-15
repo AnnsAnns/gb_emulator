@@ -3,6 +3,13 @@ use std::io::Write;
 use super::{Memory, MEMORY_SIZE};
 
 impl Memory {
+    pub fn is_dma_requested(&self) -> bool {
+        self.dma_requested
+    }
+
+    pub fn reset_dma_request(&mut self) {
+        self.dma_requested = false;
+    }
     
     pub fn is_boot_rom_enabled(&self) -> bool {
         self.boot_rom_enabled

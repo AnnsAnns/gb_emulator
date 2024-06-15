@@ -21,7 +21,7 @@ extern crate simple_log;
 
 use crate::cpu::registers::{Register16Bit, Register8Bit};
 
-const TIME_PER_FRAME: f32 = 1000.0 / 30.0;
+const TIME_PER_FRAME: f32 = 1000.0 / 60.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = false;
 #[cfg(target_os = "linux")]
@@ -143,10 +143,9 @@ async fn main() {
 
             // Redraw UI at 30 frames per second
             if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
-                // Also only poll inputs at that interval
+                // Poll inputs
                 cpu.poll_inputs();
                 cpu.blarg_print();
-        
                 ppu_time = time::Instant::now();
 
                 // Inform about the time it took to render the frame
