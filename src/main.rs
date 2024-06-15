@@ -23,7 +23,7 @@ use crate::cpu::registers::{Register16Bit, Register8Bit};
 
 const TIME_PER_FRAME: f32 = 1000.0 / 30.0;
 
-const DUMP_GAMEBOY_DOCTOR_LOG: bool = true;
+const DUMP_GAMEBOY_DOCTOR_LOG: bool = false;
 #[cfg(target_os = "linux")]
 const WINDOWS: bool = false;
 #[cfg(target_os = "windows")]
@@ -107,6 +107,12 @@ async fn main() {
     cpu.set_ppu_mode(cpu::interrupts::PpuMode::OamScan);
 
     loop {
+        // Check whether PC is at the end of the bootrom
+        if cpu.get_16bit_register(Register16Bit::PC) == 0x0100 {
+            log::info!("🚀 Bootrom finished");
+            cpu.skip_boot_rom();
+        }
+
         cpu.increment_div();
 
         if DUMP_GAMEBOY_DOCTOR_LOG {
