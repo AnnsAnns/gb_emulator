@@ -13,6 +13,8 @@ const MIN_HBLANK_DOTS: u32 = 87;
 const SCANLINES_ACTUAL: u8 = 144;
 const SCANLINES_EXTRA: u8 = 10;
 
+const TILES_PER_LINE: u16 = 21;
+
 // Mode 2
 pub fn oam_scan(_cpu: &CPU) {}
 
@@ -28,7 +30,7 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
     let mut display_x: u32 = 0;
     let mut line_x_pos = scx as u32 % 8;
 
-    for xtile in 0..21 {
+    for xtile in 0..TILES_PER_LINE {
         let tile_index = cpu.get_vram_tile_map(
             high_map,
             (((line + scy) / 8) as u16 % 0x100) * 32 + (xtile + (scx as u16 / 8)) % 32,
