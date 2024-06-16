@@ -44,7 +44,7 @@ pub fn update_atlas_from_memory(
 pub fn update_background_from_memory(cpu: &CPU, background: &mut Image, palette: &[Color; 4], high_map: bool, high_adressing: bool) {
     for line in 0..32 * 8 {
         for xtile in 0..32 {
-            let tile_index = cpu.get_vram_tile_map(high_map, (line / 8)*32 + xtile);
+            let tile_index = cpu.get_vram_tile_map_entry(high_map, (line / 8)*32 + xtile);
             let line_data = cpu.get_vram_tile_line(high_adressing, tile_index as u16, (line % 8) as u8);
 
             for x_pixel in 0..8 {

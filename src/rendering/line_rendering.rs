@@ -19,7 +19,7 @@ const TILES_PER_LINE: u16 = 21;
 pub fn oam_scan(_cpu: &CPU) {}
 
 // Mode 3
-pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
+pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
     let high_map: bool = false;
     let high_addressing: bool = !cpu.get_lcdc_bg_window_tile_data();
 
@@ -30,8 +30,9 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
     let mut display_x: u32 = 0;
     let mut line_x_pos = scx as u32 % 8;
 
+    // Draw Background
     for xtile in 0..TILES_PER_LINE {
-        let tile_index = cpu.get_vram_tile_map(
+        let tile_index = cpu.get_vram_tile_map_entry(
             high_map,
             (((line + scy) / 8) as u16 % 0x100) * 32 + (xtile + (scx as u16 / 8)) % 32,
         );
@@ -50,12 +51,59 @@ pub fn draw_pixels(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4])
                 continue;
             }
 
-            game_diplay.set_pixel(display_x, line as u32, palette[line_data[x_pixel as usize] as usize]);
+            game_diplay.set_pixel(
+                display_x,
+                line as u32,
+                palette[line_data[x_pixel as usize] as usize],
+            );
 
             display_x += 1;
             line_x_pos += 1;
         }
     }
+
+    let sprite_size = cpu.get_lcdc_obj_size();
+    let mut sprites_drawn = 0;
+
+    // Draw Objects (Sprites)
+    for sprite_idx in 0..40 {
+        let mut sprite = cpu.get_oam_entry(sprite_idx);
+
+        if (line as i32) >= sprite.y_pos - 16 && (line as i32) < sprite.y_pos - 8 {
+            let line_data = cpu.get_vram_tile_line(
+                false,
+                sprite.tile_idx,
+                (line + 16 - sprite.y_pos as u8) % 8,
+            );
+
+            sprites_drawn += 1;
+
+            for x_pixel_offset in 0..8 {
+                let x_pixel: i32 = (sprite.x_pos - 8) + x_pixel_offset;
+
+                if (x_pixel as usize) < game_diplay.width()
+                    && x_pixel >= 0
+                    && (line as usize) < game_diplay.height()
+                {
+                    let pallete_idx = if sprite.x_flip {
+                        7 - x_pixel_offset as usize
+                    } else {
+                        x_pixel_offset as usize
+                    };
+
+                    if line_data[pallete_idx] != 0 {
+                        game_diplay.set_pixel(
+                            x_pixel as u32,
+                            line as u32,
+                            palette[line_data[pallete_idx] as usize],
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    //log::info!("Sprites Drawn: {}", sprites_drawn);
 }
 
 pub struct Ppu {
@@ -101,7 +149,7 @@ impl Ppu {
             PpuMode::Drawing => {
                 // TODO Implement Variable Drawing Mode duration
                 if dot % DOTS_PER_LINE == SCAN_DOTS + MIN_DRAW_DOTS - DOTS_PER_CYCLE {
-                    draw_pixels(cpu, final_image, palette);
+                    draw_line(cpu, final_image, palette);
                     cpu.set_ppu_mode(PpuMode::HorizontalBlank);
                 } else if dot % DOTS_PER_LINE >= SCAN_DOTS + MIN_DRAW_DOTS {
                     panic!("dot has an invalid value");
