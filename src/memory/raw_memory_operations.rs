@@ -31,8 +31,21 @@ impl Memory {
             0xFF04 => self.memory[address as usize] = 0,
             // Prevents overwriting of the last 4 bits in FF00 which are mapped to controller input
             0xFF00 => {
-                let prev = self.read_byte(address);
-                self.memory[address as usize] = (value & 0xF0) | (prev & 0xF);
+                //log::info!("joypadmode: {value}");
+                //write selected buttons in memory
+                let mut buttons:u8 = 0xF;
+                //check the selected mode to set the correct button mapping
+                // or write 1111 when both are selected: https://gbdev.io/pandocs/Joypad_Input.html 
+                let value  = value & 0x30;
+
+                if value == 0x30 { //bit 5 = action buttons
+                    buttons |= value;
+                }else if value == 0x10 { //bit 5 = action buttons
+                    buttons = value | self.action_buttons;
+                }else if  value == 0x20 { //bit 4 = direction buttons
+                    buttons = value | self.direction_buttons;
+                }
+                self.memory[address as usize] =  buttons;
             },
             // OAM DMA Register
             0xFF46 => {
@@ -46,7 +59,7 @@ impl Memory {
     //Writes the actual controller inputs into memory
     pub fn write_controller_byte(&mut self, value: u8) {
         self.memory[0xFF00] = value; 
-    }    
+    }
 
     /// Read a word from memory
     /// Used to read 16-bit values from memory
