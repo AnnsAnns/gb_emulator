@@ -21,7 +21,7 @@ extern crate simple_log;
 
 use crate::cpu::registers::{Register16Bit, Register8Bit};
 
-const TIME_PER_FRAME: f32 = 1000.0 / 60.0;
+//const TIME_PER_FRAME: f32 = 1000.0 / 60.0;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = false;
 #[cfg(target_os = "linux")]
@@ -41,10 +41,10 @@ async fn main() {
     simple_log::new(config).unwrap();
 
     const PALETTE: [Color; 4] = [
-        Color::new(1.00, 1.00, 1.00, 1.00),
-        Color::new(0.18, 0.83, 0.18, 1.00),
-        Color::new(0.12, 0.54, 0.12, 1.00),
-        Color::new(0.06, 0.15, 0.06, 1.00),
+        Color::new(232.0/255.0, 252.0/255.0, 204.0/255.0, 1.00),
+        Color::new(172.0/255.0, 212.0/255.0, 144.0/255.0, 1.00),
+        Color::new(084.0/255.0, 140.0/255.0, 112.0/255.0, 1.00),
+        Color::new(020.0/255.0, 044.0/255.0, 056.0/255.0, 1.00),
     ];
     const SCALING: f32 = 4.0;
 
@@ -141,8 +141,10 @@ async fn main() {
         for _ in 0..=cpu_cycles_taken {
             ppu.step(&mut cpu, &mut final_image, &PALETTE);
 
-            // Redraw UI at 30 frames per second
-            if (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME {
+            
+            // Alternatively Redraw UI at 30 frames per second: (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME
+            // Draw when a frame is done
+            if ppu.get_frame_cycles() == 0 {
                 // Poll inputs
                 cpu.poll_inputs();
                 cpu.blarg_print();
