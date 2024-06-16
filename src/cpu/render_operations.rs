@@ -3,6 +3,19 @@ use super::CPU;
 const LCDY_ADDRESS: u16 = 0xFF44;
 const SCY_ADDRESS: u16 = 0xFF42;
 const SCX_ADDRESS: u16 = 0xFF43;
+const OAM_ADDRESS: u16 = 0xFE00;
+
+const SPRITE_SIZE: u16 = 4;
+
+pub struct Sprite {
+    pub y_pos: i32,
+    pub x_pos: i32,
+    pub tile_idx: u16,
+    pub prio_bg: bool,
+    pub y_flip: bool,
+    pub x_flip: bool,
+    pub high_palette: bool,
+}
 
 impl CPU {
     // LCD Control getters
@@ -76,8 +89,27 @@ impl CPU {
         line_data
     }
 
-    pub fn get_vram_tile_map(&self, high_map: bool, map_index: u16) -> u8 {
+    pub fn get_vram_tile_map_entry(&self, high_map: bool, map_index: u16) -> u8 {
         let addr: u16 = if high_map { 0x9C00 } else { 0x9800 } + map_index;
         self.memory.read_byte(addr)
+    }
+
+    pub fn get_oam_entry(&self, index: u8) -> Sprite {
+
+        let entry_base_addr = OAM_ADDRESS + index as u16 * SPRITE_SIZE;
+
+        let attribute_byte = self.memory.read_byte(entry_base_addr + 3);
+
+        let sprite = Sprite {
+            y_pos: self.memory.read_byte(entry_base_addr) as i32,
+            x_pos: self.memory.read_byte(entry_base_addr + 1) as i32,
+            tile_idx: self.memory.read_byte(entry_base_addr + 2) as u16,
+            prio_bg: (attribute_byte >> 7) & 1 == 1,
+            y_flip: (attribute_byte >> 6) & 1 == 1,
+            x_flip: (attribute_byte >> 5) & 1 == 1,
+            high_palette: (attribute_byte >> 4) & 1 == 1,
+        };
+
+        sprite
     }
 }
