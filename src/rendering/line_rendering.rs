@@ -83,38 +83,40 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
     let mut sprites_drawn = 0;
 
     // Draw Objects (Sprites)
-    for sprite_idx in 0..40 {
-        let sprite = cpu.get_oam_entry(sprite_idx);
-
-        if (line as i32) >= sprite.y_pos - 16 && (line as i32) < sprite.y_pos - 8 {
-            let mut tile_line = (line + 16 - sprite.y_pos as u8) % 8;
-            if sprite.y_flip {
-                tile_line = 7 - tile_line;
-            }
-
-            let line_data = cpu.get_vram_tile_line(false, sprite.tile_idx, tile_line);
-
-            sprites_drawn += 1;
-
-            for x_pixel_offset in 0..8 {
-                let x_pixel: i32 = (sprite.x_pos - 8) + x_pixel_offset;
-
-                if (x_pixel as usize) < game_diplay.width()
-                    && x_pixel >= 0
-                    && (line as usize) < game_diplay.height()
-                {
-                    let pallete_idx = if sprite.x_flip {
-                        7 - x_pixel_offset as usize
-                    } else {
-                        x_pixel_offset as usize
-                    };
-
-                    if line_data[pallete_idx] != 0 {
-                        game_diplay.set_pixel(
-                            x_pixel as u32,
-                            line as u32,
-                            palette[line_data[pallete_idx] as usize],
-                        );
+    if cpu.get_lcdc_obj_enable() {
+        for sprite_idx in 0..40 {
+            let sprite = cpu.get_oam_entry(sprite_idx);
+    
+            if (line as i32) >= sprite.y_pos - 16 && (line as i32) < sprite.y_pos - 8 {
+                let mut tile_line = (line + 16 - sprite.y_pos as u8) % 8;
+                if sprite.y_flip {
+                    tile_line = 7 - tile_line;
+                }
+    
+                let line_data = cpu.get_vram_tile_line(false, sprite.tile_idx, tile_line);
+    
+                sprites_drawn += 1;
+    
+                for x_pixel_offset in 0..8 {
+                    let x_pixel: i32 = (sprite.x_pos - 8) + x_pixel_offset;
+    
+                    if (x_pixel as usize) < game_diplay.width()
+                        && x_pixel >= 0
+                        && (line as usize) < game_diplay.height()
+                    {
+                        let pallete_idx = if sprite.x_flip {
+                            7 - x_pixel_offset as usize
+                        } else {
+                            x_pixel_offset as usize
+                        };
+    
+                        if line_data[pallete_idx] != 0 {
+                            game_diplay.set_pixel(
+                                x_pixel as u32,
+                                line as u32,
+                                palette[line_data[pallete_idx] as usize],
+                            );
+                        }
                     }
                 }
             }
