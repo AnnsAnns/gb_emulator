@@ -7,6 +7,9 @@ const OAM_ADDRESS: u16 = 0xFE00;
 
 const SPRITE_SIZE: u16 = 4;
 
+const WY_ADDRESS: u16 = 0xFF4A;
+const WX_ADDRESS: u16 = 0xFF4B;
+
 pub struct Sprite {
     pub y_pos: i32,
     pub x_pos: i32,
@@ -23,7 +26,7 @@ impl CPU {
         self.memory.read_byte(0xFF40) & (1 << 7) == (1 << 7)
     }
 
-    pub fn get_lcdc_window_tile_map_high(&self) -> bool {
+    pub fn get_lcdc_window_tile_high_map(&self) -> bool {
         self.memory.read_byte(0xFF40) & (1 << 6) == (1 << 6)
     }
 
@@ -35,7 +38,7 @@ impl CPU {
         self.memory.read_byte(0xFF40) & (1 << 4) == (1 << 4)
     }
 
-    pub fn get_lcdc_bg_tile_map(&self) -> bool {
+    pub fn get_lcdc_bg_tile_high_map(&self) -> bool {
         self.memory.read_byte(0xFF40) & (1 << 3) == (1 << 3)
     }
 
@@ -62,6 +65,14 @@ impl CPU {
 
     pub fn get_lcd_scx(&mut self) -> u8 {
         self.memory.read_byte(SCX_ADDRESS)
+    }
+
+    pub fn get_window_wy(&mut self) -> u8 {
+        self.memory.read_byte(WY_ADDRESS)
+    }
+
+    pub fn get_window_wx(&mut self) -> u8 {
+        self.memory.read_byte(WX_ADDRESS)
     }
 
     // VRAM getters
