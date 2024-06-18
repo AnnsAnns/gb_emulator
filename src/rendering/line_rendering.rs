@@ -18,6 +18,7 @@ pub fn oam_scan(_cpu: &CPU) {}
 
 // Mode 3
 pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
+
     let scx = cpu.get_lcd_scx();
     let scy = cpu.get_lcd_scy();
 
@@ -147,6 +148,18 @@ impl Ppu {
         if cpu.get_lcdc_ppu_enabled() && !self.enabled {
             self.frame_cycles = 0;
             self.enabled = true;
+        }
+
+        if !cpu.get_lcdc_ppu_enabled() && self.enabled{
+            self.enabled = false;
+            
+            for pixel in final_image.get_image_data_mut() {
+                pixel[0] = 0;
+                pixel[1] = 227;
+                pixel[2] = 48;
+                pixel[3] = 255;
+            }
+            return;
         }
 
         let dot = self.frame_cycles * DOTS_PER_CYCLE;
