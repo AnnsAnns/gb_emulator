@@ -78,9 +78,6 @@ async fn main() {
         tile_viewer_size.y + 10.0,
     );
 
-    let mut cpu = cpu::CPU::new(true);
-    let mut ppu = line_rendering::Ppu::new();
-
     let filedialog = FileDialog::new()
         .add_filter("gb", &["gb"])
         .set_title("Select a Gameboy ROM")
@@ -90,6 +87,11 @@ async fn main() {
         .unwrap();
 
     let filepath = filedialog.as_path().to_str();
+
+    let rom = std::fs::read(filepath.expect("No file was found")).expect("Unable to read file");
+
+    let mut cpu = cpu::CPU::new(true, rom);
+    let mut ppu = line_rendering::Ppu::new();
 
     cpu.load_from_file(filepath.unwrap(), 0x0000);
 

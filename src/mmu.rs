@@ -1,3 +1,4 @@
+use bank_00::Bank00;
 use input_output::InputOutput;
 use mbc::no_mbc::NoMbc;
 use simple::SimpleRegion;
@@ -5,6 +6,7 @@ use simple::SimpleRegion;
 mod simple;
 mod input_output;
 mod mbc;
+mod bank_00;
 
 static MBC_INFO_ADDRESS: usize = 0x0147;
 static MBC_ROM_SIZE_ADDRESS: usize = 0x0148;
@@ -30,7 +32,7 @@ pub trait NonMbcOperations: MemoryOperations {
     fn fill_from_slice(&mut self, data: &[u8]);
 }
 
-trait MemoryBankControllerOperations: MemoryOperations {
+pub trait MemoryBankControllerOperations: MemoryOperations {
     /// Initialize the Memory Bank Controller
     fn init(&mut self, rom_size: u8, cartridge_type: u8, ram_size: u8);
 
@@ -50,9 +52,9 @@ trait MemoryBankControllerOperations: MemoryOperations {
     fn enable_ram(&mut self, enable: bool);
 }
 
-struct MMU {
+pub struct MMU {
     /// 0x0000 to 0x3FFF - ROM Bank 00
-    pub bank_00: SimpleRegion,
+    pub bank_00: Bank00,
 
     /// The cartridge is a separate memory region from 
     /// 0x4000 to 0x7FFF for ROM 
@@ -105,13 +107,13 @@ impl MMU {
         };
 
         MMU {
-            bank_00: SimpleRegion::new(0x4000, false),
+            bank_00: Bank00::default(),
             mbc: cartridge,
-            VRAM: SimpleRegion::new(0x2000, true),
-            WRAM: SimpleRegion::new(0x2000, true),
-            OAM: SimpleRegion::new(0x00A0, true),
-            IO: InputOutput::new(0x0080),
-            HRAM: SimpleRegion::new(0x007F, true),
+            VRAM: SimpleRegion::new(0x2000, true, 0x8000),
+            WRAM: SimpleRegion::new(0x2000, true, 0xC000),
+            OAM: SimpleRegion::new(0x00A0, true, 0xFE00),
+            IO: InputOutput::new(0x0080, 0xFF00),
+            HRAM: SimpleRegion::new(0x007F, true, 0xFF80),
             interrupt_enable: 0
         }
     }
@@ -134,6 +136,9 @@ impl NonMbcOperations for MMU {
             Some(&mbc_info) => mbc_info,
             None => panic!("No MBC info found in ROM")
         };
+
+        log::info!("ROM Size: {:#X} RAM Size: {:#X} MBC Info: {:#X}", rom_size, ram_size, mbc_info);
+
         // Initialize the MBC
         self.mbc.init(rom_size, mbc_info, ram_size);
 
@@ -144,47 +149,51 @@ impl NonMbcOperations for MMU {
         // The rom bank amount is 2^(n+1) where n is the value in the ROM
         // One bank is 16 KiB
         // https://gbdev.io/pandocs/The_Cartridge_Header.html#0148--rom-size
-        let total_banks = 2^(rom_size + 1) as usize;
+        let total_banks = 2_usize.pow(rom_size as u32 + 1);
         let rom_bank_size = 0x4000;
         let total_rom_size = total_banks * rom_bank_size;
+
+        log::info!("Total ROM banks: {} Banks: {} Total Size: {}", total_banks, rom_bank_size, total_rom_size);
+
         for bank in 1..total_banks {
             let start = bank * rom_bank_size;
             let end = start + rom_bank_size;
             let slice: [u8; 0x4000] = data[start..end].try_into().unwrap();
             self.mbc.fill_rom_bank_from_slice(bank as u8, &slice);
-        }      
-
-        // Fill VRAM
-        self.VRAM.fill_from_slice(&data[0x8000..0xA000]);
-
-        // Fill External RAM
-        // @TODO: Support multiple RAM banks
-        let slice: [u8; 0x2000] = data[0xA000..0xC000].try_into().unwrap();
-        self.mbc.fill_ram_bank_from_slice(0, &slice);
-
-        // Fill WRAM
-        self.WRAM.fill_from_slice(&data[0xC000..0xE000]);
-
-        // Fill OAM
-        self.OAM.fill_from_slice(&data[0xFE00..0xFEA0]);
-
-        // Fill IO
-        self.IO.fill_from_slice(&data[0xFF00..0xFF80]);
-
-        // Fill HRAM
-        self.HRAM.fill_from_slice(&data[0xFF80..0xFFFF]);
-
-        // Fill Interrupt Enable Register
-        self.interrupt_enable = data[0xFFFF];
+        }
     }
 }
 
 impl MemoryOperations for MMU {    
     fn read_byte(&self, address: u16) -> u8 {
-        todo!("Implement read_byte for MMU")
+        match address {
+            0x0000..=0x3FFF => self.bank_00.read_byte(address),
+            0x4000..=0x7FFF => self.mbc.read_byte(address),
+            0x8000..=0x9FFF => self.VRAM.read_byte(address),
+            0xA000..=0xBFFF => self.mbc.read_byte(address),
+            0xC000..=0xDFFF => self.WRAM.read_byte(address),
+            0xE000..=0xFDFF => self.WRAM.read_byte(address - 0x2000),
+            0xFE00..=0xFE9F => self.OAM.read_byte(address),
+            0xFF00..=0xFF7F => self.IO.read_byte(address),
+            0xFF80..=0xFFFE => self.HRAM.read_byte(address),
+            0xFFFF => self.interrupt_enable,
+            _ => panic!("Address out of bounds: {:#X}", address)
+        }
     }
 
     fn write_byte(&mut self, address: u16, value: u8) {
-        todo!("Implement write_byte for MMU")
+        match address {
+            0x0000..=0x3FFF => self.bank_00.write_byte(address, value),
+            0x4000..=0x7FFF => self.mbc.write_byte(address, value),
+            0x8000..=0x9FFF => self.VRAM.write_byte(address, value),
+            0xA000..=0xBFFF => self.mbc.write_byte(address, value),
+            0xC000..=0xDFFF => self.WRAM.write_byte(address, value),
+            0xE000..=0xFDFF => self.WRAM.write_byte(address - 0x2000, value),
+            0xFE00..=0xFE9F => self.OAM.write_byte(address, value),
+            0xFF00..=0xFF7F => self.IO.write_byte(address, value),
+            0xFF80..=0xFFFE => self.HRAM.write_byte(address, value),
+            0xFFFF => self.interrupt_enable = value,
+            _ => panic!("Address out of bounds: {:#X}", address)
+        }
     }
 }
