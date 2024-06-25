@@ -7,8 +7,6 @@ const DOTS_PER_LINE: u32 = 456;
 
 const SCAN_DOTS: u32 = 80;
 const MIN_DRAW_DOTS: u32 = 172;
-#[allow(dead_code)]
-const MIN_HBLANK_DOTS: u32 = 87;
 
 const SCANLINES_ACTUAL: u8 = 144;
 const SCANLINES_EXTRA: u8 = 10;
@@ -20,82 +18,61 @@ pub fn oam_scan(_cpu: &CPU) {}
 
 // Mode 3
 pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
-    let high_map: bool = false;
-    let high_addressing: bool = !cpu.get_lcdc_bg_window_tile_data();
 
     let scx = cpu.get_lcd_scx();
     let scy = cpu.get_lcd_scy();
+
     let line: u8 = cpu.get_lcd_y_coordinate();
 
     let mut display_x: u32 = 0;
-    let mut line_x_pos = scx as u32 % 8;
+
+    let mut bg_line_x_pos = scx as u32 % 8;
+
+    let high_adressing = !cpu.get_lcdc_bg_window_tile_data();
 
     // Draw Background
     for xtile in 0..TILES_PER_LINE {
-        let tile_index = cpu.get_vram_tile_map_entry(
-            high_map,
+        // Fetch Background Line Data
+        let bg_tile_idx = cpu.get_vram_tile_map_entry(
+            cpu.get_lcdc_bg_tile_high_map(),
             (((line + scy) / 8) as u16 % 0x100) * 32 + (xtile + (scx as u16 / 8)) % 32,
         );
-        let line_data =
-            cpu.get_vram_tile_line(high_addressing, tile_index as u16, (line + scy) % 8);
+        let bg_line = cpu.get_vram_tile_line(high_adressing, bg_tile_idx as u16, (line + scy) % 8);
 
-        for x_pixel in (line_x_pos % 8)..8 {
+        for x_pixel in (bg_line_x_pos as usize % 8)..8 {
             if display_x >= game_diplay.width() as u32 {
                 break;
             }
 
-            if (line as usize * game_diplay.width() + display_x as usize)
-                >= game_diplay.get_image_data().len()
-            {
-                log::warn!("Pixel out of bounds: x: {}, y: {}", display_x, line);
-                continue;
-            }
-
-            game_diplay.set_pixel(
-                display_x,
-                line as u32,
-                palette[line_data[x_pixel as usize] as usize],
-            );
+            game_diplay.set_pixel(display_x, line as u32, palette[bg_line[x_pixel] as usize]);
 
             display_x += 1;
-            line_x_pos += 1;
+            bg_line_x_pos += 1;
         }
     }
 
-    let sprite_size = cpu.get_lcdc_obj_size();
-    let mut sprites_drawn = 0;
+    // Draw Window
+    if cpu.get_lcdc_window_enable() {
+        let wd_offset_y = cpu.get_window_wy();
+        let wd_offset_x = cpu.get_window_wx() as i32 - 7;
 
-    // Draw Objects (Sprites)
-    for sprite_idx in 0..40 {
-        let mut sprite = cpu.get_oam_entry(sprite_idx);
+        for xtile in 0..20 {
+            // Fetch Window Line Data
 
-        if (line as i32) >= sprite.y_pos - 16 && (line as i32) < sprite.y_pos - 8 {
-            let line_data = cpu.get_vram_tile_line(
-                false,
-                sprite.tile_idx,
-                (line + 16 - sprite.y_pos as u8) % 8,
-            );
-
-            sprites_drawn += 1;
-
-            for x_pixel_offset in 0..8 {
-                let x_pixel: i32 = (sprite.x_pos - 8) + x_pixel_offset;
-
-                if (x_pixel as usize) < game_diplay.width()
-                    && x_pixel >= 0
-                    && (line as usize) < game_diplay.height()
-                {
-                    let pallete_idx = if sprite.x_flip {
-                        7 - x_pixel_offset as usize
-                    } else {
-                        x_pixel_offset as usize
-                    };
-
-                    if line_data[pallete_idx] != 0 {
+            if line >= wd_offset_y {
+                let wd_tile_idx = cpu.get_vram_tile_map_entry(
+                    cpu.get_lcdc_window_tile_high_map(),
+                    ((line - wd_offset_y) as u16 / 8) * 32 + (xtile - wd_offset_x) as u16,
+                );
+                let wd_line = cpu.get_vram_tile_line(high_adressing, wd_tile_idx as u16, line % 8);
+    
+                for x_pixel in 0..8 as usize {
+                    let x_coord: i32 = xtile as i32 * 8 + x_pixel as i32 + wd_offset_x;
+                    if x_coord >= 0 && line >= wd_offset_y {
                         game_diplay.set_pixel(
-                            x_pixel as u32,
+                            x_coord as u32,
                             line as u32,
-                            palette[line_data[pallete_idx] as usize],
+                            palette[wd_line[x_pixel] as usize],
                         );
                     }
                 }
@@ -103,7 +80,49 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
         }
     }
 
-    //log::info!("Sprites Drawn: {}", sprites_drawn);
+    let sprite_size = cpu.get_lcdc_obj_size();
+    let mut sprites_drawn = 0;
+
+    // Draw Objects (Sprites)
+    if cpu.get_lcdc_obj_enable() {
+        for sprite_idx in 0..40 {
+            let sprite = cpu.get_oam_entry(sprite_idx);
+    
+            if (line as i32) >= sprite.y_pos - 16 && (line as i32) < sprite.y_pos - 8 {
+                let mut tile_line = (line + 16 - sprite.y_pos as u8) % 8;
+                if sprite.y_flip {
+                    tile_line = 7 - tile_line;
+                }
+    
+                let line_data = cpu.get_vram_tile_line(false, sprite.tile_idx, tile_line);
+    
+                sprites_drawn += 1;
+    
+                for x_pixel_offset in 0..8 {
+                    let x_pixel: i32 = (sprite.x_pos - 8) + x_pixel_offset;
+    
+                    if (x_pixel as usize) < game_diplay.width()
+                        && x_pixel >= 0
+                        && (line as usize) < game_diplay.height()
+                    {
+                        let pallete_idx = if sprite.x_flip {
+                            7 - x_pixel_offset as usize
+                        } else {
+                            x_pixel_offset as usize
+                        };
+    
+                        if line_data[pallete_idx] != 0 {
+                            game_diplay.set_pixel(
+                                x_pixel as u32,
+                                line as u32,
+                                palette[line_data[pallete_idx] as usize],
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub struct Ppu {
@@ -129,6 +148,18 @@ impl Ppu {
         if cpu.get_lcdc_ppu_enabled() && !self.enabled {
             self.frame_cycles = 0;
             self.enabled = true;
+        }
+
+        if !cpu.get_lcdc_ppu_enabled() && self.enabled{
+            self.enabled = false;
+            
+            for pixel in final_image.get_image_data_mut() {
+                pixel[0] = 0;
+                pixel[1] = 227;
+                pixel[2] = 48;
+                pixel[3] = 255;
+            }
+            return;
         }
 
         let dot = self.frame_cycles * DOTS_PER_CYCLE;
