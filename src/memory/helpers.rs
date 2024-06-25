@@ -1,8 +1,8 @@
 use std::io::Write;
 
-use super::{Memory, MEMORY_SIZE};
+use super::{Memory, MemoryBankController, MEMORY_SIZE};
 
-impl Memory {
+impl <T> Memory<T> where T: MemoryBankController {
     pub fn is_dma_requested(&self) -> bool {
         self.dma_requested
     }
@@ -13,12 +13,6 @@ impl Memory {
     
     pub fn is_boot_rom_enabled(&self) -> bool {
         self.boot_rom_enabled
-    }
-
-    /// This is used for testing purposes
-    /// @warning This is really expensive and should only be used for testing
-    pub fn return_full_memory(&self) -> [u8; MEMORY_SIZE] {
-        self.memory
     }
 
     pub fn load_from_file(&mut self, file_path: &str, offset: usize) {

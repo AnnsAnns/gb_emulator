@@ -47,7 +47,7 @@ impl CPU {
     pub fn new(enable_bootrom: bool) -> CPU {
         CPU {
             registers: [0; 12],
-            memory: Memory::new(enable_bootrom),
+            memory: Memory::new(vec![0]),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
             enable_ime: 0,
