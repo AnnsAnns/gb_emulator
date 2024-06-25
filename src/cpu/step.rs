@@ -3,6 +3,8 @@
 
 
 
+use crate::mmu::MemoryOperations;
+
 use super::{
     instructions::{FlagState, InstParam, InstructionCondition, InstructionResult, Instructions},
     registers::{Register16Bit, Register8Bit},
@@ -12,7 +14,7 @@ use super::{
 impl CPU {
     // Gets a 8-bit value from the HL register
     fn get_n8_from_hl(&self) -> u8 {
-        self.memory
+        self.mmu
             .read_byte(self.get_16bit_register(Register16Bit::HL))
     }
 
@@ -500,10 +502,10 @@ impl CPU {
         self.cycles += self.last_step_result.cycles as u64;
 
         // Check whether a DMA routine has been requested
-        if self.memory.is_dma_requested() {
+        if self.mmu.IO.is_dma_requested() {
             self.dma_active = true;
             self.dma_current_offset = 0;
-            self.memory.reset_dma_request();
+            self.mmu.IO.reset_dma_request();
         }
 
         // Do DMA for cycles used

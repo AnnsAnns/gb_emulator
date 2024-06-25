@@ -1,5 +1,7 @@
 #[cfg(test)]
 use crate::cpu::{registers::Register16Bit, CPU};
+#[cfg(test)]
+use crate::mmu::MemoryOperations;
 
 /// Test the decoding of all opcodes
 /// This will print out all decoded values and failed values
@@ -9,13 +11,13 @@ use crate::cpu::{registers::Register16Bit, CPU};
 /// Please cross-reference with a Gameboy opcode table
 #[test]
 pub fn test_decode() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
     let mut decoded_values = String::new();
     let mut failed_values = String::new();
 
     for i in 0..=0xFF {
         // Write the opcode for 0xCB to memory
-        cpu.memory
+        cpu.mmu
             .write_byte(cpu.get_16bit_register(Register16Bit::SP) + 1, i);
 
         for opcode in [i, 0xCB] {

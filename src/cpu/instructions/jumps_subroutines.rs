@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
-    registers::{Register16Bit},
+    registers::Register16Bit,
     CPU,
-};
+}, mmu::MemoryOperations};
 
 #[cfg(test)]
 use crate::test_helpers::assert_correct_instruction_step;
@@ -76,9 +76,9 @@ impl CPU {
             let value1:u8 = (value >> 8) as u8;
             let value2:u8 = value as u8;
 
-            self.memory.write_byte(memory_address, value1);
+            self.mmu.write_byte(memory_address, value1);
             self.dec_sp();
-            self.memory.write_byte(memory_address-1, value2);
+            self.mmu.write_byte(memory_address-1, value2);
 
 
             self.jp_n16(target);
@@ -182,9 +182,9 @@ impl CPU {
             let value1:u8 = (value >> 8) as u8;
             let value2:u8 = value as u8;
 
-            self.memory.write_byte(memory_address, value1);
+            self.mmu.write_byte(memory_address, value1);
             self.dec_sp();
-            self.memory.write_byte(memory_address-1, value2);
+            self.mmu.write_byte(memory_address-1, value2);
 
 
             self.jp_n16(vec as u16);
@@ -238,7 +238,8 @@ impl CPU {
 
 #[test]
 pub fn jumps_subroutines_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
     let mut registers;
     // 1) CALL and JP
     cpu.set_16bit_register(Register16Bit::SP, 0xF000);

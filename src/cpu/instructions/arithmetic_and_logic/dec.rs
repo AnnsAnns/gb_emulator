@@ -1,4 +1,4 @@
-use crate::cpu::{instructions::{ConditionCodes, FlagState, InstructionResult}, registers::Register8Bit,registers::Register16Bit, CPU};
+use crate::{cpu::{instructions::{ConditionCodes, FlagState, InstructionResult}, registers::{Register16Bit, Register8Bit},CPU}, mmu::MemoryOperations};
 impl CPU {
     /// decrements the 16bit_register register, wraps on overflow
     pub fn dec_r16(&mut self, register: Register16Bit) -> InstructionResult {
@@ -37,9 +37,9 @@ impl CPU {
     /// decrements the byte pointed to by HL
     pub fn dec_hl(&mut self) -> InstructionResult {
         let addr = self.get_16bit_register(Register16Bit::HL);
-        let r8_value = self.memory.read_byte(addr);
+        let r8_value = self.mmu.read_byte(addr);
         let (result,_) = r8_value.overflowing_sub(1);
-        self.memory.write_byte(addr, result);
+        self.mmu.write_byte(addr, result);
 
         InstructionResult {
             cycles: 3,

@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
-};
+}, mmu::MemoryOperations};
 
 #[cfg(test)]
 use crate::test_helpers::assert_correct_instruction_step;
@@ -35,7 +35,7 @@ impl CPU {
     ///check if bit in the byte in memory at the adress in HL is set and set zero flag if not
     pub fn bit_u3_hl(&mut self, bit: u8)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let register_to_test = self.memory.read_byte(memory_address);
+        let register_to_test = self.mmu.read_byte(memory_address);
         let bit_to_test = register_to_test >> (bit);
         let is_set = (bit_to_test & 1) == 1;
 
@@ -75,11 +75,11 @@ impl CPU {
     /// set bit 'bit' in the byte in memory at the adress in HL to 0
     pub fn res_u3_hl(&mut self, bit: u8)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let register_to_set = self.memory.read_byte(memory_address);
+        let register_to_set = self.mmu.read_byte(memory_address);
         let mask = !(1 << bit);
         let value = register_to_set & mask;
 
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
 
         InstructionResult {
             cycles: 4,
@@ -115,11 +115,11 @@ impl CPU {
     /// set bit 'bit' in the byte in memory at the adress in HL to 1
     pub fn set_u3_hl(&mut self, bit: u8)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let register_to_set = self.memory.read_byte(memory_address);
+        let register_to_set = self.mmu.read_byte(memory_address);
         let mask = 1 << bit;
         let value = register_to_set | mask;
         
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
 
         InstructionResult {
             cycles: 4,
@@ -156,10 +156,10 @@ impl CPU {
     }
     pub fn swap_hl(&mut self)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let byte = self.memory.read_byte(memory_address);
+        let byte = self.mmu.read_byte(memory_address);
         let value = byte.rotate_left(4);
 
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
 
         InstructionResult {
             cycles: 4,
@@ -180,7 +180,8 @@ impl CPU {
 
 #[test]
 pub fn bit_op_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
     let mut expected_result = InstructionResult::default();
     let mut registers;
 

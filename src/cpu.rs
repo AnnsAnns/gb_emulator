@@ -1,4 +1,4 @@
-use crate::memory::Memory;
+use crate::{mmu::MMU};
 use self::instructions::{InstructionResult, Instructions};
 
 pub mod decode;
@@ -25,7 +25,7 @@ pub struct CPU {
     /// that can be combined to form 4 16-bit registers (AF, BC, DE, HL)
     /// and two purely 16-bit registers (SP, PC)
     registers: [u8; 12],
-    memory: Memory,
+    pub mmu: MMU,
     next_instruction: Instructions,
     last_step_result: InstructionResult,
     /// The global interrupt master enable flag
@@ -44,14 +44,14 @@ pub struct CPU {
 /// Note, please look at the relevant modules for the actual implementations
 impl CPU {
     /// Create a new CPU
-    pub fn new(enable_bootrom: bool) -> CPU {
+    pub fn new(rom: Vec<u8>) -> CPU {
         CPU {
             registers: [0; 12],
-            memory: Memory::new(enable_bootrom),
             next_instruction: Instructions::NOP,
             last_step_result: InstructionResult::default(),
             enable_ime: 0,
             ime_flag: false,
+            mmu: MMU::new_from_vec(rom),
             last_execution_time: std::time::Instant::now(),
             cycles: 0,
             is_halted: false,
