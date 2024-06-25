@@ -31,7 +31,7 @@ impl CPU {
 
         for (key, bit) in key_map.iter() {
             if is_key_down(*key) {
-                log::info!("Key pressed: {:?}", key);
+                log::debug!("Key pressed: {:?}", key);
                 if bit < &4 {
                     new_direction &= !(1 << bit);
                 }else {

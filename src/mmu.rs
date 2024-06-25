@@ -1,6 +1,6 @@
 use bank_00::Bank00;
 use input_output::InputOutput;
-use mbc::no_mbc::NoMbc;
+use mbc::{mbc1::Mbc1, no_mbc::NoMbc};
 use simple::SimpleRegion;
 
 mod simple;
@@ -12,6 +12,7 @@ static MBC_INFO_ADDRESS: usize = 0x0147;
 static MBC_ROM_SIZE_ADDRESS: usize = 0x0148;
 static MBC_RAM_SIZE_ADDRESS: usize = 0x0149;
 static ROM1_START: usize = 0x4000;
+static RAM_START: usize = 0xA000;
 
 pub trait MemoryOperations {
     /// Read a byte from the memory region
@@ -55,6 +56,16 @@ pub trait MemoryBankControllerOperations: MemoryOperations {
     /// Get physical address within the memory region
     fn calc_physical_rom_address(&self, address: u16) -> usize {
         address as usize - ROM1_START
+    }
+
+    /// Check if the MBC is in advanced banking mode
+    /// This means that the MBC can overwrite BANK00 with a different bank
+    fn is_advanced_banking_mode(&self) -> bool;
+    
+    /// Get physical address within the memory region
+    fn calc_physical_ram_address(&self, address: u16) -> usize {
+        log::info!("RAM Address: {:#X}", address);
+        address as usize - RAM_START
     }
 }
 
@@ -109,6 +120,7 @@ impl MMU {
     pub fn new_from_mbc_info(mbc_info: u8) -> Self {
         let cartridge: Box<dyn MemoryBankControllerOperations> = match mbc_info {
             0x00 => Box::new(NoMbc::default()),
+            0x01..=0x03 => Box::new(Mbc1::default()),
             _ => panic!("Unsupported MBC type: {mbc_info}")
         };
 
@@ -163,7 +175,7 @@ impl NonMbcOperations for MMU {
 
         log::info!("Total ROM banks: {} Banks: {} Total Size: {}", total_banks, rom_bank_size, total_rom_size);
 
-        for bank in 1..total_banks {
+        for bank in 0..total_banks {
             let start = bank * rom_bank_size;
             let end = start + rom_bank_size;
             let slice: [u8; 0x4000] = data[start..end].try_into().unwrap();
@@ -175,7 +187,13 @@ impl NonMbcOperations for MMU {
 impl MemoryOperations for MMU {    
     fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0x0000..=0x3FFF => self.bank_00.read_byte(address),
+            0x0000..=0x3FFF => {
+                if self.mbc.is_advanced_banking_mode() {
+                    self.mbc.read_byte(address)
+                } else {
+                    self.bank_00.read_byte(address)
+                }
+            },
             0x4000..=0x7FFF => self.mbc.read_byte(address),
             0x8000..=0x9FFF => self.VRAM.read_byte(address),
             0xA000..=0xBFFF => self.mbc.read_byte(address),
@@ -192,7 +210,8 @@ impl MemoryOperations for MMU {
 
     fn write_byte(&mut self, address: u16, value: u8) {
         match address {
-            0x0000..=0x3FFF => self.bank_00.write_byte(address, value),
+            // The MBC uses this for its own purposes
+            0x0000..=0x3FFF => self.mbc.write_byte(address, value),
             0x4000..=0x7FFF => self.mbc.write_byte(address, value),
             0x8000..=0x9FFF => self.VRAM.write_byte(address, value),
             0xA000..=0xBFFF => self.mbc.write_byte(address, value),
