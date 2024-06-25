@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
-};
+}, mmu::MemoryOperations};
 
 impl CPU {
     /// Abstraction for the ADD instruction used by other instructions
@@ -57,7 +57,7 @@ impl CPU {
 
     fn adx_a_hl(&mut self, also_add_carry: bool) -> InstructionResult {
         let mem_addr = self.get_16bit_register(Register16Bit::HL);
-        let value = self.memory.read_byte(mem_addr);
+        let value = self.mmu.read_byte(mem_addr);
 
         InstructionResult {
             cycles: 2,

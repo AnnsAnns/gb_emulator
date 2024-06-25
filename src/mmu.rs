@@ -11,6 +11,7 @@ mod bank_00;
 static MBC_INFO_ADDRESS: usize = 0x0147;
 static MBC_ROM_SIZE_ADDRESS: usize = 0x0148;
 static MBC_RAM_SIZE_ADDRESS: usize = 0x0149;
+static ROM1_START: usize = 0x4000;
 
 pub trait MemoryOperations {
     /// Read a byte from the memory region
@@ -50,6 +51,11 @@ pub trait MemoryBankControllerOperations: MemoryOperations {
 
     /// Enable or disable the RAM
     fn enable_ram(&mut self, enable: bool);
+
+    /// Get physical address within the memory region
+    fn calc_physical_rom_address(&self, address: u16) -> usize {
+        address as usize - ROM1_START
+    }
 }
 
 pub struct MMU {
@@ -117,12 +123,14 @@ impl MMU {
             interrupt_enable: 0
         }
     }
+
+    pub fn set_bootrom_enabled(&mut self, enabled: bool) {
+        self.bank_00.boot_rom_enabled = enabled;
+    }
 }
 
 impl NonMbcOperations for MMU {
     fn fill_from_slice(&mut self, data: &[u8]) {
-        let mut current_offset = 0;
-
         // Get relevant information from the ROM for the mbc
         let rom_size = match data.get(MBC_ROM_SIZE_ADDRESS) {
             Some(&rom_size) => rom_size,
@@ -174,6 +182,7 @@ impl MemoryOperations for MMU {
             0xC000..=0xDFFF => self.WRAM.read_byte(address),
             0xE000..=0xFDFF => self.WRAM.read_byte(address - 0x2000),
             0xFE00..=0xFE9F => self.OAM.read_byte(address),
+            0xFEA0..=0xFEFF => 0, // Unused
             0xFF00..=0xFF7F => self.IO.read_byte(address),
             0xFF80..=0xFFFE => self.HRAM.read_byte(address),
             0xFFFF => self.interrupt_enable,
@@ -190,6 +199,7 @@ impl MemoryOperations for MMU {
             0xC000..=0xDFFF => self.WRAM.write_byte(address, value),
             0xE000..=0xFDFF => self.WRAM.write_byte(address - 0x2000, value),
             0xFE00..=0xFE9F => self.OAM.write_byte(address, value),
+            0xFEA0..=0xFEFF => {} // Unused
             0xFF00..=0xFF7F => self.IO.write_byte(address, value),
             0xFF80..=0xFFFE => self.HRAM.write_byte(address, value),
             0xFFFF => self.interrupt_enable = value,

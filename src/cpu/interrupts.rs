@@ -1,6 +1,6 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::{cpu::registers::Register16Bit};
+use crate::{cpu::registers::Register16Bit, mmu::MemoryOperations};
 
 use super::{CPU};
 
@@ -33,31 +33,31 @@ pub enum PpuMode {
 impl CPU {
     pub fn set_vblank_interrupt(&mut self) {
         log::debug!("VBlank interrupt set");
-        self.memory.write_byte(0xFF44, 144);
+        self.mmu.write_byte(0xFF44, 144);
         self.set_interrupt_flag(InterruptTypes::VBlank);
     }
 
     /// Set the interrupt flag for the given interrupt
     pub fn set_interrupt_flag(&mut self, interrupt: InterruptTypes) {
-        let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
-        self.memory.write_byte(
+        let interrupt_flag = self.mmu.read_byte(INTERRUPT_FLAG_ADDRESS);
+        self.mmu.write_byte(
             INTERRUPT_FLAG_ADDRESS,
             interrupt_flag | (1 << interrupt as u8),
         );
 
-        log::debug!("Interrupt Flag set: {:#X}", self.memory.read_byte(INTERRUPT_FLAG_ADDRESS));
+        log::debug!("Interrupt Flag set: {:#X}", self.mmu.read_byte(INTERRUPT_FLAG_ADDRESS));
     }
 
     pub fn set_lcd_y_coordinate(&mut self, value: u8) {
         //log::info!("Setting LCD Y coordinate: {}", value);
-        self.memory.write_byte(LCDY_ADDRESS, value);
+        self.mmu.write_byte(LCDY_ADDRESS, value);
 
         if self.is_lyc_equal_ly() {
             self.set_interrupt_flag(InterruptTypes::LCDC);
 
             // Set bit 2 of STAT register
-            let stat = self.memory.read_byte(STAT_ADDRESS);
-            self.memory.write_byte(STAT_ADDRESS, stat | 0b100);
+            let stat = self.mmu.read_byte(STAT_ADDRESS);
+            self.mmu.write_byte(STAT_ADDRESS, stat | 0b100);
         } 
     }
 
@@ -65,8 +65,8 @@ impl CPU {
     pub fn set_ppu_mode(&mut self, mode: PpuMode) {
         //log::info!("Setting PPU mode: {}", mode);
 
-        let stat = self.memory.read_byte(STAT_ADDRESS) & 0b1111_1100;
-        self.memory.write_byte(STAT_ADDRESS, stat | mode as u8);
+        let stat = self.mmu.read_byte(STAT_ADDRESS) & 0b1111_1100;
+        self.mmu.write_byte(STAT_ADDRESS, stat | mode as u8);
 
         // Check if the mode 0 interrupt is enabled
         if mode as u8 == 0 && (stat & 0b1000) != 0 {
@@ -85,17 +85,17 @@ impl CPU {
     }
 
     pub fn get_ppu_mode(&self) -> u8 {
-        self.memory.read_byte(STAT_ADDRESS) & 0b11
+        self.mmu.read_byte(STAT_ADDRESS) & 0b11
     }
 
     pub fn is_lyc_equal_ly(&self) -> bool {
-        self.memory.read_byte(LYC_ADDRESS) == self.memory.read_byte(LCDY_ADDRESS)
+        self.mmu.read_byte(LYC_ADDRESS) == self.mmu.read_byte(LCDY_ADDRESS)
     }
 
     // Checks for interrupts and returns the interrupt type
     pub fn check_interrupts(&mut self, check_for_ime: bool) -> Option<i32> {
-        let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
-        let interrupt_enable = self.memory.read_byte(INTERRUPT_ENABLE_ADDRESS);
+        let interrupt_flag = self.mmu.read_byte(INTERRUPT_FLAG_ADDRESS);
+        let interrupt_enable = self.mmu.read_byte(INTERRUPT_ENABLE_ADDRESS);
         let mut interrupt_type : Option<i32> = None;
 
         for i in 0..=4 {
@@ -119,10 +119,10 @@ impl CPU {
         self.ime_flag = false;
 
         // Clear the interrupt flag
-        let interrupt_flag = self.memory.read_byte(INTERRUPT_FLAG_ADDRESS);
-        self.memory
+        let interrupt_flag = self.mmu.read_byte(INTERRUPT_FLAG_ADDRESS);
+        self.mmu
             .write_byte(INTERRUPT_FLAG_ADDRESS, interrupt_flag & !(1 << interrupt));
-        log::debug!("Previous flags: {:#X}, New flags: {:#X}, interrupt type: {:?}", interrupt_flag, self.memory.read_byte(INTERRUPT_FLAG_ADDRESS), interrupt);
+        log::debug!("Previous flags: {:#X}, New flags: {:#X}, interrupt type: {:?}", interrupt_flag, self.mmu.read_byte(INTERRUPT_FLAG_ADDRESS), interrupt);
 
         // Call the interrupt handler at the appropriate address
         // https://gbdev.io/pandocs/Interrupt_Sources.html
@@ -142,9 +142,9 @@ impl CPU {
         let memory_address = self.get_16bit_register(Register16Bit::SP);
         let value1 = (current_pc >> 8) as u8;
         let value2 = current_pc as u8;
-        self.memory.write_byte(memory_address, value1);
+        self.mmu.write_byte(memory_address, value1);
         self.dec_sp();
-        self.memory.write_byte(memory_address-1, value2);
+        self.mmu.write_byte(memory_address-1, value2);
 
         // Jump to interrupt address
         self.set_16bit_register(Register16Bit::PC, interrupt_address);

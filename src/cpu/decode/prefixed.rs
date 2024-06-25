@@ -1,10 +1,10 @@
-use crate::cpu::{instructions::{InstParam, Instructions}, registers::{Register16Bit, Register8Bit}, CPU};
+use crate::{cpu::{instructions::{InstParam, Instructions}, registers::{Register16Bit, Register8Bit}, CPU}, mmu::MemoryOperations};
 
 impl CPU {
         /// Decode a prefixed opcode (0xCB)
         pub fn decode_prefixed(&self) -> Result<Instructions, String> {
             let opcode = self
-                .memory
+                .mmu
                 .read_byte(self.get_16bit_register(Register16Bit::PC) + 1);
     
             let head = opcode >> 4;

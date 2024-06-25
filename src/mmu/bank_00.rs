@@ -1,4 +1,4 @@
-use crate::{memory::Memory, mmu::MemoryOperations};
+use crate::{mmu::MemoryOperations};
 
 use super::NonMbcOperations;
 

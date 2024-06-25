@@ -1,4 +1,4 @@
-use crate::cpu::{instructions::{InstParam, Instructions}, registers::{Register16Bit, Register8Bit}, CPU};
+use crate::{cpu::{instructions::{InstParam, Instructions}, registers::{Register16Bit, Register8Bit}, CPU}, mmu::MemoryOperations};
 
 impl CPU {
     /// Decode the tail of an opcode to a 8 Bit Register
@@ -38,19 +38,19 @@ impl CPU {
     /// Get a 16-bit value from the program counter at the next two positions (PC + 1, PC + 2)
     /// @warning: This will *not* increment the program counter
     pub fn get_16bit_from_pc(&self) -> u16 {
-        self.memory
+        self.mmu
             .read_word(self.get_16bit_register(Register16Bit::PC) + 1)
     }
 
     /// Get a 8-bit value from the program counter at the next position (PC + 1)
     /// @warning: This will *not* increment the program counter
     pub fn get_8bit_from_pc(&self) -> u8 {
-        self.memory
+        self.mmu
             .read_byte(self.get_16bit_register(Register16Bit::PC) + 1)
     }
 
     pub fn get_8bit_from_hl(&self) -> u8 {
-        self.memory
+        self.mmu
             .read_byte(self.get_16bit_register(Register16Bit::HL))
     }
 

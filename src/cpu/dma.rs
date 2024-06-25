@@ -1,3 +1,5 @@
+use crate::mmu::MemoryOperations;
+
 use super::CPU;
 
 const DMA_REGISTER_ADDR: u16 = 0xFF46;
@@ -12,14 +14,14 @@ impl CPU {
         }
 
         // Get DMA base from memory
-        let dma_base = (self.memory.read_byte(DMA_REGISTER_ADDR) as u16) << 8;
+        let dma_base = (self.mmu.read_byte(DMA_REGISTER_ADDR) as u16) << 8;
         
         // Get the current byte to be read by combining the base + dma_current_offset
         let source_addr = dma_base + self.dma_current_offset as u16;
         let target_addr = OAM_BASE + self.dma_current_offset as u16;
         
         // Write from memory to OAM
-        self.memory.write_byte(target_addr, self.memory.read_byte(source_addr));
+        self.mmu.write_byte(target_addr, self.mmu.read_byte(source_addr));
 
         // Append offset
         let (_, overflow) = self.dma_current_offset.overflowing_add(1);

@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
-};
+}, mmu::MemoryOperations};
 
 impl CPU {
     fn sl_u8(&mut self, value: u8) -> (ConditionCodes, u8) {
@@ -41,9 +41,9 @@ impl CPU {
 
     pub fn sla_hl(&mut self) -> InstructionResult {
         let mem_addr = self.get_16bit_register(Register16Bit::HL);
-        let value = self.memory.read_byte(mem_addr);
+        let value = self.mmu.read_byte(mem_addr);
         let (condition_codes_result, result) = self.sl_u8(value);
-        self.memory.write_byte(mem_addr, result);
+        self.mmu.write_byte(mem_addr, result);
         InstructionResult {
             cycles: 4,
             bytes: 2,
@@ -54,7 +54,8 @@ impl CPU {
 
 #[test]
 pub fn sl_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
 
     //Test sra_r8
     cpu.clear_carry_flag();
@@ -73,15 +74,15 @@ pub fn sl_test() {
     //Test sra_hl
     let mem_addr = 0b0000_0000_1000_0000;
     cpu.set_16bit_register(Register16Bit::HL, mem_addr);
-    cpu.memory.write_byte(mem_addr, 64);
+    cpu.mmu.write_byte(mem_addr, 64);
 
     instruction_result = cpu.sla_hl();
-    assert_eq!(cpu.memory.read_byte(mem_addr), 128);
+    assert_eq!(cpu.mmu.read_byte(mem_addr), 128);
     assert!(instruction_result.condition_codes.carry == FlagState::Unset);
     cpu.set_carry_flag();
 
     instruction_result = cpu.sla_hl();
-    assert_eq!(cpu.memory.read_byte(mem_addr), 0);
+    assert_eq!(cpu.mmu.read_byte(mem_addr), 0);
     assert!(instruction_result.condition_codes.carry == FlagState::Set);
     cpu.clear_carry_flag();
 }

@@ -13,12 +13,14 @@ use crate::cpu::{
     registers::{Register16Bit, Register8Bit},
     CPU,
 };
+use crate::mmu::MemoryOperations;
 #[cfg(test)]
 use crate::test_helpers::{assert_correct_instruction_step};
 
 #[test]
 pub fn arithmetics_8bit_16bit_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
     let mut registers;
     //>>---------8bit Arithmetics--------->>
     // 1) ADD A,r8 
@@ -67,7 +69,7 @@ pub fn arithmetics_8bit_16bit_test() {
     assert_correct_instruction_step(&mut cpu, Instructions::ADD(super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
     assert_eq!(cpu.get_16bit_register(Register16Bit::DE), 1);
     //<<---------16bit Arithmetics---------<<
-    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 3);
+    cpu.mmu.write_byte(cpu.get_16bit_register(Register16Bit::HL), 3);
     //>>---------8bit Arithmetics--------->>
     //ADD A,[HL]
     let mut expected_result = InstructionResult::default();
@@ -124,7 +126,7 @@ pub fn arithmetics_8bit_16bit_test() {
     expected_result.bytes = 1;
     expected_result.condition_codes = ConditionCodes{zero:FlagState::Unset,subtract:FlagState::Unset,half_carry:FlagState::Unset,carry:FlagState::NotAffected};
     assert_correct_instruction_step(&mut cpu, Instructions::INC(super::InstParam::Register16Bit(Register16Bit::HL),super::InstParam::Boolean(true)), expected_result);
-    assert_eq!(cpu.memory.read_byte(cpu.get_16bit_register(Register16Bit::HL)), 4);
+    assert_eq!(cpu.mmu.read_byte(cpu.get_16bit_register(Register16Bit::HL)), 4);
 
     // SUB A,r8
     println!("regA: {}",cpu.get_8bit_register(Register8Bit::A));
@@ -169,13 +171,14 @@ pub fn arithmetics_8bit_16bit_test() {
 
 #[test]
 pub fn logic_8bit_16bit_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
     let mut registers;
     //CP
     cpu.set_8bit_register(Register8Bit::A, 15);
     cpu.set_8bit_register(Register8Bit::B, 15);
     cpu.set_16bit_register(Register16Bit::HL, 10);
-    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 16);
+    cpu.mmu.write_byte(cpu.get_16bit_register(Register16Bit::HL), 16);
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 1;
     expected_result.bytes = 1;
@@ -216,7 +219,7 @@ pub fn logic_8bit_16bit_test() {
     assert_eq!(registers[Register8Bit::A as usize], 0);
     
     cpu.set_8bit_register(Register8Bit::A, 9);
-    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 10);
+    cpu.mmu.write_byte(cpu.get_16bit_register(Register16Bit::HL), 10);
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
     expected_result.bytes = 1;
@@ -242,7 +245,7 @@ pub fn logic_8bit_16bit_test() {
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 11);
 
-    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 15);
+    cpu.mmu.write_byte(cpu.get_16bit_register(Register16Bit::HL), 15);
     cpu.set_8bit_register(Register8Bit::A, 0b00110000);
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;
@@ -271,7 +274,7 @@ pub fn logic_8bit_16bit_test() {
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 12);
 
-    cpu.memory.write_byte(cpu.get_16bit_register(Register16Bit::HL), 31);
+    cpu.mmu.write_byte(cpu.get_16bit_register(Register16Bit::HL), 31);
     cpu.set_8bit_register(Register8Bit::A, 0b00110000);
     let mut expected_result = InstructionResult::default();
     expected_result.cycles = 2;

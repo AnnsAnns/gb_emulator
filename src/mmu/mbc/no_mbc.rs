@@ -16,7 +16,7 @@ impl Default for NoMbc {
 
 impl MemoryOperations for NoMbc {
     fn read_byte(&self, address: u16) -> u8 {
-        self.rom[address as usize]
+        self.rom[self.calc_physical_rom_address(address)]
     }
 
     fn write_byte(&mut self, _address: u16, _value: u8) {

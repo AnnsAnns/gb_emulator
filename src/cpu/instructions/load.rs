@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
-};
+}, mmu::MemoryOperations};
 
 #[cfg(test)]
 use crate::test_helpers::assert_correct_instruction_step;
@@ -65,7 +65,7 @@ impl CPU {
     pub fn ld_hl_r8(&mut self, source: Register8Bit)-> InstructionResult {
         let value = self.get_8bit_register(source);
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
 
         InstructionResult {
             cycles: 2,
@@ -82,7 +82,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD__HL_,n8
     pub fn ld_hl_n8(&mut self, value: u8)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
 
         InstructionResult {
             cycles: 3,
@@ -99,7 +99,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_r8,_HL_
     pub fn ld_r8_hl(&mut self, target: Register8Bit)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let value = self.memory.read_byte(memory_address);
+        let value = self.mmu.read_byte(memory_address);
 
         self.set_8bit_register(target, value);
         InstructionResult {
@@ -118,7 +118,7 @@ impl CPU {
     pub fn ld_r16_a (&mut self, target: Register16Bit)-> InstructionResult {
         let value = self.get_8bit_register(Register8Bit::A);
         let memory_address = self.get_16bit_register(target);
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
 
         InstructionResult {
             cycles: 2,
@@ -135,7 +135,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD__n16_,A
     pub fn ld_n16_a (&mut self, target: u16)-> InstructionResult {
         let value = self.get_8bit_register(Register8Bit::A);
-        self.memory.write_byte(target, value);
+        self.mmu.write_byte(target, value);
 
         InstructionResult {
             cycles: 4,
@@ -153,7 +153,7 @@ impl CPU {
     pub fn ldh_n16_a (&mut self, target: u16)-> InstructionResult {
         if target > 0xFF00u16 && target < 0xFFFFu16 {
             let value = self.get_8bit_register(Register8Bit::A);
-            self.memory.write_byte(target, value);
+            self.mmu.write_byte(target, value);
         }
 
         InstructionResult {
@@ -173,7 +173,7 @@ impl CPU {
         let target = 0xFF00u16 + self.get_8bit_register(Register8Bit::C) as u16;
         let value = self.get_8bit_register(Register8Bit::A);
         
-        self.memory.write_byte(target, value);
+        self.mmu.write_byte(target, value);
 
         InstructionResult {
             cycles: 2,
@@ -192,7 +192,7 @@ impl CPU {
         let target = 0xFF00u16 + a8 as u16;
         let value = self.get_8bit_register(Register8Bit::A);
         
-        self.memory.write_byte(target, value);
+        self.mmu.write_byte(target, value);
 
         InstructionResult {
             cycles: 3,
@@ -209,7 +209,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_r16_
     pub fn ld_a_r16 (&mut self, source: Register16Bit)-> InstructionResult {
         let memory_address = self.get_16bit_register(source);
-        let value = self.memory.read_byte(memory_address);
+        let value = self.mmu.read_byte(memory_address);
 
         self.set_8bit_register(Register8Bit::A, value);
         InstructionResult {
@@ -226,7 +226,7 @@ impl CPU {
     /// loads(copies) the value from memory at the 16bit-address source into register A
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_n16_
     pub fn ld_a_n16 (&mut self, source: u16)-> InstructionResult {
-        let value = self.memory.read_byte(source);
+        let value = self.mmu.read_byte(source);
         self.set_8bit_register(Register8Bit::A, value);
 
         InstructionResult {
@@ -244,7 +244,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_n16_
     pub fn ldh_a_n16 (&mut self, source: u16)-> InstructionResult {
         if source > 0xFF00u16 && source < 0xFFFFu16 {
-            let value = self.memory.read_byte(source);
+            let value = self.mmu.read_byte(source);
             self.set_8bit_register(Register8Bit::A, value);
         }
 
@@ -263,7 +263,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
     pub fn ldh_a_c (&mut self)-> InstructionResult {
         let source = 0xFF00u16 + self.get_8bit_register(Register8Bit::C) as u16;
-        let value = self.memory.read_byte(source);
+        let value = self.mmu.read_byte(source);
         self.set_8bit_register(Register8Bit::A, value);
 
         InstructionResult {
@@ -281,7 +281,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LDH_A,_C_
     pub fn ldh_a_a8 (&mut self, a8:u8)-> InstructionResult {
         let source = 0xFF00u16 + a8 as u16;
-        let value = self.memory.read_byte(source);
+        let value = self.mmu.read_byte(source);
         self.set_8bit_register(Register8Bit::A, value);
 
         InstructionResult {
@@ -301,7 +301,7 @@ impl CPU {
         let value = self.get_8bit_register(Register8Bit::A);
         let memory_address = self.get_16bit_register(Register16Bit::HL);
 
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
         self.set_16bit_register(Register16Bit::HL, memory_address+1u16);
 
         InstructionResult {
@@ -321,7 +321,7 @@ impl CPU {
         let value = self.get_8bit_register(Register8Bit::A);
         let memory_address = self.get_16bit_register(Register16Bit::HL);
 
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
         self.set_16bit_register(Register16Bit::HL, memory_address.wrapping_sub(1));
 
         InstructionResult {
@@ -339,7 +339,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_HLD_
     pub fn ld_a_hld (&mut self)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let value = self.memory.read_byte(memory_address);
+        let value = self.mmu.read_byte(memory_address);
 
         self.set_8bit_register(Register8Bit::A, value);
         self.set_16bit_register(Register16Bit::HL, memory_address.wrapping_sub(1));
@@ -359,7 +359,7 @@ impl CPU {
     /// https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#LD_A,_HLI_
     pub fn ld_a_hli (&mut self)-> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::HL);
-        let value = self.memory.read_byte(memory_address);
+        let value = self.mmu.read_byte(memory_address);
 
         self.set_8bit_register(Register8Bit::A, value);
         self.set_16bit_register(Register16Bit::HL, memory_address+1u16);
@@ -379,7 +379,8 @@ impl CPU {
 
 #[test]
 pub fn load_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
     let mut expected_result = InstructionResult::default();
     let mut registers;
 
@@ -424,7 +425,7 @@ pub fn load_test() {
     let mut expected_result = InstructionResult::default();
     expected_result.bytes = 1;
     expected_result.cycles = 2;
-    assert_eq!(cpu.memory.read_byte(0xF000u16),42);
+    assert_eq!(cpu.mmu.read_byte(0xF000u16),42);
     assert_correct_instruction_step(&mut cpu, Instructions::LD(super::InstParam::Register8Bit(Register8Bit::A), super::InstParam::Register16Bit(Register16Bit::DE)), expected_result);
     registers = cpu.get_registry_dump();
     assert_eq!(registers[Register8Bit::A as usize], 42);

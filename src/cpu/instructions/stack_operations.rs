@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
-};
+}, mmu::MemoryOperations};
 
 #[cfg(test)]
 use crate::cpu::instructions::Instructions;
@@ -65,8 +65,8 @@ impl CPU { //maybe move ld, dec and inc to their files?
         let sp = self.get_16bit_register(Register16Bit::SP);
         let value = (sp & 0xFF) as u8;
         let sp_shifted = (sp >> 8) as u8;
-        self.memory.write_byte(target, value);
-        self.memory.write_byte(target+1, sp_shifted);
+        self.mmu.write_byte(target, value);
+        self.mmu.write_byte(target+1, sp_shifted);
 
         InstructionResult {
             cycles: 5,
@@ -119,9 +119,9 @@ impl CPU { //maybe move ld, dec and inc to their files?
     /// Pops 16bit-register AF from the stack, incrementing the stack pointer twice during this.
     pub fn pop_af (&mut self) -> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::SP);
-        let low_value = self.memory.read_byte(memory_address)&0xf0;
+        let low_value = self.mmu.read_byte(memory_address)&0xf0;
         self.inc_sp();
-        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 8;
+        let high_value: u16 = (self.mmu.read_byte(memory_address+1) as u16) << 8;
         self.inc_sp();
         let combined_value:u16 = high_value+(low_value as u16);
         self.set_16bit_register(Register16Bit::AF, combined_value);
@@ -156,9 +156,9 @@ impl CPU { //maybe move ld, dec and inc to their files?
     /// Pops 16bit-register target from the stack back into the register, incrementing the stack pointer twice during this.
     pub fn pop_r16 (&mut self, target:Register16Bit) -> InstructionResult {
         let memory_address = self.get_16bit_register(Register16Bit::SP);
-        let low_value = self.memory.read_byte(memory_address);
+        let low_value = self.mmu.read_byte(memory_address);
         self.inc_sp();
-        let high_value: u16 = (self.memory.read_byte(memory_address+1) as u16) << 8;
+        let high_value: u16 = (self.mmu.read_byte(memory_address+1) as u16) << 8;
         self.inc_sp();
         let combined_value: u16 = high_value + (low_value as u16);
         self.set_16bit_register(target, combined_value);
@@ -179,14 +179,14 @@ impl CPU { //maybe move ld, dec and inc to their files?
         self.dec_sp();
         let value = self.get_8bit_register(Register8Bit::A);
         let memory_address = self.get_16bit_register(Register16Bit::SP);
-        self.memory.write_byte(memory_address, value);
+        self.mmu.write_byte(memory_address, value);
         self.dec_sp();
         let mut flags: u8 = 0;
         if self.is_zero_flag_set() {flags += 128;}
         if self.is_subtraction_flag_set() {flags += 64;}
         if self.is_half_carry_flag_set() {flags += 32;}
         if self.is_carry_flag_set() {flags += 16;}
-        self.memory.write_byte(memory_address-1, flags);
+        self.mmu.write_byte(memory_address-1, flags);
 
         InstructionResult {
             cycles: 4,
@@ -220,9 +220,9 @@ impl CPU { //maybe move ld, dec and inc to their files?
             },
             _ => panic!("push with {:?} not intended", target),
         }
-        self.memory.write_byte(memory_address, value1);
+        self.mmu.write_byte(memory_address, value1);
         self.dec_sp();
-        self.memory.write_byte(memory_address-1, value2);
+        self.mmu.write_byte(memory_address-1, value2);
 
 
         InstructionResult {
@@ -240,7 +240,8 @@ impl CPU { //maybe move ld, dec and inc to their files?
 
 #[test]
 pub fn stack_ops_test() {
-    let mut cpu = CPU::new(false);
+    let mut cpu = CPU::new(Vec::new());
+    cpu.mmu.set_bootrom_enabled(false);
     let mut registers;
     // 1) ADD
     cpu.set_16bit_register(Register16Bit::SP, 0xFF00);
@@ -353,9 +354,9 @@ pub fn stack_ops_test() {
     expected_result.bytes = 1;
     expected_result.condition_codes = ConditionCodes{zero:FlagState::Set,subtract:FlagState::Unset,half_carry:FlagState::Set,carry:FlagState::Unset};
     assert_correct_instruction_step(&mut cpu, Instructions::POP(super::InstParam::Register16Bit(Register16Bit::AF)), expected_result);
-    let mem = cpu.get_memory().read_byte(0xFEFF);
+    let mem = cpu.mmu.read_byte(0xFEFF);
     assert_eq!(mem, 0xAA);
-    let mem = cpu.get_memory().read_byte(0xFEFE);
+    let mem = cpu.mmu.read_byte(0xFEFE);
     assert_eq!(mem, 0xA0);
     registers = cpu.get_registry_dump();
     let register_value = Register16Bit::AF as usize;

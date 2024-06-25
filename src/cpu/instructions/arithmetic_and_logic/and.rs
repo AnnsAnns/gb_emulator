@@ -1,8 +1,8 @@
-use crate::cpu::{
+use crate::{cpu::{
     instructions::{ConditionCodes, FlagState, InstructionResult},
     registers::{Register16Bit, Register8Bit},
     CPU,
-};
+}, mmu::MemoryOperations};
 
 impl CPU {
     /// Bitwise AND between the value in r8 and A.
@@ -32,7 +32,7 @@ impl CPU {
     /// Bitwise AND between the value in memory address HL and A.
     pub fn and_a_hl(&mut self) -> InstructionResult {
         let mem_addr = self.get_16bit_register(Register16Bit::HL);
-        let value = self.memory.read_byte(mem_addr);
+        let value = self.mmu.read_byte(mem_addr);
         let a = self.get_8bit_register(Register8Bit::A);
         let result = a & value;
 

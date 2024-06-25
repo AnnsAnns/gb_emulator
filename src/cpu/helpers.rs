@@ -1,4 +1,4 @@
-use crate::memory::Memory;
+use crate::mmu::MemoryOperations;
 
 use super::{instructions::{InstructionResult, Instructions}, registers::{Register16Bit, Register8Bit}, CPU};
 
@@ -21,9 +21,9 @@ impl CPU {
         self.set_8bit_register(Register8Bit::L, 0x4D);
         self.set_16bit_register(Register16Bit::SP, 0xFFFE);
         self.set_16bit_register(Register16Bit::PC, 0x0100);
-        self.memory.boot_rom_enabled = false;
+        self.mmu.set_bootrom_enabled(false);
         // Set Joypad register
-        self.memory.write_byte(0xFF00, 0b1111_1111);
+        self.mmu.write_byte(0xFF00, 0b1111_1111);
     }
 
     /// Polls the inputs
@@ -44,35 +44,27 @@ impl CPU {
 
     // Print blarg serial output
     pub fn blarg_print(&mut self) {
-        let serial_data = self.memory.read_byte(0xFF02);
+        let serial_data = self.mmu.read_byte(0xFF02);
         if serial_data == 0x81 {
-            let data = self.memory.read_byte(0xFF01);
+            let data = self.mmu.read_byte(0xFF01);
             print!("{}", data as char);
-            self.memory.write_byte(0xFF02, 0x0);
+            self.mmu.write_byte(0xFF02, 0x0);
         }
     }
 
-    pub fn load_from_file(&mut self, file: &str, offset: usize) {
-        self.memory.load_from_file(file, offset);
-    }
-
     pub fn get_next_opcode(&mut self) -> u8 {
-        self.memory
+        self.mmu
             .read_byte(self.get_16bit_register(Register16Bit::PC))
     }
 
     pub fn write_memory(&mut self, address: u16, value: u8) {
-        self.memory.write_byte(address, value);
+        self.mmu.write_byte(address, value);
     }
 
     /// Set the next instruction to be executed
     /// This is used for testing
     pub fn set_instruction(&mut self, instruction: Instructions) {
         self.next_instruction = instruction;
-    }
-
-    pub fn dump_memory(&self) {
-        self.memory.dump_to_file();
     }
 
     /// Get the last step result
@@ -86,7 +78,7 @@ impl CPU {
     }
 
     pub fn is_boot_rom_enabled(&self) -> bool {
-        self.memory.is_boot_rom_enabled()
+        self.mmu.bank_00.boot_rom_enabled
     }
 
     pub fn get_instruction(&self) -> &Instructions {
@@ -96,12 +88,5 @@ impl CPU {
     #[cfg(test)]
     pub fn get_registry_dump(&self) -> [u8; 12] {
         self.registers
-    }
-
-    /// Gets the full memory of the CPU
-    /// This is used for testing purposes
-    /// @warning This is a very expensive operation
-    pub fn get_memory(&self) -> Memory {
-        self.memory.clone()
     }
 }

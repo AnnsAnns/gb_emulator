@@ -2,7 +2,6 @@
 pub mod test_helpers;
 
 pub mod cpu;
-pub mod memory;
 pub mod rendering;
 pub mod mmu;
 
@@ -10,6 +9,7 @@ use std::{fs::File, io::Write, time};
 
 use cpu::CPU;
 use macroquad::{prelude::*, ui::root_ui};
+use mmu::MemoryOperations;
 use rendering::{
     line_rendering::{self},
     tiles::*,
@@ -90,10 +90,8 @@ async fn main() {
 
     let rom = std::fs::read(filepath.expect("No file was found")).expect("Unable to read file");
 
-    let mut cpu = cpu::CPU::new(true, rom);
+    let mut cpu = cpu::CPU::new(rom);
     let mut ppu = line_rendering::Ppu::new();
-
-    cpu.load_from_file(filepath.unwrap(), 0x0000);
 
     // Get start time
     let mut last_frame_time = time::Instant::now();
@@ -137,7 +135,7 @@ async fn main() {
         let cpu_cycles_taken = result.unwrap().cycles;
 
         let pc_following_word = cpu
-            .get_memory()
+            .mmu
             .read_word(cpu.get_16bit_register(Register16Bit::PC) + 1);
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
@@ -177,12 +175,6 @@ async fn main() {
                 gb_display.draw(&final_image);
                 next_frame().await;
                 frame += 1;
-
-                // Dump memory every 3 seconds
-                if !WINDOWS && dump_time.elapsed().as_secs() >= 3 {
-                    dump_time = time::Instant::now();
-                    cpu.dump_memory();
-                }
             }
         }
     }
@@ -201,10 +193,10 @@ fn info_to_string(cpu: &CPU) -> String {
         cpu.get_8bit_register(Register8Bit::L),
         cpu.get_16bit_register(Register16Bit::SP),
         cpu.get_16bit_register(Register16Bit::PC),
-        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC)),
-        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
-        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
-        cpu.get_memory().read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
+        cpu.mmu.read_byte(cpu.get_16bit_register(Register16Bit::PC)),
+        cpu.mmu.read_byte(cpu.get_16bit_register(Register16Bit::PC) + 1),
+        cpu.mmu.read_byte(cpu.get_16bit_register(Register16Bit::PC) + 2),
+        cpu.mmu.read_byte(cpu.get_16bit_register(Register16Bit::PC) + 3),
     )
 }
 
