@@ -1,4 +1,4 @@
-use super::MemoryOperations;
+use super::{MemoryOperations, NonMbcOperations};
 
 pub struct InputOutput {
     memory: Vec<u8>,
@@ -19,5 +19,11 @@ impl MemoryOperations for InputOutput {
 
     fn write_byte(&mut self, address: u16, value: u8) {
         self.memory[address as usize] = value;
+    }
+}
+
+impl NonMbcOperations for InputOutput {
+    fn fill_from_slice(&mut self, data: &[u8]) {
+        self.memory.copy_from_slice(data);
     }
 }

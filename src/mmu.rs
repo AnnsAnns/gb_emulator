@@ -119,6 +119,8 @@ impl MMU {
 
 impl NonMbcOperations for MMU {
     fn fill_from_slice(&mut self, data: &[u8]) {
+        let mut current_offset = 0;
+
         // Get relevant information from the ROM for the mbc
         let rom_size = match data.get(MBC_ROM_SIZE_ADDRESS) {
             Some(&rom_size) => rom_size,
@@ -138,16 +140,51 @@ impl NonMbcOperations for MMU {
         // Fill the ROM bank 00
         self.bank_00.fill_from_slice(&data[0x0000..0x4000]);
 
-        // Fill the mbc with 
-        
+        // Fill the mbc with n banks of ROM based on the ROM size
+        // The rom bank amount is 2^(n+1) where n is the value in the ROM
+        // One bank is 16 KiB
+        // https://gbdev.io/pandocs/The_Cartridge_Header.html#0148--rom-size
+        let total_banks = 2^(rom_size + 1) as usize;
+        let rom_bank_size = 0x4000;
+        let total_rom_size = total_banks * rom_bank_size;
+        for bank in 1..total_banks {
+            let start = bank * rom_bank_size;
+            let end = start + rom_bank_size;
+            let slice: [u8; 0x4000] = data[start..end].try_into().unwrap();
+            self.mbc.fill_rom_bank_from_slice(bank as u8, &slice);
+        }      
+
+        // Fill VRAM
+        self.VRAM.fill_from_slice(&data[0x8000..0xA000]);
+
+        // Fill External RAM
+        // @TODO: Support multiple RAM banks
+        let slice: [u8; 0x2000] = data[0xA000..0xC000].try_into().unwrap();
+        self.mbc.fill_ram_bank_from_slice(0, &slice);
+
+        // Fill WRAM
+        self.WRAM.fill_from_slice(&data[0xC000..0xE000]);
+
+        // Fill OAM
+        self.OAM.fill_from_slice(&data[0xFE00..0xFEA0]);
+
+        // Fill IO
+        self.IO.fill_from_slice(&data[0xFF00..0xFF80]);
+
+        // Fill HRAM
+        self.HRAM.fill_from_slice(&data[0xFF80..0xFFFF]);
+
+        // Fill Interrupt Enable Register
+        self.interrupt_enable = data[0xFFFF];
     }
 }
 
 impl MemoryOperations for MMU {    
     fn read_byte(&self, address: u16) -> u8 {
-        0
+        todo!("Implement read_byte for MMU")
     }
 
     fn write_byte(&mut self, address: u16, value: u8) {
+        todo!("Implement write_byte for MMU")
     }
 }

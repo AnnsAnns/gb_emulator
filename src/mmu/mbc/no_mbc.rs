@@ -20,7 +20,7 @@ impl MemoryOperations for NoMbc {
     }
 
     fn write_byte(&mut self, _address: u16, _value: u8) {
-        // Do nothing
+        // Do nothing as this is a ROM only cartridge
     }
 }
 
