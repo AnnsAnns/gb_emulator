@@ -4,6 +4,7 @@ pub mod test_helpers;
 pub mod cpu;
 pub mod memory;
 pub mod rendering;
+pub mod mmu;
 
 use std::{fs::File, io::Write, time};
 
