@@ -57,10 +57,7 @@ async fn main() {
     };
     let gb_display_size = gb_display.size(&final_image);
 
-    request_new_screen_size(
-        gb_display_size.x + 10.0,
-        gb_display_size.y + 100.0,
-    );
+    request_new_screen_size(gb_display_size.x + 10.0, gb_display_size.y + 100.0);
 
     let filepath = Option::Some("assets/roms/Mindy.gb");
 
@@ -81,22 +78,18 @@ async fn main() {
         cpu.skip_boot_rom();
     }
 
+    let mut player_input = cpu::joypad::PlayerInput {
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+        a: false,
+        b: false,
+        start: false,
+        select: false,
+    };
+
     loop {
-        // Get Player Inputs
-        let keys_down = get_keys_down();
-        let player_input = cpu::joypad::PlayerInput {
-            up: keys_down.contains(&KeyCode::Up),
-            down: keys_down.contains(&KeyCode::Down),
-            left: keys_down.contains(&KeyCode::Left),
-            right: keys_down.contains(&KeyCode::Right),
-            a: keys_down.contains(&KeyCode::A),
-            b: keys_down.contains(&KeyCode::S),
-            start: keys_down.contains(&KeyCode::Enter),
-            select: keys_down.contains(&KeyCode::Tab),
-        };
-
-        log::debug!("{:?}", player_input);
-
         // Check whether PC is at the end of the bootrom
         if cpu.get_16bit_register(Register16Bit::PC) == 0x0100 {
             log::info!("🚀 Bootrom finished");
@@ -156,7 +149,20 @@ async fn main() {
 
                 gb_display.draw(&final_image);
                 next_frame().await;
+
                 frame += 1;
+
+                let keys_down = get_keys_down();
+                player_input = cpu::joypad::PlayerInput {
+                    up: keys_down.contains(&KeyCode::Up),
+                    down: keys_down.contains(&KeyCode::Down),
+                    left: keys_down.contains(&KeyCode::Left),
+                    right: keys_down.contains(&KeyCode::Right),
+                    a: keys_down.contains(&KeyCode::A),
+                    b: keys_down.contains(&KeyCode::S),
+                    start: keys_down.contains(&KeyCode::Enter),
+                    select: keys_down.contains(&KeyCode::Tab),
+                };
             }
         }
     }
