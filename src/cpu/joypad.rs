@@ -38,31 +38,32 @@ impl CPU {
             | (!player_input.select as u8) << 2
             | (!player_input.start as u8) << 3;
 
-        // save current button states
-        self.mmu.IO.action_buttons = new_action;
-        self.mmu.IO.direction_buttons = new_direction;
         //maybe update joypadbyte in memory?
-        let mut result = false;
+        let mut inputs_changed = false;
         let selected = self.mmu.read_byte(JOYPAD_REGISTER) & 0x30;
         if selected == 0x10 {
             //bit 5 = action buttons
-            result = action != new_action;
+            inputs_changed = action != new_action;
             self.mmu.IO.write_controller_byte(selected | new_action);
+            self.generate_joypad_interrupt()
         } else if selected == 0x20 {
             //bit 4 = direction buttons
-            result = direction != new_direction;
+            inputs_changed = direction != new_direction;
             self.mmu.IO.write_controller_byte(selected | new_direction);
+            self.generate_joypad_interrupt()
         }
-        //joypad interrupt might not be working as intended?
-        // If the joypad selects have changed, we need to set the joypad interrupt flag
-        if result {
-            if self.stop_mode {
-                self.stop_mode = false;
-            } else {
-                self.set_interrupt_flag(InterruptTypes::Joypad);
-            }
+        // save current button states
+        self.mmu.IO.action_buttons = new_action;
+        self.mmu.IO.direction_buttons = new_direction;
+
+        inputs_changed
+    }
+
+    fn generate_joypad_interrupt(&mut self) {
+        if self.stop_mode {
+            self.stop_mode = false;
         }
-        result
+        self.set_interrupt_flag(InterruptTypes::Joypad);
     }
 
     pub fn enable_buttons_debug(&mut self) {
