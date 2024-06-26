@@ -2,8 +2,8 @@
 pub mod test_helpers;
 
 pub mod cpu;
-pub mod rendering;
 pub mod mmu;
+pub mod rendering;
 
 use std::{fs::File, io::Write, time};
 
@@ -15,7 +15,7 @@ use rendering::{
     tiles::*,
     views::*,
 };
-use rfd::FileDialog;
+
 use simple_log::LogConfigBuilder;
 
 extern crate simple_log;
@@ -42,10 +42,10 @@ async fn main() {
     simple_log::new(config).unwrap();
 
     const PALETTE: [Color; 4] = [
-        Color::new(232.0/255.0, 252.0/255.0, 204.0/255.0, 1.00),
-        Color::new(172.0/255.0, 212.0/255.0, 144.0/255.0, 1.00),
-        Color::new(084.0/255.0, 140.0/255.0, 112.0/255.0, 1.00),
-        Color::new(020.0/255.0, 044.0/255.0, 056.0/255.0, 1.00),
+        Color::new(232.0 / 255.0, 252.0 / 255.0, 204.0 / 255.0, 1.00),
+        Color::new(172.0 / 255.0, 212.0 / 255.0, 144.0 / 255.0, 1.00),
+        Color::new(084.0 / 255.0, 140.0 / 255.0, 112.0 / 255.0, 1.00),
+        Color::new(020.0 / 255.0, 044.0 / 255.0, 056.0 / 255.0, 1.00),
     ];
     const SCALING: f32 = 4.0;
 
@@ -57,36 +57,12 @@ async fn main() {
     };
     let gb_display_size = gb_display.size(&final_image);
 
-    let mut background_viewer = BackgroundViewer {
-        offset_x: gb_display_size.x + 10.0,
-        offset_y: 5.0,
-        scaling: SCALING / 2.0,
-    };
-    let mut background_image = Image::gen_image_color(32 * 8, 32 * 8, PINK);
-    let background_viewer_size = background_viewer.size();
-
-    let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
-    let mut tile_viewer = TileViewer {
-        offset_x: gb_display_size.x + background_viewer_size.x + 15.0,
-        offset_y: 5.0,
-        scaling: SCALING,
-    };
-    let tile_viewer_size = tile_viewer.size();
-
     request_new_screen_size(
-        background_viewer_size.x + tile_viewer_size.x + gb_display_size.x + 20.0,
-        tile_viewer_size.y + 10.0,
+        gb_display_size.x + 10.0,
+        gb_display_size.y + 100.0,
     );
 
-    let filedialog = FileDialog::new()
-        .add_filter("gb", &["gb"])
-        .set_title("Select a Gameboy ROM")
-        // Set directory to the current directory
-        .set_directory(std::env::current_dir().unwrap())
-        .pick_file()
-        .unwrap();
-
-    let filepath = filedialog.as_path().to_str();
+    let filepath = Option::Some("assets/roms/Mindy.gb");
 
     let rom = std::fs::read(filepath.expect("No file was found")).expect("Unable to read file");
 
@@ -105,9 +81,22 @@ async fn main() {
         cpu.skip_boot_rom();
     }
 
-    cpu.set_ppu_mode(cpu::interrupts::PpuMode::OamScan);
-
     loop {
+        // Get Player Inputs
+        let keys_down = get_keys_down();
+        let player_input = cpu::joypad::PlayerInput {
+            up: keys_down.contains(&KeyCode::Up),
+            down: keys_down.contains(&KeyCode::Down),
+            left: keys_down.contains(&KeyCode::Left),
+            right: keys_down.contains(&KeyCode::Right),
+            a: keys_down.contains(&KeyCode::A),
+            b: keys_down.contains(&KeyCode::S),
+            start: keys_down.contains(&KeyCode::Enter),
+            select: keys_down.contains(&KeyCode::Tab),
+        };
+
+        log::debug!("{:?}", player_input);
+
         // Check whether PC is at the end of the bootrom
         if cpu.get_16bit_register(Register16Bit::PC) == 0x0100 {
             log::info!("🚀 Bootrom finished");
@@ -142,12 +131,11 @@ async fn main() {
         for _ in 0..=cpu_cycles_taken {
             ppu.step(&mut cpu, &mut final_image, &PALETTE);
 
-            
             // Alternatively Redraw UI at 30 frames per second: (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME
             // Draw when a frame is done
             if ppu.get_frame_cycles() == 0 {
                 // Poll inputs
-                cpu.poll_inputs();
+                cpu.poll_inputs(&player_input);
                 cpu.blarg_print();
                 ppu_time = time::Instant::now();
 
@@ -165,12 +153,6 @@ async fn main() {
                 .as_str(),
                 );
                 last_frame_time = time::Instant::now();
-
-                // Update Debugging Views
-                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
-                update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
-                background_viewer.draw(&background_image);
-                tile_viewer.draw(&tile_atlas);
 
                 gb_display.draw(&final_image);
                 next_frame().await;
@@ -203,8 +185,5 @@ fn info_to_string(cpu: &CPU) -> String {
 fn dump_cpu_info(cpu: &CPU, destination: &mut File) {
     // Dump registers to file for Gameboy Doctor like this
     // A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999 PCMEM:AA,BB,CC,DD
-    let _ = destination.write_all(
-                    info_to_string(cpu)
-                    .as_bytes(),
-                );
+    let _ = destination.write_all(info_to_string(cpu).as_bytes());
 }

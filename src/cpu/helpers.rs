@@ -1,6 +1,6 @@
 use crate::mmu::MemoryOperations;
 
-use super::{instructions::{InstructionResult, Instructions}, registers::{Register16Bit, Register8Bit}, CPU};
+use super::{instructions::{InstructionResult, Instructions}, joypad::PlayerInput, registers::{Register16Bit, Register8Bit}, CPU};
 
 
 
@@ -28,14 +28,8 @@ impl CPU {
 
     /// Polls the inputs
     /// Warning, this will loop till input is received when self.stop_mode is true
-    pub fn poll_inputs(&mut self) {
-        loop { 
-            self.update_key_input();
-
-            if !self.is_in_stop_mode() {
-                break;
-            }
-        }
+    pub fn poll_inputs(&mut self, player_input: &PlayerInput) {
+            self.update_key_input(player_input);
     }
 
     pub fn is_in_stop_mode(&self) -> bool {

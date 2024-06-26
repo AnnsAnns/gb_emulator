@@ -9,7 +9,7 @@ pub mod registers;
 pub mod render_operations;
 mod step;
 pub mod interrupts;
-mod joypad;
+pub mod joypad;
 mod timer;
 mod dma;
 mod helpers;
