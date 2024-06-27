@@ -5,18 +5,15 @@ pub mod cpu;
 pub mod mmu;
 pub mod rendering;
 
-use cpu::CPU;
-use macroquad::{prelude::*, ui::root_ui};
+use macroquad::prelude::*;
 use mmu::MemoryOperations;
 use rendering::{
     line_rendering::{self},
-    tiles::*,
     views::*,
 };
 
-use crate::cpu::registers::{Register16Bit, Register8Bit};
+use crate::cpu::registers::Register16Bit;
 
-const WINDOWS: bool = false;
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
@@ -44,10 +41,6 @@ async fn main() {
 
     let mut cpu = cpu::CPU::new(rom);
     let mut ppu = line_rendering::Ppu::new();
-
-    // Get start time
-    let mut frame = 0;
-
 
     cpu.skip_boot_rom();
 
@@ -100,8 +93,6 @@ async fn main() {
 
                 gb_display.draw(&final_image);
                 next_frame().await;
-
-                frame += 1;
 
                 let keys_down = get_keys_down();
                 player_input = cpu::joypad::PlayerInput {
