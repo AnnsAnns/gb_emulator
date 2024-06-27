@@ -156,7 +156,6 @@ impl CPU {
         //erstmal auslassen
         self.stop_mode = true;
         log::warn!("STOP was called. The emulator isn't dead, to reduce the complexity, stop will resume after 3 seconds.");
-        std::thread::sleep(std::time::Duration::from_secs(3));
         self.stop_mode = false;
         InstructionResult {
             cycles: 0,

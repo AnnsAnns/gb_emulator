@@ -498,7 +498,6 @@ impl CPU {
         }
 
         // Update the last execution time
-        self.last_execution_time = std::time::Instant::now();
         self.cycles += self.last_step_result.cycles as u64;
 
         // Check whether a DMA routine has been requested
