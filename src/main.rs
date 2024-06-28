@@ -35,9 +35,11 @@ async fn main() {
     };
     let gb_display_size = gb_display.size(&final_image);
 
-    request_new_screen_size(gb_display_size.x + 10.0, gb_display_size.y + 100.0);
+    let mut on_screen_controls = OnScreenControls::new(5.0, gb_display_size.y + 10.0, 1.0);
 
-    let rom: Vec<u8> = include_bytes!("../assets/roms/Mindy.gb").to_vec();
+    request_new_screen_size(gb_display_size.x + 10.0, gb_display_size.y * 1.5);
+
+    let rom: Vec<u8> = include_bytes!("../assets/roms/Tetris.gb").to_vec();
 
     let mut cpu = cpu::CPU::new(rom);
     let mut ppu = line_rendering::Ppu::new();
@@ -92,6 +94,7 @@ async fn main() {
                 cpu.blarg_print();
 
                 gb_display.draw(&final_image);
+                on_screen_controls.draw();
                 next_frame().await;
 
                 let keys_down = get_keys_down();

@@ -134,50 +134,51 @@ impl BackgroundViewer {
     }
 }
 
-pub struct EmulationControls {
+pub struct OnScreenControls {
     pub offset_x: f32,
     pub offset_y: f32,
     pub scaling: f32,
 
-    play_active: Texture2D,
-    play_inactive: Texture2D,
-    pause_active: Texture2D,
-    pause_inactive: Texture2D,
+    a_active: Texture2D,
+    b_active: Texture2D,
+    select_active: Texture2D,
+    start_active: Texture2D,
     step_active: Texture2D,
+    cross: Texture2D
 }
 
-impl EmulationControls {
-    pub fn new(offset_x: f32, offset_y: f32, scaling: f32) -> EmulationControls {
-        let ec = EmulationControls {
+impl OnScreenControls {
+    pub fn new(offset_x: f32, offset_y: f32, scaling: f32) -> OnScreenControls {
+        let ec = OnScreenControls {
             offset_x,
             offset_y,
             scaling,
-            play_active: Texture2D::from_image(
+            a_active: Texture2D::from_image(
                 &Image::from_file_with_format(
-                    include_bytes!("../../assets/buttons/play-active.png"),
+                    include_bytes!("../../assets/buttons/A-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
             ),
-            play_inactive: Texture2D::from_image(
+            b_active: Texture2D::from_image(
                 &Image::from_file_with_format(
-                    include_bytes!("../../assets/buttons/play-inactive.png"),
-                    Some(ImageFormat::Png),
-                )
-                .expect("Asset not found"),
-            ),
-
-            pause_active: Texture2D::from_image(
-                &Image::from_file_with_format(
-                    include_bytes!("../../assets/buttons/pause-active.png"),
+                    include_bytes!("../../assets/buttons/B-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
             ),
 
-            pause_inactive: Texture2D::from_image(
+            select_active: Texture2D::from_image(
                 &Image::from_file_with_format(
-                    include_bytes!("../../assets/buttons/pause-inactive.png"),
+                    include_bytes!("../../assets/buttons/select-active.png"),
+                    Some(ImageFormat::Png),
+                )
+                .expect("Asset not found"),
+            ),
+
+            start_active: Texture2D::from_image(
+                &Image::from_file_with_format(
+                    include_bytes!("../../assets/buttons/start-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
@@ -190,22 +191,54 @@ impl EmulationControls {
                 )
                 .expect("Asset not found"),
             ),
+
+            cross: Texture2D::from_image(
+                &Image::from_file_with_format(
+                    include_bytes!("../../assets/buttons/cross.png"),
+                    Some(ImageFormat::Png),
+                )
+                .expect("Asset not found"),
+            )
         };
 
-        ec.play_active.set_filter(FilterMode::Nearest);
-        ec.play_inactive.set_filter(FilterMode::Nearest);
-        ec.pause_active.set_filter(FilterMode::Nearest);
-        ec.pause_inactive.set_filter(FilterMode::Nearest);
+        ec.a_active.set_filter(FilterMode::Nearest);
+        ec.b_active.set_filter(FilterMode::Nearest);
+        ec.select_active.set_filter(FilterMode::Nearest);
+        ec.start_active.set_filter(FilterMode::Nearest);
         ec.step_active.set_filter(FilterMode::Nearest);
 
         ec
     }
 
     pub fn draw(&self) {
-        let button_params = DrawTextureParams {
+        let ab_params = DrawTextureParams {
             dest_size: Option::Some(Vec2::new(
-                self.play_active.width() * self.scaling,
-                self.play_active.height() * self.scaling,
+                self.a_active.width() * self.scaling,
+                self.a_active.height() * self.scaling,
+            )),
+            source: None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: None,
+        };
+
+        let select_start_params = DrawTextureParams {
+            dest_size: Option::Some(Vec2::new(
+                self.select_active.width() * self.scaling,
+                self.select_active.height() * self.scaling,
+            )),
+            source: None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: None,
+        };
+
+        let cross_params = DrawTextureParams {
+            dest_size: Option::Some(Vec2::new(
+                self.cross.width() * self.scaling,
+                self.cross.height() * self.scaling,
             )),
             source: None,
             rotation: 0.0,
@@ -215,25 +248,39 @@ impl EmulationControls {
         };
 
         draw_texture_ex(
-            &self.play_active,
+            &self.a_active,
+            self.offset_x + self.scaling * 520.0,
+            self.offset_y + self.scaling * 50.0,
+            WHITE,
+            ab_params.clone(),
+        );
+        draw_texture_ex(
+            &self.b_active,
+            self.offset_x + self.scaling * 420.0,
+            self.offset_y + self.scaling * 100.0,
+            WHITE,
+            ab_params,
+        );
+        draw_texture_ex(
+            &self.select_active,
+            self.offset_x + self.scaling * 240.0,
+            self.offset_y + 220.0 * self.scaling,
+            WHITE,
+            select_start_params.clone(),
+        );
+        draw_texture_ex(
+            &self.start_active,
+            self.offset_x + self.scaling * (self.select_active.width() + 260.0),
+            self.offset_y + 220.0 * self.scaling,
+            WHITE,
+            select_start_params,
+        );
+        draw_texture_ex(
+            &self.cross,
             self.offset_x,
-            self.offset_y,
+            self.offset_y + self.scaling * 30.0,
             WHITE,
-            button_params.clone(),
-        );
-        draw_texture_ex(
-            &self.pause_inactive,
-            self.offset_x + self.play_active.width() * self.scaling + 5.0,
-            self.offset_y,
-            WHITE,
-            button_params.clone(),
-        );
-        draw_texture_ex(
-            &self.step_active,
-            self.offset_x + self.play_active.width() * self.scaling * 2.0 + 30.0,
-            self.offset_y,
-            WHITE,
-            button_params.clone(),
+            cross_params,
         );
     }
 }
