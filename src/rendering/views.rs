@@ -147,11 +147,10 @@ pub struct OnScreenControls {
     pub offset_y: f32,
     pub scaling: f32,
 
-    a_active: Texture2D,
-    b_active: Texture2D,
-    select_active: Texture2D,
-    start_active: Texture2D,
-    step_active: Texture2D,
+    a: Texture2D,
+    b: Texture2D,
+    select: Texture2D,
+    start: Texture2D,
     cross: Texture2D,
 }
 
@@ -161,45 +160,34 @@ impl OnScreenControls {
             offset_x,
             offset_y,
             scaling,
-            a_active: Texture2D::from_image(
+            a: Texture2D::from_image(
                 &Image::from_file_with_format(
                     include_bytes!("../../assets/buttons/A-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
             ),
-            b_active: Texture2D::from_image(
+            b: Texture2D::from_image(
                 &Image::from_file_with_format(
                     include_bytes!("../../assets/buttons/B-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
             ),
-
-            select_active: Texture2D::from_image(
+            select: Texture2D::from_image(
                 &Image::from_file_with_format(
                     include_bytes!("../../assets/buttons/select-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
             ),
-
-            start_active: Texture2D::from_image(
+            start: Texture2D::from_image(
                 &Image::from_file_with_format(
                     include_bytes!("../../assets/buttons/start-active.png"),
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
             ),
-
-            step_active: Texture2D::from_image(
-                &Image::from_file_with_format(
-                    include_bytes!("../../assets/buttons/step-active.png"),
-                    Some(ImageFormat::Png),
-                )
-                .expect("Asset not found"),
-            ),
-
             cross: Texture2D::from_image(
                 &Image::from_file_with_format(
                     include_bytes!("../../assets/buttons/cross.png"),
@@ -209,11 +197,10 @@ impl OnScreenControls {
             ),
         };
 
-        ec.a_active.set_filter(FilterMode::Nearest);
-        ec.b_active.set_filter(FilterMode::Nearest);
-        ec.select_active.set_filter(FilterMode::Nearest);
-        ec.start_active.set_filter(FilterMode::Nearest);
-        ec.step_active.set_filter(FilterMode::Nearest);
+        ec.a.set_filter(FilterMode::Nearest);
+        ec.b.set_filter(FilterMode::Nearest);
+        ec.select.set_filter(FilterMode::Nearest);
+        ec.start.set_filter(FilterMode::Nearest);
 
         ec
     }
@@ -221,8 +208,8 @@ impl OnScreenControls {
     pub fn draw(&self) {
         let ab_params = DrawTextureParams {
             dest_size: Option::Some(Vec2::new(
-                self.a_active.width() * self.scaling,
-                self.a_active.height() * self.scaling,
+                self.a.width() * self.scaling,
+                self.a.height() * self.scaling,
             )),
             source: None,
             rotation: 0.0,
@@ -233,8 +220,8 @@ impl OnScreenControls {
 
         let select_start_params = DrawTextureParams {
             dest_size: Option::Some(Vec2::new(
-                self.select_active.width() * self.scaling,
-                self.select_active.height() * self.scaling,
+                self.select.width() * self.scaling,
+                self.select.height() * self.scaling,
             )),
             source: None,
             rotation: 0.0,
@@ -256,29 +243,29 @@ impl OnScreenControls {
         };
 
         draw_texture_ex(
-            &self.a_active,
+            &self.a,
             self.offset_x + self.scaling * 520.0,
             self.offset_y + self.scaling * 50.0,
             WHITE,
             ab_params.clone(),
         );
         draw_texture_ex(
-            &self.b_active,
+            &self.b,
             self.offset_x + self.scaling * 420.0,
             self.offset_y + self.scaling * 100.0,
             WHITE,
             ab_params,
         );
         draw_texture_ex(
-            &self.select_active,
+            &self.select,
             self.offset_x + self.scaling * 240.0,
             self.offset_y + 220.0 * self.scaling,
             WHITE,
             select_start_params.clone(),
         );
         draw_texture_ex(
-            &self.start_active,
-            self.offset_x + self.scaling * (self.select_active.width() + 260.0),
+            &self.start,
+            self.offset_x + self.scaling * (self.select.width() + 260.0),
             self.offset_y + 220.0 * self.scaling,
             WHITE,
             select_start_params,
@@ -307,7 +294,7 @@ impl OnScreenControls {
                 self.offset_y + self.scaling * (220.0 + 15.0),
             ),
             start: Vec2::new(
-                self.offset_x + self.scaling * (self.select_active.width() + 260.0 + 40.0),
+                self.offset_x + self.scaling * (self.select.width() + 260.0 + 40.0),
                 self.offset_y + self.scaling * (220.0 + 15.0),
             ),
             cross_up: Vec2::new(self.offset_x + self.scaling * 110.0, self.offset_y + self.scaling * 70.0),
