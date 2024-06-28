@@ -8,7 +8,7 @@ use super::{interrupts::InterruptTypes, CPU};
 
 const JOYPAD_REGISTER: u16 = 0xFF00;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PlayerInput {
     pub right: bool,
     pub left: bool,

@@ -5,6 +5,8 @@ pub mod cpu;
 pub mod mmu;
 pub mod rendering;
 
+use std::fmt::format;
+
 use macroquad::prelude::*;
 use mmu::MemoryOperations;
 use rendering::{
@@ -13,7 +15,6 @@ use rendering::{
 };
 
 use crate::cpu::registers::Register16Bit;
-
 
 #[macroquad::main("GB Emulator")]
 async fn main() {
@@ -35,7 +36,8 @@ async fn main() {
     };
     let gb_display_size = gb_display.size(&final_image);
 
-    let mut on_screen_controls = OnScreenControls::new(5.0, gb_display_size.y + 10.0, 1.0);
+    let on_screen_controls = OnScreenControls::new(5.0, gb_display_size.y + 10.0, 1.0);
+    let osc_locs = on_screen_controls.get_on_screen_control_locations();
 
     request_new_screen_size(gb_display_size.x + 10.0, gb_display_size.y * 1.5);
 
@@ -47,14 +49,7 @@ async fn main() {
     cpu.skip_boot_rom();
 
     let mut player_input = cpu::joypad::PlayerInput {
-        up: false,
-        down: false,
-        left: false,
-        right: false,
-        a: false,
-        b: false,
-        start: false,
-        select: false,
+        ..Default::default()
     };
 
     loop {
@@ -95,19 +90,198 @@ async fn main() {
 
                 gb_display.draw(&final_image);
                 on_screen_controls.draw();
-                next_frame().await;
+
+                let touch_down = touches();
+
+                let mut debug_text = "".to_string();
+
+                let mut touch_input = cpu::joypad::PlayerInput {
+                    ..Default::default()
+                };
+
+                for touch in touch_down {
+                    touch_input.right =
+                        touch.position.distance(osc_locs.cross_right) < 17.0 * SCALING;
+                    touch_input.left =
+                        touch.position.distance(osc_locs.cross_left) < 17.0 * SCALING;
+                    touch_input.up = touch.position.distance(osc_locs.cross_up) < 17.0 * SCALING;
+                    touch_input.down =
+                        touch.position.distance(osc_locs.cross_down) < 17.0 * SCALING;
+                    touch_input.a = touch.position.distance(osc_locs.a) < 10.0 * SCALING;
+                    touch_input.b = touch.position.distance(osc_locs.b) < 10.0 * SCALING;
+                    touch_input.select = touch.position.distance(osc_locs.select) < 10.0 * SCALING;
+                    touch_input.start = touch.position.distance(osc_locs.start) < 10.0 * SCALING;
+
+                    // debug_text = format!(
+                    //     "Pos: {}, Dist: {}",
+                    //     touch.position,
+                    //     touch.position.distance(button_pos)
+                    // );
+                }
+
+                let active_col = Color::from_rgba(255, 255, 255, 80);
+                let inactive_col = Color::from_rgba(255, 255, 255, 0);
+
+                draw_circle(
+                    osc_locs.a.x,
+                    osc_locs.a.y,
+                    10.0 * SCALING,
+                    if touch_input.a {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.b.x,
+                    osc_locs.b.y,
+                    10.0 * SCALING,
+                    if touch_input.b {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.select.x,
+                    osc_locs.select.y,
+                    10.0 * SCALING,
+                    if touch_input.select {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.start.x,
+                    osc_locs.start.y,
+                    10.0 * SCALING,
+                    if touch_input.start {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.cross_up.x,
+                    osc_locs.cross_up.y,
+                    17.0 * SCALING,
+                    if touch_input.up {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.cross_right.x,
+                    osc_locs.cross_right.y,
+                    17.0 * SCALING,
+                    if touch_input.right {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.cross_left.x,
+                    osc_locs.cross_left.y,
+                    17.0 * SCALING,
+                    if touch_input.left {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_circle(
+                    osc_locs.cross_down.x,
+                    osc_locs.cross_down.y,
+                    17.0 * SCALING,
+                    if touch_input.down {
+                        active_col
+                    } else {
+                        inactive_col
+                    },
+                );
+
+                draw_text(
+                    "A",
+                    osc_locs.a.x,
+                    osc_locs.a.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "B",
+                    osc_locs.b.x,
+                    osc_locs.b.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "Sel",
+                    osc_locs.select.x,
+                    osc_locs.select.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "Srt",
+                    osc_locs.start.x,
+                    osc_locs.start.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "U",
+                    osc_locs.cross_up.x,
+                    osc_locs.cross_up.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "D",
+                    osc_locs.cross_down.x,
+                    osc_locs.cross_down.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "L",
+                    osc_locs.cross_left.x,
+                    osc_locs.cross_left.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+                draw_text(
+                    "R",
+                    osc_locs.cross_right.x,
+                    osc_locs.cross_right.y,
+                    24.0,
+                    Color::from_hex(0xFF10FF),
+                );
+
+                draw_text(&debug_text, 5.0, 600.0, 24.0, Color::from_hex(0xFFFFFF));
 
                 let keys_down = get_keys_down();
                 player_input = cpu::joypad::PlayerInput {
-                    up: keys_down.contains(&KeyCode::Up),
-                    down: keys_down.contains(&KeyCode::Down),
-                    left: keys_down.contains(&KeyCode::Left),
-                    right: keys_down.contains(&KeyCode::Right),
-                    a: keys_down.contains(&KeyCode::A),
-                    b: keys_down.contains(&KeyCode::S),
-                    start: keys_down.contains(&KeyCode::Enter),
-                    select: keys_down.contains(&KeyCode::Tab),
+                    up: keys_down.contains(&KeyCode::Up) || touch_input.up,
+                    down: keys_down.contains(&KeyCode::Down) || touch_input.down,
+                    left: keys_down.contains(&KeyCode::Left) || touch_input.left,
+                    right: keys_down.contains(&KeyCode::Right) || touch_input.right,
+                    a: keys_down.contains(&KeyCode::A) || touch_input.a,
+                    b: keys_down.contains(&KeyCode::S) || touch_input.b,
+                    start: keys_down.contains(&KeyCode::Enter) || touch_input.start,
+                    select: keys_down.contains(&KeyCode::Tab) || touch_input.select,
                 };
+
+                next_frame().await;
             }
         }
     }

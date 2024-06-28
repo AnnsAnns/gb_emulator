@@ -78,10 +78,7 @@ impl TileViewer {
             let tile_index = y_tile * 16 + x_tile;
             let tile_addr = 0x8000 + tile_index * 16;
 
-            let pos_text = format!(
-                "Tile Index: {}, ADR: {:#X}",
-                tile_index, tile_addr
-            );
+            let pos_text = format!("Tile Index: {}, ADR: {:#X}", tile_index, tile_addr);
 
             draw_text(
                 &pos_text,
@@ -134,6 +131,17 @@ impl BackgroundViewer {
     }
 }
 
+pub struct OnScreenControlLocations {
+    pub a: Vec2,
+    pub b: Vec2,
+    pub select: Vec2,
+    pub start: Vec2,
+    pub cross_up: Vec2,
+    pub cross_right: Vec2,
+    pub cross_down: Vec2,
+    pub cross_left: Vec2,
+}
+
 pub struct OnScreenControls {
     pub offset_x: f32,
     pub offset_y: f32,
@@ -144,7 +152,7 @@ pub struct OnScreenControls {
     select_active: Texture2D,
     start_active: Texture2D,
     step_active: Texture2D,
-    cross: Texture2D
+    cross: Texture2D,
 }
 
 impl OnScreenControls {
@@ -198,7 +206,7 @@ impl OnScreenControls {
                     Some(ImageFormat::Png),
                 )
                 .expect("Asset not found"),
-            )
+            ),
         };
 
         ec.a_active.set_filter(FilterMode::Nearest);
@@ -282,5 +290,30 @@ impl OnScreenControls {
             WHITE,
             cross_params,
         );
+    }
+
+    pub fn get_on_screen_control_locations(&self) -> OnScreenControlLocations {
+        OnScreenControlLocations {
+            a: Vec2::new(
+                self.offset_x + self.scaling * (520.0 + 40.0),
+                self.offset_y + self.scaling * (50.0 + 40.0),
+            ),
+            b: Vec2::new(
+                self.offset_x + self.scaling * (420.0 + 40.0),
+                self.offset_y + self.scaling * (100.0 + 40.0),
+            ),
+            select: Vec2::new(
+                self.offset_x + self.scaling * (240.0 + 40.0),
+                self.offset_y + self.scaling * (220.0 + 15.0),
+            ),
+            start: Vec2::new(
+                self.offset_x + self.scaling * (self.select_active.width() + 260.0 + 40.0),
+                self.offset_y + self.scaling * (220.0 + 15.0),
+            ),
+            cross_up: Vec2::new(self.offset_x + self.scaling * 110.0, self.offset_y + self.scaling * 70.0),
+            cross_right: Vec2::new(self.offset_x + self.scaling * 180.0, self.offset_y + self.scaling * 142.0),
+            cross_down: Vec2::new(self.offset_x + self.scaling * 110.0, self.offset_y + self.scaling * 215.0),
+            cross_left: Vec2::new(self.offset_x + self.scaling * 40.0, self.offset_y + self.scaling * 142.0),
+        }
     }
 }
