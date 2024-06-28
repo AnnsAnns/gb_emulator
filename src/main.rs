@@ -5,8 +5,6 @@ pub mod cpu;
 pub mod mmu;
 pub mod rendering;
 
-use std::fmt::format;
-
 use macroquad::prelude::*;
 use mmu::MemoryOperations;
 use rendering::{
@@ -125,6 +123,8 @@ async fn main() {
                 };
 
                 on_screen_controls.draw(player_input.clone());
+                
+                draw_text(&format!("{} fps", get_fps()), 300.0, 750.0, 24.0, BLACK);
 
                 next_frame().await;
                 clear_background(GRAY);
