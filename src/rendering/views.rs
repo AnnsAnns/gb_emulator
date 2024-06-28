@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 
+use crate::cpu::joypad::PlayerInput;
+
 pub struct GbDisplay {
     pub offset_x: f32,
     pub offset_y: f32,
@@ -23,15 +25,6 @@ impl GbDisplay {
         let tex2d = Texture2D::from_image(image);
         tex2d.set_filter(FilterMode::Nearest);
         draw_texture_ex(&tex2d, self.offset_x, self.offset_y, WHITE, tex2d_params);
-
-        //TODO: Draw actual emulator content
-        //draw_text(
-        //    "Game Display",
-        //    self.offset_x + 100.0,
-        //    self.offset_y + 250.0,
-        //    100.0,
-        //    BLACK,
-        //);
     }
 
     pub fn size(&self, image: &Image) -> Vec2 {
@@ -131,6 +124,7 @@ impl BackgroundViewer {
     }
 }
 
+#[derive(Clone)]
 pub struct OnScreenControlLocations {
     pub a: Vec2,
     pub b: Vec2,
@@ -152,6 +146,11 @@ pub struct OnScreenControls {
     select: Texture2D,
     start: Texture2D,
     cross: Texture2D,
+
+    osc_locs: OnScreenControlLocations,
+
+    active_color: Color,
+    inactive_color: Color,
 }
 
 impl OnScreenControls {
@@ -195,6 +194,31 @@ impl OnScreenControls {
                 )
                 .expect("Asset not found"),
             ),
+            osc_locs: OnScreenControlLocations {
+                a: Vec2::new(
+                    offset_x + scaling * (520.0 + 40.0),
+                    offset_y + scaling * (50.0 + 40.0),
+                ),
+                b: Vec2::new(
+                    offset_x + scaling * (420.0 + 40.0),
+                    offset_y + scaling * (100.0 + 40.0),
+                ),
+                select: Vec2::new(
+                    offset_x + scaling * (240.0 + 40.0),
+                    offset_y + scaling * (220.0 + 15.0),
+                ),
+                start: Vec2::new(
+                    offset_x + scaling * (83.0 + 260.0 + 40.0),
+                    offset_y + scaling * (220.0 + 15.0),
+                ),
+                cross_up: Vec2::new(offset_x + scaling * 110.0, offset_y + scaling * 70.0),
+                cross_right: Vec2::new(offset_x + scaling * 180.0, offset_y + scaling * 142.0),
+                cross_down: Vec2::new(offset_x + scaling * 110.0, offset_y + scaling * 215.0),
+                cross_left: Vec2::new(offset_x + scaling * 40.0, offset_y + scaling * 142.0),
+            },
+
+            active_color: Color::from_rgba(255, 255, 255, 80),
+            inactive_color: Color::from_rgba(255, 255, 255, 0)
         };
 
         ec.a.set_filter(FilterMode::Nearest);
@@ -205,7 +229,7 @@ impl OnScreenControls {
         ec
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, player_inputs: PlayerInput) {
         let ab_params = DrawTextureParams {
             dest_size: Option::Some(Vec2::new(
                 self.a.width() * self.scaling,
@@ -277,30 +301,97 @@ impl OnScreenControls {
             WHITE,
             cross_params,
         );
+
+        draw_circle(
+            self.osc_locs.a.x,
+            self.osc_locs.a.y,
+            10.0 * self.scaling,
+            if player_inputs.a {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.b.x,
+            self.osc_locs.b.y,
+            10.0 * self.scaling,
+            if player_inputs.b {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.select.x,
+            self.osc_locs.select.y,
+            10.0 * self.scaling,
+            if player_inputs.select {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.start.x,
+            self.osc_locs.start.y,
+            10.0 * self.scaling,
+            if player_inputs.start {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.cross_up.x,
+            self.osc_locs.cross_up.y,
+            17.0 * self.scaling,
+            if player_inputs.up {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.cross_right.x,
+            self.osc_locs.cross_right.y,
+            17.0 * self.scaling,
+            if player_inputs.right {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.cross_left.x,
+            self.osc_locs.cross_left.y,
+            17.0 * self.scaling,
+            if player_inputs.left {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
+
+        draw_circle(
+            self.osc_locs.cross_down.x,
+            self.osc_locs.cross_down.y,
+            17.0 * self.scaling,
+            if player_inputs.down {
+                self.active_color
+            } else {
+                self.inactive_color
+            },
+        );
     }
 
     pub fn get_on_screen_control_locations(&self) -> OnScreenControlLocations {
-        OnScreenControlLocations {
-            a: Vec2::new(
-                self.offset_x + self.scaling * (520.0 + 40.0),
-                self.offset_y + self.scaling * (50.0 + 40.0),
-            ),
-            b: Vec2::new(
-                self.offset_x + self.scaling * (420.0 + 40.0),
-                self.offset_y + self.scaling * (100.0 + 40.0),
-            ),
-            select: Vec2::new(
-                self.offset_x + self.scaling * (240.0 + 40.0),
-                self.offset_y + self.scaling * (220.0 + 15.0),
-            ),
-            start: Vec2::new(
-                self.offset_x + self.scaling * (self.select.width() + 260.0 + 40.0),
-                self.offset_y + self.scaling * (220.0 + 15.0),
-            ),
-            cross_up: Vec2::new(self.offset_x + self.scaling * 110.0, self.offset_y + self.scaling * 70.0),
-            cross_right: Vec2::new(self.offset_x + self.scaling * 180.0, self.offset_y + self.scaling * 142.0),
-            cross_down: Vec2::new(self.offset_x + self.scaling * 110.0, self.offset_y + self.scaling * 215.0),
-            cross_left: Vec2::new(self.offset_x + self.scaling * 40.0, self.offset_y + self.scaling * 142.0),
-        }
+        self.osc_locs.clone()
     }
 }
