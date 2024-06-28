@@ -28,6 +28,8 @@ async fn main() {
     ];
     const SCALING: f32 = 4.0;
 
+
+
     let mut final_image = Image::gen_image_color(160, 144, GREEN);
     let mut gb_display = GbDisplay {
         offset_x: 5.0,
@@ -125,6 +127,7 @@ async fn main() {
                 on_screen_controls.draw(player_input.clone());
 
                 next_frame().await;
+                clear_background(GRAY);
             }
         }
     }

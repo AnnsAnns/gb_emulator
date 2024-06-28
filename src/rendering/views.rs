@@ -305,7 +305,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.a.x,
             self.osc_locs.a.y,
-            10.0 * self.scaling,
+            40.0 * self.scaling,
             if player_inputs.a {
                 self.active_color
             } else {
@@ -316,7 +316,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.b.x,
             self.osc_locs.b.y,
-            10.0 * self.scaling,
+            40.0 * self.scaling,
             if player_inputs.b {
                 self.active_color
             } else {
@@ -327,7 +327,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.select.x,
             self.osc_locs.select.y,
-            10.0 * self.scaling,
+            40.0 * self.scaling,
             if player_inputs.select {
                 self.active_color
             } else {
@@ -338,7 +338,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.start.x,
             self.osc_locs.start.y,
-            10.0 * self.scaling,
+            40.0 * self.scaling,
             if player_inputs.start {
                 self.active_color
             } else {
@@ -349,7 +349,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.cross_up.x,
             self.osc_locs.cross_up.y,
-            17.0 * self.scaling,
+            68.0 * self.scaling,
             if player_inputs.up {
                 self.active_color
             } else {
@@ -360,7 +360,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.cross_right.x,
             self.osc_locs.cross_right.y,
-            17.0 * self.scaling,
+            68.0 * self.scaling,
             if player_inputs.right {
                 self.active_color
             } else {
@@ -371,7 +371,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.cross_left.x,
             self.osc_locs.cross_left.y,
-            17.0 * self.scaling,
+            68.0 * self.scaling,
             if player_inputs.left {
                 self.active_color
             } else {
@@ -382,7 +382,7 @@ impl OnScreenControls {
         draw_circle(
             self.osc_locs.cross_down.x,
             self.osc_locs.cross_down.y,
-            17.0 * self.scaling,
+            68.0 * self.scaling,
             if player_inputs.down {
                 self.active_color
             } else {
