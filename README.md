@@ -64,3 +64,37 @@ The last operation executed (in between lines 16519 and 16520) was:
 - [Hello World ROM](https://gbdev.io/rgbds-live/)
 - [Gameboy Doctor for debugging](https://github.com/robert/gameboy-doctor)
 - [GBMicrotest](https://github.com/aappleby/GBMicrotest)
+
+# Authors
+
+### Vincent Adamczyk
+
+- Main Focus: CPU 
+    - Focus: Instructions, Decode
+    - Basic Knowledge: Flags, Step
+
+### Laurin Zacharias
+
+- Main Focus: CPU
+    - Focus: Instructions, Joypad, Step, Debugging
+    - Basic Knowledge: Decode
+
+### Michael Vogt
+
+- Main Focus: PPU
+    - Rendering Module (src/rendering)
+    - CPU Rendering Operations (rendering_operations.rs)
+
+### Tom Hert
+
+- Main Focus: CPU, MMU, Main
+    - Focus: 
+        - Memory Management Unit (src/mmu)
+        - Structs/Enums/Concept of the Emulator (except PPU)
+            * e.g. MMU, CPU, Instructions (ENUM not implementations), Registers, Flags
+        - CPU (src/cpu)
+            * Decode
+            * Interrupts
+            * Registers
+            * DMA
+    - Basic Knowledge: Instructions
