@@ -6,10 +6,25 @@ pub trait Draw {
 }
 
 pub struct GbDisplay {
-    pub offset_x: f32,
-    pub offset_y: f32,
-    pub scaling: f32,
-    pub gb_image: Image
+    offset_x: f32,
+    offset_y: f32,
+    scaling: f32,
+    gb_image: Image
+}
+
+impl GbDisplay {
+    pub fn new(offset_x: f32, offset_y: f32, scaling: f32) -> GbDisplay {
+        GbDisplay {
+            offset_x,
+            offset_y,
+            scaling,
+            gb_image: Image::gen_image_color(160, 144, GREEN)
+        }
+    }
+
+    pub fn get_gb_image(&mut self) -> &mut Image {
+        &mut self.gb_image
+    }
 }
 
 impl Draw for GbDisplay {
@@ -40,10 +55,26 @@ impl Draw for GbDisplay {
 }
 
 pub struct TileViewer {
-    pub offset_x: f32,
-    pub offset_y: f32,
-    pub scaling: f32,
-    pub atlas: Image
+    offset_x: f32,
+    offset_y: f32,
+    scaling: f32,
+    atlas: Image
+}
+
+impl TileViewer {
+    pub fn new(offset_x: f32, offset_y: f32, scaling: f32) -> TileViewer {
+        TileViewer {
+            offset_x,
+            offset_y,
+            scaling,
+            atlas: Image::gen_image_color(8 * 16, 8 * 24, WHITE)
+        }
+    }
+
+    pub fn get_atlas(&mut self) -> &mut Image {
+        &mut self.atlas
+    }
+    
 }
 
 impl Draw for TileViewer {
@@ -100,10 +131,25 @@ impl Draw for TileViewer {
 }
 
 pub struct BackgroundViewer {
-    pub offset_x: f32,
-    pub offset_y: f32,
-    pub scaling: f32,
-    pub image: Image
+    offset_x: f32,
+    offset_y: f32,
+    scaling: f32,
+    image: Image
+}
+
+impl BackgroundViewer {
+    pub fn new(offset_x: f32, offset_y: f32, scaling: f32) -> BackgroundViewer {
+        BackgroundViewer {
+            offset_x,
+            offset_y,
+            scaling,
+            image: Image::gen_image_color(32 * 8, 32 * 8, WHITE)
+        }
+    }
+
+    pub fn get_image(&mut self) -> &mut Image {
+        &mut self.image
+    }
 }
 
 impl Draw for BackgroundViewer {
@@ -134,9 +180,9 @@ impl Draw for BackgroundViewer {
 }
 
 pub struct EmulationControls {
-    pub offset_x: f32,
-    pub offset_y: f32,
-    pub scaling: f32,
+    offset_x: f32,
+    offset_y: f32,
+    scaling: f32,
 
     play_active: Texture2D,
     play_inactive: Texture2D,

@@ -12,7 +12,7 @@ use macroquad::{prelude::*, ui::root_ui};
 use mmu::MemoryOperations;
 use rendering::{
     line_rendering::{self},
-    tiles::*,
+    tiles::{self, *},
     views::*,
 };
 use rfd::FileDialog;
@@ -49,34 +49,13 @@ async fn main() {
     ];
     const SCALING: f32 = 4.0;
 
-    let mut gb_display = GbDisplay {
-        offset_x: 5.0,
-        offset_y: 5.0,
-        scaling: SCALING,
-        gb_image: Image::gen_image_color(160, 144, GREEN)
-    };
-    let gb_display_size = gb_display.size();
-
-    let mut background_viewer = BackgroundViewer {
-        offset_x: gb_display_size.x + 10.0,
-        offset_y: 5.0,
-        scaling: SCALING / 2.0,
-        image: Image::gen_image_color(32 * 8, 32 * 8, PINK)
-    };
-
-    let background_viewer_size = background_viewer.size();
-
-    let mut tile_viewer = TileViewer {
-        offset_x: gb_display_size.x + background_viewer_size.x + 15.0,
-        offset_y: 5.0,
-        scaling: SCALING,
-        atlas: Image::gen_image_color(8 * 16, 8 * 24, WHITE)
-    };
-    let tile_viewer_size = tile_viewer.size();
+    let mut gb_display = GbDisplay::new(5.0, 5.0, SCALING);
+    let mut background_viewer = BackgroundViewer::new(gb_display.size().x + 10.0, 5.0, SCALING / 2.0);
+    let mut tile_viewer = TileViewer::new(gb_display.size().x + background_viewer.size().x + 15.0, 5.0, SCALING);
 
     request_new_screen_size(
-        background_viewer_size.x + tile_viewer_size.x + gb_display_size.x + 20.0,
-        tile_viewer_size.y + 10.0,
+        background_viewer.size().x + tile_viewer.size().x + gb_display.size().x + 20.0,
+        tile_viewer.size().y + 10.0,
     );
 
     let filedialog = FileDialog::new()
@@ -141,7 +120,7 @@ async fn main() {
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         for _ in 0..=cpu_cycles_taken {
-            ppu.step(&mut cpu, &mut gb_display.gb_image, &PALETTE);
+            ppu.step(&mut cpu, &mut gb_display.get_gb_image(), &PALETTE);
 
             
             // Alternatively Redraw UI at 30 frames per second: (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME
@@ -168,8 +147,8 @@ async fn main() {
                 last_frame_time = time::Instant::now();
 
                 // Update Debugging Views
-                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_viewer.atlas, &PALETTE);
-                update_background_from_memory(&cpu, &mut background_viewer.image, &PALETTE, false, true);
+                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_viewer.get_atlas(), &PALETTE);
+                update_background_from_memory(&cpu, &mut background_viewer.get_image(), &PALETTE, false, true);
                 background_viewer.draw();
                 tile_viewer.draw();
 
