@@ -35,8 +35,10 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
         // Fetch Background Line Data
         let bg_tile_idx = cpu.get_vram_tile_map_entry(
             cpu.get_lcdc_bg_tile_high_map(),
+            // 32 tiles per line; 8 pixels per tile
             (((line + scy) / 8) as u16 % 0x100) * 32 + (xtile + (scx as u16 / 8)) % 32,
         );
+
         let bg_line = cpu.get_vram_tile_line(high_adressing, bg_tile_idx as u16, (line + scy) % 8);
 
         for x_pixel in (bg_line_x_pos as usize % 8)..8 {
@@ -56,6 +58,7 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
         let wd_offset_y = cpu.get_window_wy();
         let wd_offset_x = cpu.get_window_wx() as i32 - 7;
 
+        // Fetch Window Line Data for the 20 tiles on screen
         for xtile in 0..20 {
             // Fetch Window Line Data
 
@@ -66,6 +69,7 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
                 );
                 let wd_line = cpu.get_vram_tile_line(high_adressing, wd_tile_idx as u16, line % 8);
     
+                // Draw the 8 pixels in a tile line
                 for x_pixel in 0..8 as usize {
                     let x_coord: i32 = xtile as i32 * 8 + x_pixel as i32 + wd_offset_x;
                     if x_coord >= 0 && line >= wd_offset_y {
@@ -80,24 +84,24 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
         }
     }
 
-    let sprite_size = cpu.get_lcdc_obj_size();
-    let mut sprites_drawn = 0;
-
     // Draw Objects (Sprites)
     if cpu.get_lcdc_obj_enable() {
+        // Draw Sprites; 40 sprites max are visible
         for sprite_idx in 0..40 {
             let sprite = cpu.get_oam_entry(sprite_idx);
     
+            // Check if sprite is on the current line; Sprites are offset by 16 pixels on the Y axis; 8 pixels on the X axis
             if (line as i32) >= sprite.y_pos - 16 && (line as i32) < sprite.y_pos - 8 {
                 let mut tile_line = (line + 16 - sprite.y_pos as u8) % 8;
+
+                // Flip the tile y coordinate if the sprite is flipped
                 if sprite.y_flip {
                     tile_line = 7 - tile_line;
                 }
     
                 let line_data = cpu.get_vram_tile_line(false, sprite.tile_idx, tile_line);
     
-                sprites_drawn += 1;
-    
+                // Draw the 8 pixels in a tile line
                 for x_pixel_offset in 0..8 {
                     let x_pixel: i32 = (sprite.x_pos - 8) + x_pixel_offset;
     
@@ -105,12 +109,14 @@ pub fn draw_line(cpu: &mut CPU, game_diplay: &mut Image, palette: &[Color; 4]) {
                         && x_pixel >= 0
                         && (line as usize) < game_diplay.height()
                     {
+                        // Flip the tile x coordinate if the sprite is flipped
                         let pallete_idx = if sprite.x_flip {
                             7 - x_pixel_offset as usize
                         } else {
                             x_pixel_offset as usize
                         };
     
+                        // Draw the pixel if color is not 0; 0 is transparent
                         if line_data[pallete_idx] != 0 {
                             game_diplay.set_pixel(
                                 x_pixel as u32,
@@ -150,9 +156,10 @@ impl Ppu {
             self.enabled = true;
         }
 
+        // Clear the screen if the PPU is disabled
         if !cpu.get_lcdc_ppu_enabled() && self.enabled{
             self.enabled = false;
-            
+
             for pixel in final_image.get_image_data_mut() {
                 pixel[0] = 0;
                 pixel[1] = 227;
@@ -162,6 +169,7 @@ impl Ppu {
             return;
         }
 
+        // A dot is a PPU cycle; the PPU runs faster than the CPU; the emulation code will execute all the work on render mode transitions
         let dot = self.frame_cycles * DOTS_PER_CYCLE;
         self.frame_cycles += 1;
 
