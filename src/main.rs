@@ -49,27 +49,28 @@ async fn main() {
     ];
     const SCALING: f32 = 4.0;
 
-    let mut final_image = Image::gen_image_color(160, 144, GREEN);
     let mut gb_display = GbDisplay {
         offset_x: 5.0,
         offset_y: 5.0,
         scaling: SCALING,
+        gb_image: Image::gen_image_color(160, 144, GREEN)
     };
-    let gb_display_size = gb_display.size(&final_image);
+    let gb_display_size = gb_display.size();
 
     let mut background_viewer = BackgroundViewer {
         offset_x: gb_display_size.x + 10.0,
         offset_y: 5.0,
         scaling: SCALING / 2.0,
+        image: Image::gen_image_color(32 * 8, 32 * 8, PINK)
     };
-    let mut background_image = Image::gen_image_color(32 * 8, 32 * 8, PINK);
+
     let background_viewer_size = background_viewer.size();
 
-    let mut tile_atlas = Image::gen_image_color(8 * 16, 8 * 24, WHITE);
     let mut tile_viewer = TileViewer {
         offset_x: gb_display_size.x + background_viewer_size.x + 15.0,
         offset_y: 5.0,
         scaling: SCALING,
+        atlas: Image::gen_image_color(8 * 16, 8 * 24, WHITE)
     };
     let tile_viewer_size = tile_viewer.size();
 
@@ -140,7 +141,7 @@ async fn main() {
         log::debug!("🔢 Following Word (PC): {:#06X}", pc_following_word);
 
         for _ in 0..=cpu_cycles_taken {
-            ppu.step(&mut cpu, &mut final_image, &PALETTE);
+            ppu.step(&mut cpu, &mut gb_display.gb_image, &PALETTE);
 
             
             // Alternatively Redraw UI at 30 frames per second: (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME
@@ -167,12 +168,12 @@ async fn main() {
                 last_frame_time = time::Instant::now();
 
                 // Update Debugging Views
-                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_atlas, &PALETTE);
-                update_background_from_memory(&cpu, &mut background_image, &PALETTE, false, true);
-                background_viewer.draw(&background_image);
-                tile_viewer.draw(&tile_atlas);
+                update_atlas_from_memory(&cpu, 16 * 24, &mut tile_viewer.atlas, &PALETTE);
+                update_background_from_memory(&cpu, &mut background_viewer.image, &PALETTE, false, true);
+                background_viewer.draw();
+                tile_viewer.draw();
 
-                gb_display.draw(&final_image);
+                gb_display.draw();
                 next_frame().await;
                 frame += 1;
             }
