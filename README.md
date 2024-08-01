@@ -2,6 +2,8 @@
 
 # [Docs](https://haw-rust-sose24.github.io/gb_emulator/)
 
+![msrdc_4LGF6VzZB3](https://github.com/user-attachments/assets/4e216b44-cdca-4dac-879a-c4d0c7d13fce)
+
 This is a Gameboy emulator written in Rust for the Rust WP SoSE 24 project at the HAW Hamburg.
 
 By default, the game will load the game at `./game.gb`. If there is no game at that location, the emulator will load a testrom.
