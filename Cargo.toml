@@ -2,12 +2,13 @@
 name = "gb_emulator"
 version = "0.1.0"
 edition = "2021"
+authors = ["Vincent Adamczyk", "Laurin Zacharias", "Michael Vogt", "Tom Hert"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 num_enum = "0.7.2"
-macroquad = "=0.4.5"
+macroquad = "0.4.11"
 log = "0.4.21"
 simple-log = "1.6.0"
 rfd = {version = "0.14.1", features = ["gtk3"], default-features = false}
