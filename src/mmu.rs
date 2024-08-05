@@ -57,7 +57,7 @@ pub trait MemoryBankControllerOperations: MemoryOperations {
 
     /// Get physical address within the memory region
     fn calc_physical_rom_address(&self, address: u16) -> usize {
-        address as usize - ROM1_START
+        (address as usize).wrapping_sub(ROM1_START)
     }
 
     /// Check if the MBC is in advanced banking mode
