@@ -1,4 +1,5 @@
 use bank_00::Bank00;
+use debugging::mbc_type_to_string;
 use input_output::InputOutput;
 use mbc::{mbc1::Mbc1, no_mbc::NoMbc};
 use simple::SimpleRegion;
@@ -7,6 +8,7 @@ mod simple;
 mod input_output;
 mod mbc;
 mod bank_00;
+mod debugging;
 
 static MBC_INFO_ADDRESS: usize = 0x0147;
 static MBC_ROM_SIZE_ADDRESS: usize = 0x0148;
@@ -121,7 +123,7 @@ impl MMU {
         let cartridge: Box<dyn MemoryBankControllerOperations> = match mbc_info {
             0x00 => Box::new(NoMbc::default()),
             0x01..=0x03 => Box::new(Mbc1::default()),
-            _ => panic!("Unsupported MBC type: {mbc_info}")
+            _ => panic!("Unsupported MBC type: {}", mbc_type_to_string(mbc_info))
         };
 
         MMU {
@@ -158,6 +160,7 @@ impl NonMbcOperations for MMU {
         };
 
         log::info!("ROM Size: {:#X} RAM Size: {:#X} MBC Info: {:#X}", rom_size, ram_size, mbc_info);
+        log::info!("MBC Type: {}", mbc_type_to_string(mbc_info));
 
         // Initialize the MBC
         self.mbc.init(rom_size, mbc_info, ram_size);
