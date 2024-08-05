@@ -145,14 +145,17 @@ impl MemoryBankControllerOperations for Mbc1 {
     }
     
     fn switch_rom_bank(&mut self, bank: u8) {
+        log::info!("Switching ROM bank to {}", bank);
         self.ram_bank_number = bank;
     }
     
     fn switch_ram_bank(&mut self, bank: u8) {
+        log::info!("Switching RAM bank to {}", bank);
         self.ram_bank_number = bank;
     }
     
     fn enable_ram(&mut self, enable: bool) {
+        log::info!("RAM enabled: {}", enable);
         self.ram_enabled = enable;
     }
     
