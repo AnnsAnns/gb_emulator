@@ -5,7 +5,7 @@ pub mod cpu;
 pub mod rendering;
 pub mod mmu;
 
-use std::{fs::File, io::Write, time};
+use std::{fs::File, io::Write, ops::Sub, thread, time};
 
 use cpu::CPU;
 use macroquad::{prelude::*, ui::root_ui};
@@ -22,7 +22,7 @@ extern crate simple_log;
 
 use crate::cpu::registers::{Register16Bit, Register8Bit};
 
-//const TIME_PER_FRAME: f32 = 1000.0 / 60.0;
+const TIME_PER_FRAME: f32 = 1000.0 / 59.73;
 
 const DUMP_GAMEBOY_DOCTOR_LOG: bool = false;
 #[cfg(target_os = "linux")]
@@ -76,6 +76,8 @@ async fn main() {
     // Get start time
     let mut last_frame_time = time::Instant::now();
     let mut ppu_time = time::Instant::now();
+    let mut fps_time = time::Instant::now();
+    let mut fps = 0;
     let mut dump_time = time::Instant::now();
     let mut frame = 0;
 
@@ -122,10 +124,16 @@ async fn main() {
         for _ in 0..=cpu_cycles_taken {
             ppu.step(&mut cpu, &mut gb_display.get_gb_image(), &PALETTE);
 
-            
             // Alternatively Redraw UI at 30 frames per second: (ppu_time.elapsed().as_millis() as f32) >= TIME_PER_FRAME
             // Draw when a frame is done
             if ppu.get_frame_cycles() == 0 {
+                // Check whether 1 second has passed to update the FPS
+                if fps_time.elapsed().as_secs() >= 1 {
+                    fps_time = time::Instant::now();
+                    fps = frame;
+                    frame = 0;
+                }
+
                 // Poll inputs
                 cpu.poll_inputs();
                 cpu.blarg_print();
@@ -135,16 +143,14 @@ async fn main() {
                 root_ui().label(
                 None,
                 format!(
-                    "Dots: {:?} | Frame time: {:?} | CPU Cycle: {:?} | Frame: {:?} | Frame Cycle: {:?}",
+                    "FPS: {:?} | Dots: {:?} | CPU Cycle: {:?} | Frame: {:?}",
+                    fps,
                     ppu.get_dot(),
-                    last_frame_time.elapsed(),
                     cpu.get_cycles(),
                     frame,
-                    ppu.get_frame_cycles()
                 )
                 .as_str(),
                 );
-                last_frame_time = time::Instant::now();
 
                 // Update Debugging Views
                 update_atlas_from_memory(&cpu, 16 * 24, &mut tile_viewer.get_atlas(), &PALETTE);
@@ -155,6 +161,11 @@ async fn main() {
                 gb_display.draw();
                 next_frame().await;
                 frame += 1;
+
+                thread::sleep(time::Duration::from_millis(
+                    (TIME_PER_FRAME - last_frame_time.elapsed().as_millis() as f32) as u64,
+                ));
+                last_frame_time = time::Instant::now();
             }
         }
     }
