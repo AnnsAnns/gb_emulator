@@ -66,7 +66,7 @@ pub trait MemoryBankControllerOperations: MemoryOperations {
     
     /// Get physical address within the memory region
     fn calc_physical_ram_address(&self, address: u16) -> usize {
-        log::info!("RAM Address: {:#X}", address);
+        log::debug!("RAM Address: {:#X}", address);
         address as usize - RAM_START
     }
 }
